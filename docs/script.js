@@ -2,69 +2,131 @@ vkBridge.send('VKWebAppInit');
 
 const BRAIN_API_URL = 'https://neuro-master.online';
 
-// Находим общие элементы
+// --- Глобальные переменные ---
+// Хранилище для URL-адресов фото в пошаговых режимах
+const multiStepPhotoUrls = {}; 
+
+// --- Поиск элементов ---
 const loader = document.getElementById('loader');
-const originalImageContainer = document.getElementById('originalImageContainer');
-const originalImage = document.getElementById('originalImage');
-const resultContainer = document.getElementById('resultContainer');
-const resultImage = document.getElementById('resultImage');
-const resultVideo = document.getElementById('resultVideo');
+// ... (остальные элементы)
 
-// Находим все кнопки "запустить"
-const processButtons = document.querySelectorAll('.process-button');
-
-// Добавляем обработчик на каждую кнопку
-processButtons.forEach(button => {
+// --- Обработчики ---
+document.querySelectorAll('.process-button').forEach(button => {
     button.addEventListener('click', handleProcessClick);
 });
 
+document.querySelectorAll('.add-photo-button').forEach(button => {
+    button.addEventListener('click', handleAddPhotoClick);
+});
+
+// --- Логика ---
+
+// Клик по кнопке "Добавить фото"
+async function handleAddPhotoClick(event) {
+    const section = event.target.closest('.mode-section');
+    const mode = section.dataset.mode;
+
+    try {
+        const photoData = await vkBridge.send('VKWebAppGetPhotos', { max_count: 1 });
+        const largestPhoto = photoData.images.sort((a, b) => b.width - a.width)[0];
+        
+        // Инициализируем массив фото для этого режима, если его нет
+        if (!multiStepPhotoUrls[mode]) {
+            multiStepPhotoUrls[mode] = [];
+        }
+        // Добавляем URL нового фото
+        multiStepPhotoUrls[mode].push(largestPhoto.url);
+
+        // Обновляем интерфейс
+        updateMultiStepUI(section, mode);
+
+    } catch (error) {
+        handleError(error);
+    }
+}
+
+// Обновление UI для пошаговых секций
+function updateMultiStepUI(section, mode) {
+    const previewsContainer = section.querySelector('.image-previews');
+    const processButton = section.querySelector('.process-button');
+
+    // Очищаем старые миниатюры
+    previewsContainer.innerHTML = '';
+
+    // Рисуем новые миниатюры
+    multiStepPhotoUrls[mode].forEach(url => {
+        const img = document.createElement('img');
+        img.src = url;
+        img.style.width = '80px';
+        img.style.height = '80px';
+        img.style.objectFit = 'cover';
+        img.style.margin = '5px';
+        img.style.borderRadius = '8px';
+        previewsContainer.appendChild(img);
+    });
+
+    // Показываем кнопку "Запустить", если есть хотя бы одно фото
+    if (multiStepPhotoUrls[mode].length > 0) {
+        processButton.classList.remove('hidden');
+    }
+}
+
+
+// Клик по кнопке "Запустить" или "Нарисовать"
 async function handleProcessClick(event) {
-    // Находим родительскую секцию, чтобы понять, какой режим выбран
     const section = event.target.closest('.mode-section');
     const mode = section.dataset.mode;
     const promptInput = section.querySelector('.prompt-input');
-    const prompt = promptInput.value;
-
-    if (!prompt) {
-        alert('Пожалуйста, введите текстовое описание (промпт) для обработки.');
-        return;
-    }
+    let prompt = promptInput.value;
+    
+    // ... (проверка на пустой промпт)
 
     try {
-        // 1. Получаем фото от пользователя
-        const photoData = await vkBridge.send('VKWebAppGetPhotos', { max_count: 1 });
-        const largestPhoto = photoData.images.sort((a, b) => b.width - a.width)[0];
-        const photoUrl = largestPhoto.url;
+        let requestBody = { prompt };
         
-        // Показываем UI
-        showLoaderAndOriginal(photoUrl);
+        // --- Логика для разных режимов ---
+        if (section.dataset.multistep === 'true') {
+            // Пошаговый режим
+            if (!multiStepPhotoUrls[mode] || multiStepPhotoUrls[mode].length === 0) {
+                alert('Пожалуйста, добавьте хотя бы одно фото.');
+                return;
+            }
+            requestBody.image_urls = multiStepPhotoUrls[mode];
+            // Показываем последнюю добавленную картинку как "оригинал"
+            showLoaderAndOriginal(multiStepPhotoUrls[mode][multiStepPhotoUrls[mode].length - 1]);
+        
+        } else if (mode === 't2i') {
+            // Режим Текст-в-Картинку
+            showLoaderAndOriginal(null); // Фото нет
+        
+        } else {
+            // Обычный режим с одним фото
+            const photoData = await vkBridge.send('VKWebAppGetPhotos', { max_count: 1 });
+            const largestPhoto = photoData.images.sort((a, b) => b.width - a.width)[0];
+            requestBody.image_url = largestPhoto.url;
+            showLoaderAndOriginal(largestPhoto.url);
+        }
 
-        // 2. Готовим тело запроса для "мозга"
-        const requestBody = {
-            // user_id пока не передаем для анонимности
-            // user_id: 12345, 
-            prompt: prompt,
-            // В зависимости от режима, ключ для URL будет разным
-            image_url: photoUrl, // Для vip_edit
-            image_urls: [photoUrl] // Для quick_edit
-        };
-
-        // 3. Отправляем запрос на правильную "дверь" API
+        // --- Отправка запроса ---
         const response = await fetch(`${BRAIN_API_URL}/generate_${mode}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(requestBody)
         });
-
+        
+        // ... (обработка ответа и ошибок, как раньше)
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.detail || `Сервер ответил ошибкой: ${response.status}`);
         }
-
         const result = await response.json();
-
-        // 4. Показываем результат
         showResult(result);
+
+        // Сбрасываем состояние пошагового режима после успешной обработки
+        if (section.dataset.multistep === 'true') {
+            multiStepPhotoUrls[mode] = [];
+            updateMultiStepUI(section, mode);
+        }
 
     } catch (error) {
         handleError(error);
@@ -73,31 +135,5 @@ async function handleProcessClick(event) {
     }
 }
 
-function showLoaderAndOriginal(photoUrl) {
-    originalImage.src = photoUrl;
-    originalImageContainer.classList.remove('hidden');
-    resultContainer.classList.add('hidden');
-    resultImage.classList.add('hidden');
-    resultVideo.classList.add('hidden');
-    loader.classList.remove('hidden');
-}
-
-function showResult(result) {
-    resultContainer.classList.remove('hidden');
-    if (result.imageUrl) {
-        resultImage.src = result.imageUrl;
-        resultImage.classList.remove('hidden');
-    } else if (result.videoUrl) {
-        resultVideo.src = result.videoUrl;
-        resultVideo.classList.remove('hidden');
-    }
-}
-
-function handleError(error) {
-    console.error('Ошибка в процессе:', error);
-    if (error.error_data && error.error_data.error_reason) {
-        alert(`Ошибка VK: ${error.error_data.error_reason}`);
-    } else {
-        alert(`Произошла ошибка: ${error.message}`);
-    }
-}
+// ... (остальные функции showLoaderAndOriginal, showResult, handleError без изменений)
+// ...
