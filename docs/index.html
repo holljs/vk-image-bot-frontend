@@ -10,26 +10,46 @@
 <body>
     <div id="app">
         <h1>Нейро-художник</h1>
-        <p>Преврати свое фото в произведение искусства!</p>
-        
-        <button id="processButton">Выбрать и обработать фото</button>
+        <p>Выбери режим и преврати свое фото в произведение искусства!</p>
 
         <div id="loader" class="hidden">
             <div class="spinner"></div>
             <p>Магия в процессе, подождите...</p>
         </div>
 
-        <div class="image-container">
+        <!-- Секция для результатов -->
+        <div class="result-container">
             <div id="originalImageContainer" class="hidden">
                 <h2>Оригинал:</h2>
-                <img id="originalImage" src="" alt="Original Image">
+                <img id="originalImage" src="" alt="Original">
             </div>
-            <div id="resultImageContainer" class="hidden">
+            <div id="resultContainer" class="hidden">
                 <h2>Результат:</h2>
-                <img id="resultImage" src="" alt="Processed Image">
+                <img id="resultImage" class="hidden" src="" alt="Result">
+                <video id="resultVideo" class="hidden" controls src=""></video>
             </div>
         </div>
-        
+
+        <hr>
+
+        <!-- РЕЖИМ 1: Арт-Образ -->
+        <div class="mode-section" data-mode="vip_edit">
+            <h2>🎨 Арт-Образ (VIP-редактирование)</h2>
+            <p>Создай новый образ, сохранив свое лицо. Опиши, что хочешь увидеть.</p>
+            <input type="text" class="prompt-input" placeholder="Например: в стиле стимпанк, киборг">
+            <button class="process-button">Выбрать фото и запустить</button>
+        </div>
+
+        <hr>
+
+        <!-- РЕЖИМ 2: Фото Микс -->
+        <div class="mode-section" data-mode="quick_edit">
+            <h2>✨ Фото Микс (быстрое редактирование)</h2>
+            <p>Измени фото по текстовой инструкции.</p>
+            <input type="text" class="prompt-input" placeholder="Например: сделай волосы синими">
+            <button class="process-button">Выбрать фото и запустить</button>
+        </div>
+
     </div>
     <script src="script.js"></script>
 </body>
