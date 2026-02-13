@@ -8,31 +8,29 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div id="app">
+        <h1>Нейро-художник</h1>
+        <p>Преврати свое фото в произведение искусства!</p>
+        
+        <button id="processButton">Выбрать и обработать фото</button>
 
-    <div id="app-container">
-
-        <!-- Экран загрузки -->
-        <div id="screen-loading" class="screen">
-            <p>Загрузка...</p>
+        <div id="loader" class="hidden">
+            <div class="spinner"></div>
+            <p>Магия в процессе, подождите...</p>
         </div>
 
-        <!-- Основной экран -->
-        <div id="screen-main" class="screen" style="display: none;">
-            <h1>Нейро-художник</h1>
-            <p>Опишите картинку, которую хотите создать:</p>
-            
-            <textarea id="prompt-input" placeholder="Например, 'рыжий кот в очках пьет кофе'"></textarea>
-            
-            <button id="generate-button" class="button">🎨 Сгенерировать</button>
-
-            <div id="result-container" style="display: none;">
+        <div class="image-container">
+            <div id="originalImageContainer" class="hidden">
+                <h2>Оригинал:</h2>
+                <img id="originalImage" src="" alt="Original Image">
+            </div>
+            <div id="resultImageContainer" class="hidden">
                 <h2>Результат:</h2>
-                <img id="result-image" src="" alt="Сгенерированное изображение">
+                <img id="resultImage" src="" alt="Processed Image">
             </div>
         </div>
-
+        
     </div>
-
     <script src="script.js"></script>
 </body>
 </html>
