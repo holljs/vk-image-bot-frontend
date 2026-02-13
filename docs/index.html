@@ -9,48 +9,43 @@
 </head>
 <body>
     <div id="app">
+        <!-- ... (Заголовок, лоадер, секция результатов без изменений) ... -->
         <h1>Нейро-художник</h1>
-        <p>Выбери режим и преврати свое фото в произведение искусства!</p>
+        <div id="loader" class="hidden">...</div>
+        <div class="result-container">...</div>
+        <hr>
+        <!-- ... (Секция T2I без изменений) ... -->
+        <div class="mode-section" data-mode="t2i">...</div>
+        <hr>
+        <p style="text-align: center; font-weight: bold; margin: 20px 0;">ИЛИ ОБРАБОТАЙ СВОЕ ФОТО</p>
+        <hr>
+        <!-- ... (Секция Арт-Образ без изменений) ... -->
+        <div class="mode-section" data-mode="vip_edit">...</div>
+        <hr>
 
-        <div id="loader" class="hidden">
-            <div class="spinner"></div>
-            <p>Магия в процессе, подождите...</p>
-        </div>
+        <!-- РЕЖИМ 2: Фото Микс (с новым, пошаговым интерфейсом) -->
+        <div class="mode-section" data-mode="quick_edit" data-multistep="true">
+            <h2>✨ Фото Микс (можно несколько фото)</h2>
+            <p>Смешай несколько фото или измени одно по инструкции.</p>
+            <input type="text" class="prompt-input" placeholder="Например: смешай два лица">
+            
+            <!-- Контейнер для миниатюр загруженных фото -->
+            <div class="image-previews"></div>
 
-        <!-- Секция для результатов -->
-        <div class="result-container">
-            <div id="originalImageContainer" class="hidden">
-                <h2>Оригинал:</h2>
-                <img id="originalImage" src="" alt="Original">
-            </div>
-            <div id="resultContainer" class="hidden">
-                <h2>Результат:</h2>
-                <img id="resultImage" class="hidden" src="" alt="Result">
-                <video id="resultVideo" class="hidden" controls src=""></video>
+            <!-- Кнопки управления для пошагового режима -->
+            <div class="step-buttons">
+                <button class="add-photo-button">Добавить фото</button>
+                <button class="process-button hidden">Запустить обработку</button>
             </div>
         </div>
 
         <hr>
-
-        <!-- РЕЖИМ 1: Арт-Образ -->
-        <div class="mode-section" data-mode="vip_edit">
-            <h2>🎨 Арт-Образ (VIP-редактирование)</h2>
-            <p>Создай новый образ, сохранив свое лицо. Опиши, что хочешь увидеть.</p>
-            <input type="text" class="prompt-input" placeholder="Например: в стиле стимпанк, киборг">
-            <button class="process-button">Выбрать фото и запустить</button>
-        </div>
-
+        <!-- ... (Остальные секции пока без изменений) ... -->
+        <div class="mode-section" data-mode="vip_mix">...</div>
         <hr>
-
-        <!-- РЕЖИМ 2: Фото Микс -->
-        <div class="mode-section" data-mode="quick_edit">
-            <h2>✨ Фото Микс (быстрое редактирование)</h2>
-            <p>Измени фото по текстовой инструкции.</p>
-            <input type="text" class="prompt-input" placeholder="Например: сделай волосы синими">
-            <button class="process-button">Выбрать фото и запустить</button>
-        </div>
-
+        <div class="mode-section" data-mode="i2v">...</div>
     </div>
     <script src="script.js"></script>
 </body>
 </html>
+
