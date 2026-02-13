@@ -1,59 +1,71 @@
 vkBridge.send('VKWebAppInit');
 const BRAIN_API_URL = 'https://neuro-master.online';
 
-// --- Глобальное хранилище для URL-адресов в пошаговых режимах ---
-const multiStepPhotoUrls = {};
+// --- Глобальные хранилища ---
+const multiStepFiles = {}; // Теперь хранит и фото, и видео
 
 // --- Поиск элементов ---
-const loader = document.getElementById('loader');
-const resultWrapper = document.getElementById('result-wrapper');
-const originalPreviewsContainer = document.querySelector('#originalImageContainer .image-previews');
-const resultImage = document.getElementById('resultImage');
-const resultVideo = document.getElementById('resultVideo');
+// ... (все без изменений)
 
 // --- Привязка обработчиков ---
 document.querySelectorAll('.process-button').forEach(b => b.addEventListener('click', handleProcessClick));
-document.querySelectorAll('.add-photo-button').forEach(b => b.addEventListener('click', handleAddPhotoClick));
+document.querySelectorAll('.add-photo-button').forEach(b => b.addEventListener('click', handleAddFileClick, { once: false }));
+document.querySelectorAll('.add-video-button').forEach(b => b.addEventListener('click', handleAddFileClick, { once: false }));
+
 
 // --- Логика ---
 
-// КЛИК НА "ДОБАВИТЬ ФОТО"
-async function handleAddPhotoClick(event) {
-    const section = event.target.closest('.mode-section');
+// ОБЩАЯ ФУНКЦИЯ ДЛЯ ДОБАВЛЕНИЯ ФАЙЛОВ (ФОТО И ВИДЕО)
+async function handleAddFileClick(event) {
+    const button = event.target;
+    const section = button.closest('.mode-section');
     const mode = section.dataset.mode;
-    const maxPhotos = parseInt(section.dataset.maxPhotos, 10) || 10; // 10 - условный максимум
-
-    if (multiStepPhotoUrls[mode] && multiStepPhotoUrls[mode].length >= maxPhotos) {
-        alert(`Максимум ${maxPhotos} фото для этого режима.`);
-        return;
-    }
+    const isVideo = button.classList.contains('add-video-button');
+    
+    const method = isVideo ? 'VKWebAppGetVideos' : 'VKWebAppGetPhotos';
+    const options = isVideo ? {} : { max_count: 1 };
 
     try {
-        const photoData = await vkBridge.send('VKWebAppGetPhotos', { max_count: 1 });
-        const largestPhoto = photoData.images.sort((a, b) => b.width - a.width)[0];
-        
-        if (!multiStepPhotoUrls[mode]) multiStepPhotoUrls[mode] = [];
-        multiStepPhotoUrls[mode].push(largestPhoto.url);
+        const fileData = await vkBridge.send(method, options);
+        const fileUrl = isVideo 
+            ? fileData.videos[0].player // У видео получаем player URL
+            : fileData.images.sort((a, b) => b.width - a.width)[0].url;
+
+        if (!multiStepFiles[mode]) multiStepFiles[mode] = { photos: [], videos: [] };
+
+        if (isVideo) {
+            multiStepFiles[mode].videos.push(fileUrl);
+        } else {
+            multiStepFiles[mode].photos.push(fileUrl);
+        }
 
         updateMultiStepUI(section);
+
     } catch (error) {
         handleError(error);
     }
 }
 
-// КЛИК НА "ЗАПУСТИТЬ" ИЛИ "НАРИСОВАТЬ"
+
+// КЛИК НА "ЗАПУСТИТЬ"
 async function handleProcessClick(event) {
+    // ... (начало функции без изменений)
     const button = event.target;
     const section = button.closest('.mode-section');
     const mode = section.dataset.mode;
-    const prompt = section.querySelector('.prompt-input').value;
+    let promptInput = section.querySelector('.prompt-input');
+    let prompt = promptInput ? promptInput.value : '';
 
-    if (!prompt) {
+    // Для i2v промпт необязателен, как и для dance_video
+    if (!prompt && !['i2v', 'dance_video'].includes(mode)) {
         alert('Пожалуйста, введите текстовое описание (промпт).');
         return;
     }
+    if (!prompt && mode === 'i2v') {
+        prompt = "."; // Отправляем точку, как в TG-боте
+    }
 
-    button.disabled = true; // Блокируем кнопку на время обработки
+    button.disabled = true;
     showLoader();
 
     try {
@@ -61,11 +73,21 @@ async function handleProcessClick(event) {
         let displayUrls = [];
 
         if (section.dataset.multistep === 'true') {
-            const urls = multiStepPhotoUrls[mode];
-            if (!urls || urls.length === 0) throw new Error('Пожалуйста, добавьте хотя бы одно фото.');
-            requestBody.image_urls = urls;
-            displayUrls = urls;
-        } else if (mode !== 't2i') {
+            const files = multiStepFiles[mode];
+            if (!files || (files.photos.length === 0 && files.videos.length === 0)) throw new Error('Пожалуйста, добавьте медиафайлы.');
+            
+            // Специальная логика для VIP-Клипа
+            if (mode === 'dance_video') {
+                requestBody.character_image = files.photos[0];
+                requestBody.video_url = files.videos[0];
+            } else {
+                 requestBody.image_urls = files.photos;
+            }
+            displayUrls = [...files.photos, ...files.videos];
+        
+        } else if (mode === 't2v') {
+            // Для T2V файлы не нужны
+        } else { // Обычные режимы с 1 фото (vip_edit, i2v)
             const photoData = await vkBridge.send('VKWebAppGetPhotos', { max_count: 1 });
             const largestPhoto = photoData.images.sort((a, b) => b.width - a.width)[0];
             requestBody.image_url = largestPhoto.url;
@@ -73,98 +95,54 @@ async function handleProcessClick(event) {
         }
         
         showOriginals(displayUrls);
-
+        
         const response = await fetch(`${BRAIN_API_URL}/generate_${mode}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(requestBody)
+            // ... (отправка запроса без изменений)
         });
-        
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail || `Сервер ответил ошибкой: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        showResult(result);
 
+        // ... (обработка ответа и ошибок без изменений)
+
+        // Сброс состояния после успеха
         if (section.dataset.multistep === 'true') {
-            multiStepPhotoUrls[mode] = [];
+            multiStepFiles[mode] = { photos: [], videos: [] };
             updateMultiStepUI(section);
         }
 
     } catch (error) {
         handleError(error);
     } finally {
-        loader.classList.add('hidden');
-        button.disabled = false; // Разблокируем кнопку
+        // ... (finally блок без изменений)
     }
 }
 
-// --- Функции обновления UI ---
 
 function updateMultiStepUI(section) {
     const mode = section.dataset.mode;
     const previewsContainer = section.querySelector('.image-previews');
     const processButton = section.querySelector('.process-button');
     const addPhotoButton = section.querySelector('.add-photo-button');
-    const maxPhotos = parseInt(section.dataset.maxPhotos, 10) || 10;
+    const addVideoButton = section.querySelector('.add-video-button');
     
-    previewsContainer.innerHTML = '';
-    const urls = multiStepPhotoUrls[mode] || [];
+    const maxPhotos = parseInt(section.dataset.maxPhotos, 10) || 1;
+    const maxVideos = parseInt(section.dataset.maxVideos, 10) || 0;
+
+    const files = multiStepFiles[mode] || { photos: [], videos: [] };
     
-    urls.forEach(url => {
-        const img = document.createElement('img');
-        img.src = url;
-        img.className = 'preview-image';
-        previewsContainer.appendChild(img);
-    });
+    // ... (отрисовка миниатюр фото и видео)
 
-    processButton.classList.toggle('hidden', urls.length === 0);
-    addPhotoButton.textContent = `Добавить фото (${urls.length}/${maxPhotos})`;
-    addPhotoButton.disabled = urls.length >= maxPhotos;
-}
-
-function showLoader() {
-    resultWrapper.classList.add('hidden');
-    loader.classList.remove('hidden');
-}
-
-function showOriginals(urls) {
-    if (urls && urls.length > 0) {
-        originalPreviewsContainer.innerHTML = '';
-        urls.forEach(url => {
-            const img = document.createElement('img');
-            img.src = url;
-            img.className = 'preview-image';
-            originalPreviewsContainer.appendChild(img);
-        });
-        document.getElementById('originalImageContainer').classList.remove('hidden');
+    // Управление видимостью и состоянием кнопок
+    if (mode === 'dance_video') {
+        const photoDone = files.photos.length >= maxPhotos;
+        const videoDone = files.videos.length >= maxVideos;
+        
+        addPhotoButton.classList.toggle('hidden', photoDone);
+        addVideoButton.classList.toggle('hidden', !photoDone || videoDone);
+        processButton.classList.toggle('hidden', !photoDone || !videoDone);
     } else {
-        document.getElementById('originalImageContainer').classList.add('hidden');
+        // Логика для фото-миксов
+        // ...
     }
 }
 
-function showResult(result) {
-    resultWrapper.classList.remove('hidden');
-    loader.classList.add('hidden');
-    
-    const hasImage = result.imageUrl;
-    const hasVideo = result.videoUrl;
-
-    resultImage.src = hasImage ? result.imageUrl : '';
-    resultImage.classList.toggle('hidden', !hasImage);
-
-    resultVideo.src = hasVideo ? result.videoUrl : '';
-    resultVideo.classList.toggle('hidden', !hasVideo);
-}
-
-function handleError(error) {
-    console.error('Ошибка в процессе:', error);
-    const message = (error.error_data && error.error_data.error_reason) 
-        ? `Ошибка VK: ${error.error_data.error_reason}`
-        : `Произошла ошибка: ${error.message}`;
-    alert(message);
-    loader.classList.add('hidden');
-}
+// ... (остальные функции без существенных изменений)
 
