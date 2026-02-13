@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Нейро-художник</title>
+    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="app-container">
+
+        <!-- Экран загрузки -->
+        <div id="screen-loading" class="screen">
+            <p>Загрузка...</p>
+        </div>
+
+        <!-- Основной экран -->
+        <div id="screen-main" class="screen" style="display: none;">
+            <h1>Нейро-художник</h1>
+            <p>Опишите картинку, которую хотите создать:</p>
+            
+            <textarea id="prompt-input" placeholder="Например, 'рыжий кот в очках пьет кофе'"></textarea>
+            
+            <button id="generate-button" class="button">🎨 Сгенерировать</button>
+
+            <div id="result-container" style="display: none;">
+                <h2>Результат:</h2>
+                <img id="result-image" src="" alt="Сгенерированное изображение">
+            </div>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
