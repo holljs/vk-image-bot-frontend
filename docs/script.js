@@ -1,29 +1,19 @@
 vkBridge.send('VKWebAppInit');
-
 const BRAIN_API_URL = 'https://neuro-master.online';
 
-// --- Глобальные переменные ---
-const multiStepPhotoUrls = {}; 
+// --- Глобальное хранилище для URL-адресов в пошаговых режимах ---
+const multiStepPhotoUrls = {};
 
 // --- Поиск элементов ---
 const loader = document.getElementById('loader');
-const originalImageContainer = document.getElementById('originalImageContainer');
-const originalImage = document.getElementById('originalImage');
-const resultContainer = document.getElementById('resultContainer');
+const resultWrapper = document.getElementById('result-wrapper');
+const originalPreviewsContainer = document.querySelector('#originalImageContainer .image-previews');
 const resultImage = document.getElementById('resultImage');
 const resultVideo = document.getElementById('resultVideo');
 
 // --- Привязка обработчиков ---
-
-// 1. Привязываем обработчики ко всем кнопкам, которые должны ЗАПУСКАТЬ обработку
-document.querySelectorAll('.process-button').forEach(button => {
-    button.addEventListener('click', handleProcessClick);
-});
-
-// 2. Привязываем обработчики ко всем кнопкам, которые должны ДОБАВЛЯТЬ фото
-document.querySelectorAll('.add-photo-button').forEach(button => {
-    button.addEventListener('click', handleAddPhotoClick);
-});
+document.querySelectorAll('.process-button').forEach(b => b.addEventListener('click', handleProcessClick));
+document.querySelectorAll('.add-photo-button').forEach(b => b.addEventListener('click', handleAddPhotoClick));
 
 // --- Логика ---
 
@@ -31,68 +21,59 @@ document.querySelectorAll('.add-photo-button').forEach(button => {
 async function handleAddPhotoClick(event) {
     const section = event.target.closest('.mode-section');
     const mode = section.dataset.mode;
-    
-    console.log(`Нажата кнопка 'Добавить фото' для режима: ${mode}`); // Строка для отладки
+    const maxPhotos = parseInt(section.dataset.maxPhotos, 10) || 10; // 10 - условный максимум
+
+    if (multiStepPhotoUrls[mode] && multiStepPhotoUrls[mode].length >= maxPhotos) {
+        alert(`Максимум ${maxPhotos} фото для этого режима.`);
+        return;
+    }
 
     try {
-        // Вот здесь должен вызываться VK Bridge и появляться ошибка в браузере
         const photoData = await vkBridge.send('VKWebAppGetPhotos', { max_count: 1 });
-        
         const largestPhoto = photoData.images.sort((a, b) => b.width - a.width)[0];
         
-        if (!multiStepPhotoUrls[mode]) {
-            multiStepPhotoUrls[mode] = [];
-        }
+        if (!multiStepPhotoUrls[mode]) multiStepPhotoUrls[mode] = [];
         multiStepPhotoUrls[mode].push(largestPhoto.url);
 
-        updateMultiStepUI(section, mode);
-
+        updateMultiStepUI(section);
     } catch (error) {
-        // Здесь мы должны увидеть ошибку 'unsupported platform'
         handleError(error);
     }
 }
 
 // КЛИК НА "ЗАПУСТИТЬ" ИЛИ "НАРИСОВАТЬ"
 async function handleProcessClick(event) {
-    // ... (эта функция пока остается без изменений, она будет вызвана второй)
-    const section = event.target.closest('.mode-section');
+    const button = event.target;
+    const section = button.closest('.mode-section');
     const mode = section.dataset.mode;
-    const promptInput = section.querySelector('.prompt-input');
-    let prompt = promptInput.value;
-    
-    if (!prompt && mode !== 'i2v') { 
+    const prompt = section.querySelector('.prompt-input').value;
+
+    if (!prompt) {
         alert('Пожалуйста, введите текстовое описание (промпт).');
         return;
     }
-    if (!prompt && mode === 'i2v') {
-        prompt = ".";
-    }
+
+    button.disabled = true; // Блокируем кнопку на время обработки
+    showLoader();
 
     try {
-        let requestBody = { prompt };
-        let displayUrl = null; // URL для показа в блоке "оригинал"
-        
+        const requestBody = { prompt };
+        let displayUrls = [];
+
         if (section.dataset.multistep === 'true') {
-            if (!multiStepPhotoUrls[mode] || multiStepPhotoUrls[mode].length === 0) {
-                alert('Пожалуйста, добавьте хотя бы одно фото.');
-                return;
-            }
-            requestBody.image_urls = multiStepPhotoUrls[mode];
-            displayUrl = multiStepPhotoUrls[mode][multiStepPhotoUrls[mode].length - 1];
-        
-        } else if (mode === 't2i') {
-            displayUrl = null;
-        
-        } else {
+            const urls = multiStepPhotoUrls[mode];
+            if (!urls || urls.length === 0) throw new Error('Пожалуйста, добавьте хотя бы одно фото.');
+            requestBody.image_urls = urls;
+            displayUrls = urls;
+        } else if (mode !== 't2i') {
             const photoData = await vkBridge.send('VKWebAppGetPhotos', { max_count: 1 });
             const largestPhoto = photoData.images.sort((a, b) => b.width - a.width)[0];
             requestBody.image_url = largestPhoto.url;
-            displayUrl = largestPhoto.url;
+            displayUrls = [largestPhoto.url];
         }
-
-        showLoaderAndOriginal(displayUrl);
         
+        showOriginals(displayUrls);
+
         const response = await fetch(`${BRAIN_API_URL}/generate_${mode}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -103,72 +84,87 @@ async function handleProcessClick(event) {
             const errorData = await response.json();
             throw new Error(errorData.detail || `Сервер ответил ошибкой: ${response.status}`);
         }
+        
         const result = await response.json();
         showResult(result);
 
         if (section.dataset.multistep === 'true') {
             multiStepPhotoUrls[mode] = [];
-            updateMultiStepUI(section, mode);
+            updateMultiStepUI(section);
         }
 
     } catch (error) {
         handleError(error);
     } finally {
         loader.classList.add('hidden');
+        button.disabled = false; // Разблокируем кнопку
     }
 }
 
+// --- Функции обновления UI ---
 
-function updateMultiStepUI(section, mode) {
+function updateMultiStepUI(section) {
+    const mode = section.dataset.mode;
     const previewsContainer = section.querySelector('.image-previews');
     const processButton = section.querySelector('.process-button');
-    if (!previewsContainer || !processButton) return;
-
+    const addPhotoButton = section.querySelector('.add-photo-button');
+    const maxPhotos = parseInt(section.dataset.maxPhotos, 10) || 10;
+    
     previewsContainer.innerHTML = '';
-    (multiStepPhotoUrls[mode] || []).forEach(url => {
+    const urls = multiStepPhotoUrls[mode] || [];
+    
+    urls.forEach(url => {
         const img = document.createElement('img');
         img.src = url;
         img.className = 'preview-image';
         previewsContainer.appendChild(img);
     });
 
-    if (multiStepPhotoUrls[mode] && multiStepPhotoUrls[mode].length > 0) {
-        processButton.classList.remove('hidden');
-    } else {
-        processButton.classList.add('hidden');
-    }
+    processButton.classList.toggle('hidden', urls.length === 0);
+    addPhotoButton.textContent = `Добавить фото (${urls.length}/${maxPhotos})`;
+    addPhotoButton.disabled = urls.length >= maxPhotos;
 }
 
-function showLoaderAndOriginal(photoUrl) {
-    if (photoUrl) {
-        originalImage.src = photoUrl;
-        originalImageContainer.classList.remove('hidden');
-    } else {
-        originalImageContainer.classList.add('hidden');
-    }
-    resultContainer.classList.add('hidden');
-    resultImage.classList.add('hidden');
-    resultVideo.classList.add('hidden');
+function showLoader() {
+    resultWrapper.classList.add('hidden');
     loader.classList.remove('hidden');
 }
 
-function showResult(result) {
-    resultContainer.classList.remove('hidden');
-    if (result.imageUrl) {
-        resultImage.src = result.imageUrl;
-        resultImage.classList.remove('hidden');
-    } else if (result.videoUrl) {
-        resultVideo.src = result.videoUrl;
-        resultVideo.classList.remove('hidden');
+function showOriginals(urls) {
+    if (urls && urls.length > 0) {
+        originalPreviewsContainer.innerHTML = '';
+        urls.forEach(url => {
+            const img = document.createElement('img');
+            img.src = url;
+            img.className = 'preview-image';
+            originalPreviewsContainer.appendChild(img);
+        });
+        document.getElementById('originalImageContainer').classList.remove('hidden');
+    } else {
+        document.getElementById('originalImageContainer').classList.add('hidden');
     }
+}
+
+function showResult(result) {
+    resultWrapper.classList.remove('hidden');
+    loader.classList.add('hidden');
+    
+    const hasImage = result.imageUrl;
+    const hasVideo = result.videoUrl;
+
+    resultImage.src = hasImage ? result.imageUrl : '';
+    resultImage.classList.toggle('hidden', !hasImage);
+
+    resultVideo.src = hasVideo ? result.videoUrl : '';
+    resultVideo.classList.toggle('hidden', !hasVideo);
 }
 
 function handleError(error) {
     console.error('Ошибка в процессе:', error);
-    if (error.error_data && error.error_data.error_reason) {
-        alert(`Ошибка VK: ${error.error_data.error_reason}`);
-    } else {
-        alert(`Произошла ошибка: ${error.message}`);
-    }
+    const message = (error.error_data && error.error_data.error_reason) 
+        ? `Ошибка VK: ${error.error_data.error_reason}`
+        : `Произошла ошибка: ${error.message}`;
+    alert(message);
+    loader.classList.add('hidden');
 }
 
