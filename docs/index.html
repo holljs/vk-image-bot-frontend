@@ -9,30 +9,55 @@
 </head>
 <body>
     <div id="app">
-        <!-- ... (Заголовок, лоадер, секция результатов без изменений) ... -->
         <h1>Нейро-художник</h1>
-        <div id="loader" class="hidden">...</div>
-        <div class="result-container">...</div>
-        <hr>
-        <!-- ... (Секция T2I без изменений) ... -->
-        <div class="mode-section" data-mode="t2i">...</div>
-        <hr>
-        <p style="text-align: center; font-weight: bold; margin: 20px 0;">ИЛИ ОБРАБОТАЙ СВОЕ ФОТО</p>
-        <hr>
-        <!-- ... (Секция Арт-Образ без изменений) ... -->
-        <div class="mode-section" data-mode="vip_edit">...</div>
+
+        <div id="loader" class="hidden">
+            <div class="spinner"></div>
+            <p>Магия в процессе, подождите...</p>
+        </div>
+
+        <div id="result-wrapper" class="hidden">
+            <div class="result-container">
+                <div id="originalImageContainer" class="hidden">
+                    <h2>Оригинал:</h2>
+                    <div class="image-previews"></div>
+                </div>
+                <div id="resultContainer">
+                    <h2>Результат:</h2>
+                    <img id="resultImage" class="hidden" src="" alt="Result">
+                    <video id="resultVideo" class="hidden" controls src=""></video>
+                </div>
+            </div>
+        </div>
+        
         <hr>
 
-        <!-- РЕЖИМ 2: Фото Микс (с новым, пошаговым интерфейсом) -->
-        <div class="mode-section" data-mode="quick_edit" data-multistep="true">
-            <h2>✨ Фото Микс (можно несколько фото)</h2>
-            <p>Смешай несколько фото или измени одно по инструкции.</p>
+        <!-- РЕЖИМ 0: Текст в Картинку -->
+        <div class="mode-section" data-mode="t2i">
+            <h2>🎨 Нейро-Художник</h2>
+            <p>Опишите картинку, которую хотите создать.</p>
+            <input type="text" class="prompt-input" placeholder="Например: кот в скафандре на луне">
+            <button class="process-button">Нарисовать</button>
+        </div>
+
+        <hr>
+
+        <!-- РЕЖИМ 1: Арт-Образ (1 фото) -->
+        <div class="mode-section" data-mode="vip_edit">
+            <h2>🎨 Арт-Образ</h2>
+            <p>Создай креативный портрет, сохранив свое лицо.</p>
+            <input type="text" class="prompt-input" placeholder="Например: сделай из меня рыцаря">
+            <button class="process-button">Выбрать 1 фото и запустить</button>
+        </div>
+
+        <hr>
+
+        <!-- РЕЖИМ 2: Фото Микс (до 3-х фото) -->
+        <div class="mode-section" data-mode="quick_edit" data-multistep="true" data-max-photos="3">
+            <h2>✨ Фото Микс</h2>
+            <p>Продвинутое смешивание до 3-х фото по инструкции.</p>
             <input type="text" class="prompt-input" placeholder="Например: смешай два лица">
-            
-            <!-- Контейнер для миниатюр загруженных фото -->
             <div class="image-previews"></div>
-
-            <!-- Кнопки управления для пошагового режима -->
             <div class="step-buttons">
                 <button class="add-photo-button">Добавить фото</button>
                 <button class="process-button hidden">Запустить обработку</button>
@@ -40,12 +65,20 @@
         </div>
 
         <hr>
-        <!-- ... (Остальные секции пока без изменений) ... -->
-        <div class="mode-section" data-mode="vip_mix">...</div>
-        <hr>
-        <div class="mode-section" data-mode="i2v">...</div>
+
+        <!-- РЕЖИМ 3: VIP-Микс (несколько фото) -->
+        <div class="mode-section" data-mode="vip_mix" data-multistep="true">
+            <h2>👑 VIP-Микс</h2>
+            <p>Фотореалистичное смешивание нескольких фото.</p>
+            <input type="text" class="prompt-input" placeholder="Например: девушка на фоне Токио">
+            <div class="image-previews"></div>
+            <div class="step-buttons">
+                <button class="add-photo-button">Добавить фото</button>
+                <button class="process-button hidden">Запустить обработку</button>
+            </div>
+        </div>
+
     </div>
     <script src="script.js"></script>
 </body>
 </html>
-
