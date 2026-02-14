@@ -1,7 +1,6 @@
 vkBridge.send('VKWebAppInit').catch(error => console.error("VK Bridge Init Error:", error));
 
-const BRAIN_API_URL = 'https://neuro-master.online'; // <-- Возвращаем https и убираем порт!
-
+javascript const BRAIN_API_URL = 'https://neuro-master.online';
 // --- Глобальное хранилище для пошаговых режимов ---
 const multiStepFiles = {};
 
