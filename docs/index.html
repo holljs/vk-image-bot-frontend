@@ -7,41 +7,31 @@
     <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
     <link rel="stylesheet" href="style.css">
     <style>
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.9);
+        .step-instruction {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
         }
-        .modal-content {
-            margin: auto;
-            display: block;
-            max-width: 90%;
-            max-height: 90%;
+        .preview-image {
+            max-width: 100px;
+            max-height: 100px;
+            margin: 5px;
+            object-fit: cover;
         }
-        .close {
-            position: absolute;
-            top: 15px;
-            right: 35px;
-            color: #f1f1f1;
-            font-size: 40px;
-            font-weight: bold;
-            cursor: pointer;
+        .hidden { display: none; }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid #3498db;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
         }
-        .download-button {
-            display: block;
-            margin: 20px auto;
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -62,17 +52,21 @@
                     <h2>Результат:</h2>
                     <img id="resultImage" class="hidden" src="" alt="Result">
                     <video id="resultVideo" class="hidden" controls src=""></video>
-                    <button id="downloadButton" class="download-button hidden">Скачать результат</button>
                 </div>
             </div>
         </div>
 
-        <div id="imageModal" class="modal">
-            <span class="close">&times;</span>
-            <img class="modal-content" id="modalImage">
-        </div>
-
         <hr>
+        <div class="step-instruction">
+            <h3>📌 Порядок действий:</h3>
+            <ol>
+                <li>Сначала напишите промпт в поле ввода</li>
+                <li>Затем добавляйте фотографии кнопкой "Добавить фото"</li>
+                <li>Нажмите "Запустить обработку"</li>
+            </ol>
+        </div>
+        <hr>
+
         <!-- РЕЖИМ 0: Текст в Картинку -->
         <div class="mode-section" data-mode="t2i">
             <h2>🎨 Нейро-Художник</h2>
@@ -81,17 +75,19 @@
             <button class="process-button">Нарисовать</button>
         </div>
         <hr>
+
         <p style="text-align: center; font-weight: bold; margin: 20px 0;">📸 ОБРАБОТКА ФОТО 📸</p>
         <hr>
+
         <!-- РЕЖИМ 1: Арт-Образ (1 фото) -->
         <div class="mode-section" data-mode="vip_edit">
             <h2>🎨 Арт-Образ</h2>
             <p>Создай креативный портрет, сохранив свое лицо.</p>
             <input type="text" class="prompt-input" placeholder="Например: сделай из меня рыцаря">
-            <input type="file" id="vipEditFileInput" accept="image/*" style="display: none;">
-            <button class="process-button" onclick="document.getElementById('vipEditFileInput').click()">Выбрать 1 фото и запустить</button>
+            <button class="process-button">Выбрать 1 фото и запустить</button>
         </div>
         <hr>
+
         <!-- РЕЖИМ 2: Фото Микс (до 3-х фото) -->
         <div class="mode-section" data-mode="quick_edit" data-multistep="true" data-max-photos="3">
             <h2>✨ Фото Микс</h2>
@@ -99,12 +95,12 @@
             <input type="text" class="prompt-input" placeholder="Например: смешай два лица">
             <div class="image-previews"></div>
             <div class="step-buttons">
-                <input type="file" id="quickEditFileInput" accept="image/*" multiple style="display: none;">
-                <button class="add-photo-button" onclick="document.getElementById('quickEditFileInput').click()">Добавить фото</button>
+                <button class="add-photo-button">Добавить фото (0/3)</button>
                 <button class="process-button hidden">Запустить обработку</button>
             </div>
         </div>
         <hr>
+
         <!-- РЕЖИМ 3: VIP-Микс (до 5-ти фото) -->
         <div class="mode-section" data-mode="vip_mix" data-multistep="true" data-max-photos="5">
             <h2>👑 VIP-Микс</h2>
@@ -112,24 +108,24 @@
             <input type="text" class="prompt-input" placeholder="Например: девушка на фоне Токио">
             <div class="image-previews"></div>
             <div class="step-buttons">
-                <input type="file" id="vipMixFileInput" accept="image/*" multiple style="display: none;">
-                <button class="add-photo-button" onclick="document.getElementById('vipMixFileInput').click()">Добавить фото</button>
+                <button class="add-photo-button">Добавить фото (0/5)</button>
                 <button class="process-button hidden">Запустить обработку</button>
             </div>
         </div>
         <hr>
+
         <p style="text-align: center; font-weight: bold; margin: 20px 0;">✨ ВИДЕО-МАГИЯ ✨</p>
         <hr>
+
         <!-- РЕЖИМ 4: Живое Фото (I2V) -->
         <div class="mode-section" data-mode="i2v">
             <h2>✨ Живое Фото</h2>
             <p>Оживи свою фотографию! Можешь задать сценарий анимации.</p>
             <input type="text" class="prompt-input" placeholder="Например: камера летит вперед (или оставь пустым)">
-            <input type="file" id="i2vFileInput" accept="image/*" style="display: none;">
-            <button class="process-button" onclick="document.getElementById('i2vFileInput').click()">Выбрать 1 фото и анимировать</button>
+            <button class="process-button">Выбрать 1 фото и анимировать</button>
         </div>
-
         <hr>
+
         <!-- РЕЖИМ 5: Текст в Видео (T2V) -->
         <div class="mode-section" data-mode="t2v">
             <h2>🎬 Видео-Клип</h2>
@@ -138,33 +134,34 @@
             <button class="process-button">Создать видео</button>
         </div>
         <hr>
+
         <!-- РЕЖИМ 6: VIP-Клип (Танцы) -->
         <div class="mode-section" data-mode="vip_clip" data-multistep="true" data-max-photos="1" data-max-videos="1">
             <h2>🎬 VIP-Клип (Танцы)</h2>
             <p>Перенеси персонажа с фото в любое видео с танцем!</p>
             <div class="image-previews"></div>
             <div class="step-buttons">
-                <input type="file" id="vipClipPhotoInput" accept="image/*" style="display: none;">
-                <button class="add-photo-button" onclick="document.getElementById('vipClipPhotoInput').click()">1. Добавить фото персонажа</button>
-                <input type="file" id="vipClipVideoInput" accept="video/*" style="display: none;">
-                <button class="add-video-button hidden" onclick="document.getElementById('vipClipVideoInput').click()">2. Добавить видео с танцем</button>
+                <button class="add-photo-button">1. Добавить фото персонажа</button>
+                <button class="add-video-button hidden">2. Добавить видео с танцем</button>
             </div>
         </div>
         <hr>
+
         <p style="text-align: center; font-weight: bold; margin: 20px 0;">🎙️ АУДИО И ТЕКСТ 🎙️</p>
         <hr>
+
         <!-- РЕЖИМ 7: Говорящее Фото -->
         <div class="mode-section" data-mode="talking_photo" data-multistep="true" data-max-photos="1" data-max-audios="1">
             <h2>🗣️ Говорящее Фото</h2>
             <p>Оживи фото своим голосом (или любым звуком)!</p>
             <div class="image-previews"></div>
             <div class="step-buttons">
-                <input type="file" id="talkingPhotoInput" accept="image/*" style="display: none;">
-                <button class="add-photo-button" onclick="document.getElementById('talkingPhotoInput').click()">1. Добавить фото</button>
+                <button class="add-photo-button">1. Добавить фото</button>
                 <button class="record-audio-button hidden">2. Записать голос (до 20 сек)</button>
             </div>
         </div>
         <hr>
+
         <!-- РЕЖИМ 8: Нейро-Музыка -->
         <div class="mode-section" data-mode="music">
             <h2>🎵 Нейро-Музыка</h2>
@@ -178,8 +175,10 @@
                 <button class="style-button" data-prompt="Smooth Jazz, Saxophone, Relaxing">🎷 Расслабляющий Джаз</button>
                 <button class="style-button" data-prompt="Cinematic, Orchestral, Epic, Trailer">🎻 Кинематографичный</button>
             </div>
+            <button class="process-button">Создать музыку</button>
         </div>
         <hr>
+
         <!-- РЕЖИМ 9: Нейро-Помощник -->
         <div class="mode-section" data-mode="chat">
             <h2>🧠 Нейро-Помощник</h2>
