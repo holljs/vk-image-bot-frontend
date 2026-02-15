@@ -10,12 +10,10 @@
 <body>
     <div id="app">
         <h1>Нейро-художник</h1>
-
         <div id="loader" class="hidden">
             <div class="spinner"></div>
             <p>Магия в процессе, подождите...</p>
         </div>
-
         <div id="result-wrapper" class="hidden">
             <div class="result-container">
                 <div id="originalImageContainer" class="hidden">
@@ -31,7 +29,6 @@
         </div>
         
         <hr>
-
         <!-- РЕЖИМ 0: Текст в Картинку -->
         <div class="mode-section" data-mode="t2i">
             <h2>🎨 Нейро-Художник</h2>
@@ -39,11 +36,9 @@
             <input type="text" class="prompt-input" placeholder="Например: кот в скафандре на луне">
             <button class="process-button">Нарисовать</button>
         </div>
-
         <hr>
         <p style="text-align: center; font-weight: bold; margin: 20px 0;">📸 ОБРАБОТКА ФОТО 📸</p>
         <hr>
-
         <!-- РЕЖИМ 1: Арт-Образ (1 фото) -->
         <div class="mode-section" data-mode="vip_edit">
             <h2>🎨 Арт-Образ</h2>
@@ -51,9 +46,7 @@
             <input type="text" class="prompt-input" placeholder="Например: сделай из меня рыцаря">
             <button class="process-button">Выбрать 1 фото и запустить</button>
         </div>
-
         <hr>
-
         <!-- РЕЖИМ 2: Фото Микс (до 3-х фото) -->
         <div class="mode-section" data-mode="quick_edit" data-multistep="true" data-max-photos="3">
             <h2>✨ Фото Микс</h2>
@@ -65,9 +58,7 @@
                 <button class="process-button hidden">Запустить обработку</button>
             </div>
         </div>
-
         <hr>
-
         <!-- РЕЖИМ 3: VIP-Микс (до 5-ти фото) -->
         <div class="mode-section" data-mode="vip_mix" data-multistep="true" data-max-photos="5">
             <h2>👑 VIP-Микс</h2>
@@ -79,11 +70,9 @@
                 <button class="process-button hidden">Запустить обработку</button>
             </div>
         </div>
-
         <hr>
         <p style="text-align: center; font-weight: bold; margin: 20px 0;">✨ ВИДЕО-МАГИЯ ✨</p>
         <hr>
-
         <!-- РЕЖИМ 4: Живое Фото (I2V) -->
         <div class="mode-section" data-mode="i2v">
             <h2>✨ Живое Фото</h2>
@@ -93,7 +82,6 @@
         </div>
         
         <hr>
-
         <!-- РЕЖИM 5: Текст в Видео (T2V) -->
         <div class="mode-section" data-mode="t2v">
             <h2>🎬 Видео-Клип</h2>
@@ -101,11 +89,9 @@
             <input type="text" class="prompt-input" placeholder="Например: дрон пролетает над горами">
             <button class="process-button">Создать видео</button>
         </div>
-
         <hr>
-
         <!-- РЕЖИМ 6: VIP-Клип (Танцы) -->
-        <div class="mode-section" data-mode="dance_video" data-multistep="true" data-max-photos="1" data-max-videos="1">
+        <div class="mode-section" data-mode="vip_clip" data-multistep="true" data-max-photos="1" data-max-videos="1">
             <h2>🎬 VIP-Клип (Танцы)</h2>
             <p>Перенеси персонажа с фото в любое видео с танцем!</p>
             
@@ -114,14 +100,11 @@
             <div class="step-buttons">
                 <button class="add-photo-button">1. Добавить фото персонажа</button>
                 <button class="add-video-button hidden">2. Добавить видео с танцем</button>
-                <button class="process-button hidden">Запустить обработку</button>
             </div>
         </div>
-
         <hr>
         <p style="text-align: center; font-weight: bold; margin: 20px 0;">🎙️ АУДИО И ТЕКСТ 🎙️</p>
         <hr>
-
         <!-- РЕЖИМ 7: Говорящее Фото -->
         <div class="mode-section" data-mode="talking_photo" data-multistep="true" data-max-photos="1" data-max-audios="1">
             <h2>🗣️ Говорящее Фото</h2>
@@ -130,12 +113,9 @@
             <div class="step-buttons">
                 <button class="add-photo-button">1. Добавить фото</button>
                 <button class="record-audio-button hidden">2. Записать голос (до 20 сек)</button>
-                <button class="process-button hidden">Запустить обработку</button>
             </div>
         </div>
-
         <hr>
-
         <!-- РЕЖИМ 8: Нейро-Музыка -->
         <div class="mode-section" data-mode="music">
             <h2>🎵 Нейро-Музыка</h2>
@@ -150,9 +130,7 @@
                 <button class="style-button" data-prompt="Cinematic, Orchestral, Epic, Trailer">🎻 Кинематографичный</button>
             </div>
         </div>
-
         <hr>
-
         <!-- РЕЖИМ 9: Нейро-Помощник -->
         <div class="mode-section" data-mode="chat">
             <h2>🧠 Нейро-Помощник</h2>
@@ -160,8 +138,7 @@
             <textarea class="prompt-input" rows="3" placeholder="Например: напиши пост про осень..."></textarea>
             <button class="process-button">Отправить</button>
         </div>
-
     </div>
-    <script src="script.js"></script>
+    <script src="script.js?v=3"></script>
 </body>
 </html>
