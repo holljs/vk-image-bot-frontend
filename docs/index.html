@@ -6,11 +6,21 @@
     <title>Нейро-художник</title>
     <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
     <link rel="stylesheet" href="style.css">
+    <style>
+        .hidden { display: none; }
+        .spinner { border: 4px solid rgba(0, 0, 0, 0.1); border-radius: 50%; border-top: 4px solid #3498db; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .preview-image { max-width: 100px; max-height: 100px; margin: 5px; }
+        .download-button { display: block; margin: 20px auto; padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.9); }
+        .modal-content { margin: auto; display: block; max-width: 90%; max-height: 90%; }
+        .close { position: absolute; top: 15px; right: 35px; color: #f1f1f1; font-size: 40px; font-weight: bold; cursor: pointer; }
+    </style>
 </head>
 <body>
     <div id="app">
         <h1>Нейро-художник vFinal</h1>
-        
+
         <!-- Загрузчик -->
         <div id="loader" class="hidden">
             <div class="spinner"></div>
@@ -25,9 +35,14 @@
                 <video id="resultVideo" class="hidden" controls src=""></video>
             </div>
             <p class="hint">Нажмите на картинку, чтобы открыть оригинал</p>
-            <button id="downloadButton" class="download-button">Скачать результат</button>
+            <button id="downloadButton" class="download-button hidden">Скачать результат</button>
         </div>
-        
+
+        <div id="imageModal" class="modal">
+            <span class="close">&times;</span>
+            <img class="modal-content" id="modalImage">
+        </div>
+
         <hr>
 
         <!-- РЕЖИМ 0: Текст в Картинку -->
@@ -41,7 +56,7 @@
         <hr>
         <p style="text-align: center; font-weight: bold; margin: 20px 0;">📸 ОБРАБОТКА ФОТО 📸</p>
         <hr>
-        
+
         <!-- РЕЖИМ 1: Арт-Образ -->
         <div class="mode-section" data-mode="vip_edit" data-max-photos="1">
             <h2>🎨 Арт-Образ</h2>
@@ -119,16 +134,12 @@
         <hr>
 
         <!-- РЕЖИМ 6: VIP-Клип (Танцы) -->
-        <!-- Для этого режима нам нужно ДВА инпута: для фото и для видео -->
         <div class="mode-section" data-mode="vip_clip" data-max-photos="1">
             <h2>🎬 VIP-Клип (Танцы)</h2>
             <p>Перенеси персонажа с фото в любое видео с танцем!</p>
             <div class="image-previews"></div>
-            
-            <!-- Два разных инпута -->
             <input type="file" class="file-upload-input hidden" accept="image/*">
             <input type="file" class="video-upload-input hidden" accept="video/*">
-            
             <div class="step-buttons">
                 <button class="universal-upload-button">1. Выбрать фото персонажа</button>
                 <button class="universal-video-button">2. Выбрать видео танца</button>
@@ -141,15 +152,12 @@
         <hr>
 
         <!-- РЕЖИМ 7: Говорящее Фото -->
-        <!-- Для этого режима нам нужно фото и кнопка записи (которую мы пока уберем и заменим на выбор аудио) -->
         <div class="mode-section" data-mode="talking_photo" data-max-photos="1">
             <h2>🗣️ Говорящее Фото</h2>
             <p>Оживи фото! Выберите фото и аудио-файл.</p>
             <div class="image-previews"></div>
-            
             <input type="file" class="file-upload-input hidden" accept="image/*">
             <input type="file" class="audio-upload-input hidden" accept="audio/*">
-            
             <div class="step-buttons">
                 <button class="universal-upload-button">1. Выбрать фото</button>
                 <button class="universal-audio-button">2. Выбрать аудио</button>
@@ -158,7 +166,7 @@
         </div>
 
         <hr>
-        
+
         <!-- РЕЖИМ 8: Нейро-Помощник -->
         <div class="mode-section" data-mode="chat">
             <h2>🧠 Нейро-Помощник</h2>
@@ -174,12 +182,11 @@
             <textarea class="prompt-input" rows="3" placeholder="Текст песни..."></textarea>
             <p>2. Выберите стиль:</p>
             <div class="music-styles">
-                <button class="process-button" data-style="Epic Rock">Рок</button>
-                <button class="process-button" data-style="Pop">Поп</button>
-                <button class="process-button" data-style="Rap">Рэп</button>
+                <button class="style-button" data-style="Epic Rock">Рок</button>
+                <button class="style-button" data-style="Pop">Поп</button>
+                <button class="style-button" data-style="Rap">Рэп</button>
             </div>
         </div>
-
     </div>
     <script src="script.js?v=21"></script>
 </body>
