@@ -9,16 +9,18 @@
 </head>
 <body>
     <div id="app">
-        <h1>Нейро-художник v3.0</h1>
+        <h1>Нейро-художник v4.0</h1>
+
         <div id="loader" class="hidden">
             <div class="spinner"></div>
             <p>Магия в процессе, подождите...</p>
         </div>
+
         <div id="result-wrapper" class="hidden">
             <div class="result-container">
                 <div id="originalImageContainer" class="hidden">
                     <h2>Оригинал:</h2>
-                    <div class="image-previews"></div>
+                    <div id="original-previews" class="image-previews"></div>
                 </div>
                 <div id="resultContainer">
                     <h2>Результат:</h2>
@@ -29,22 +31,31 @@
         </div>
         
         <hr>
-        <!-- РЕЖИМ: Арт-Образ (упрощенный) -->
+
+        <!-- РЕЖИМ: Арт-Образ (ПРАВИЛЬНАЯ ЛОГИКА) -->
         <div class="mode-section" data-mode="vip_edit">
             <h2>🎨 Арт-Образ</h2>
-            <p>Создай креативный портрет, сохранив свое лицо.</p>
-            <input type="text" id="vip-edit-prompt" class="prompt-input" placeholder="Например: сделай из меня рыцаря">
             
-            <!-- Скрытый input для выбора файла -->
-            <input type="file" id="vip-edit-upload" accept="image/*" class="hidden">
-            
-            <!-- Видимая кнопка, которая нажимает на скрытый input -->
-            <button onclick="document.getElementById('vip-edit-upload').click();">Выбрать фото с устройства</button>
-        </div>
+            <!-- Контейнер для превью фото -->
+            <div class="image-previews" id="vip-edit-previews"></div>
 
-        <!-- ... (остальные режимы пока можно закомментировать или оставить) ... -->
+            <!-- Кнопка выбора фото -->
+            <button onclick="document.getElementById('vip-edit-upload').click();">1. Выбрать фото</button>
+            <input type="file" id="vip-edit-upload" accept="image/*" class="hidden">
+
+            <hr>
+            
+            <!-- Поле для промпта -->
+            <p>2. Напишите, что нужно сделать</p>
+            <input type="text" id="vip-edit-prompt" class="prompt-input" placeholder="Например: сделай из меня рыцаря">
+
+            <!-- Кнопка запуска, изначально скрыта -->
+            <button id="vip-edit-process" class="process-button hidden">3. Нарисовать!</button>
+        </div>
+        
+        <!-- Мы пока оставим только один этот режим, чтобы отладить его до идеала -->
         
     </div>
-    <script src="script.js?v=4"></script> <!-- Снова меняем версию, чтобы сбросить кеш -->
+    <script src="script.js?v=5"></script> <!-- Снова меняем версию, чтобы сбросить кеш -->
 </body>
 </html>
