@@ -1,4 +1,4 @@
-// script.js (v14 - ТОЛЬКО АРТ-ОБРАЗ, НО РАБОЧИЙ)
+// script.js (v15 - ТОЛЬКО АРТ-ОБРАЗ, И НИЧЕГО ЛИШНЕГО)
 
 // --- Инициализация ---
 vkBridge.send('VKWebAppInit');
@@ -6,7 +6,7 @@ const BRAIN_API_URL = 'https://neuro-master.online/api';
 let USER_ID = null;
 let artObrazFile = null;
 
-// --- Поиск элементов ---
+// --- Поиск элементов (только то, что есть на странице!) ---
 const loader = document.getElementById('loader');
 const resultWrapper = document.getElementById('result-wrapper');
 const resultImage = document.getElementById('resultImage');
@@ -19,14 +19,23 @@ const artObrazPreviews = document.getElementById('art-obraz-previews');
 // --- Получение ID пользователя ---
 vkBridge.subscribe(async (e) => {
   if (e.detail?.type === 'VKWebAppUpdateConfig') {
+    initializeUser();
+  }
+});
+setTimeout(() => { initializeUser(); }, 2000);
+
+let userInitialized = false;
+async function initializeUser() {
+    if (userInitialized) return;
+    userInitialized = true;
     try {
         const userInfo = await vkBridge.send('VKWebAppGetUserInfo');
         if (userInfo.id) USER_ID = userInfo.id;
+        console.log("VK User ID:", USER_ID);
     } catch (error) { console.error(error); }
-  }
-});
+}
 
-// --- ЛОГИКА ---
+// --- ЛОГИКА ДЛЯ "АРТ-ОБРАЗ" ---
 
 // 1. Клик на "Выбрать фото"
 artObrazSelectBtn.addEventListener('click', () => {
@@ -44,27 +53,20 @@ artObrazUploadInput.addEventListener('change', (event) => {
 
 // 3. Клик на "Нарисовать"
 artObrazProcessBtn.addEventListener('click', async () => {
-    if (!artObrazFile) { alert("Сначала выберите фото."); return; }
-    const prompt = artObrazPromptInput.value;
-    if (!prompt) { alert("Сначала напишите промпт."); return; }
-    if (!USER_ID) { alert("ID пользователя не определен. Перезапустите приложение."); return; }
-
+    if (!artObrazFile || !artObrazPromptInput.value || !USER_ID) {
+        alert("Пожалуйста, выберите фото, введите промпт и убедитесь, что ID пользователя определен.");
+        return;
+    }
     showLoader();
     try {
-        // Загружаем файл и получаем URL
         const photoUrl = await uploadFile(artObrazFile);
-        
-        // Формируем и отправляем запрос на "мозг"
-        const requestBody = { user_id: USER_ID, model: 'vip_edit', prompt: prompt, image_urls: [photoUrl] };
+        const requestBody = { user_id: USER_ID, model: 'vip_edit', prompt: artObrazPromptInput.value, image_urls: [photoUrl] };
         const response = await fetch(`${BRAIN_API_URL}/generate`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody)
         });
-
         if (!response.ok) throw new Error((await response.json()).detail);
-        
         const result = await response.json();
         showResult(result.result_url);
-
     } catch (error) {
         handleError(error);
     } finally {
