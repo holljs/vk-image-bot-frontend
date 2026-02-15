@@ -1,4 +1,4 @@
-// script.js (v4 - ПОЛНАЯ И ОКОНЧАТЕЛЬНАЯ ВЕРСИЯ С ИЗМЕНЕНИЯМИ)
+// script.js (v4 - ПОЛНАЯ И ОКОНЧАТЕЛЬНАЯ ВЕРСИЯ)
 
 // --- Глобальные переменные ---
 const BRAIN_API_URL = 'https://neuro-master.online/api';
@@ -56,9 +56,7 @@ setTimeout(() => {
 }, 2000);
 // --- КОНЕЦ ИНИЦИАЛИЗАЦИИ ---
 
-
 // --- ОСНОВНАЯ ЛОГИКА ---
-
 async function handleProcessClick(event) {
     const button = event.target;
     const section = button.closest('.mode-section');
@@ -74,9 +72,14 @@ async function handleProcessClick(event) {
 
     try {
         const requestBody = {
-            user_id: USER_ID, model: model,
+            user_id: USER_ID,
+            model: model,
             prompt: section.querySelector('.prompt-input')?.value || (model === 'i2v' ? '.' : ''),
-            image_urls: [], video_url: null, audio_url: null, lyrics: null, style_prompt: null
+            image_urls: [],
+            video_url: null,
+            audio_url: null,
+            lyrics: null,
+            style_prompt: null
         };
 
         if (section.dataset.multistep === 'true') {
@@ -87,7 +90,6 @@ async function handleProcessClick(event) {
 
             if (model === 'vip_clip' && (!requestBody.image_urls.length || !requestBody.video_url)) throw new Error('Нужно добавить и фото, и видео!');
             if (model === 'talking_photo' && (!requestBody.image_urls.length || !requestBody.audio_url)) throw new Error('Нужно добавить фото и записать аудио!');
-
         }
         else if (['vip_edit', 'i2v'].includes(model)) {
             const photoData = await vkBridge.send('VKWebAppGetPhotos', { max_count: 1 });
@@ -112,31 +114,14 @@ async function handleProcessClick(event) {
         const result = await response.json();
         showResult(result);
 
-        // Очищаем все промпты
-        document.querySelectorAll('.prompt-input').forEach(input => {
-            input.value = '';
-        });
-
         if (multiStepFiles[model]) {
             multiStepFiles[model] = { photos: [], videos: [], audios: [] };
             updateMultiStepUI(section);
         }
-
-        // Автоматическая прокрутка и уведомление
-        setTimeout(() => {
-            resultWrapper.scrollIntoView({behavior: "smooth"});
-            // Выводим уведомление в верхней части экрана
-            vkBridge.send('VKWebAppShowNativeNotification', {
-                title: '🎉 Готово!',
-                text: 'Ваше изображение готово! Результат вверху страницы',
-                duration: 4000
-            });
-        }, 500);
-
     } catch (error) {
         handleError(error);
     } finally {
-        hideLoader();
+        hideLoader(); // КРИТИЧЕСКИ ВАЖНО для предотвращения бесконечной загрузки!
         button.disabled = false;
     }
 }
@@ -164,7 +149,6 @@ async function handleAddFileClick(event, fileType) {
 
         updateMultiStepUI(section);
     } catch (error) {
-        // Игнорируем ошибки "User denied"
         if (error.error_data && error.error_data.error_code === 4) {
             console.log("Пользователь отменил выбор файла.");
         } else {
@@ -214,7 +198,7 @@ async function handleMusicStyleClick(event) {
     showLoader();
     try {
         const response = await fetch(`${BRAIN_API_URL}/generate`, {
-            method: 'POST',
+            method:POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ user_id: USER_ID, model: 'music', lyrics: lyrics, style_prompt: stylePrompt })
         });
@@ -254,22 +238,23 @@ function updateMultiStepUI(section) {
     const audioDone = maxAudios > 0 && (files.audios?.length || 0) >= maxAudios;
 
     if (mode === 'vip_clip') {
-        if(addPhotoButton) addPhotoButton.classList.toggle('hidden', photoDone);
-        if(addVideoButton) addVideoButton.classList.toggle('hidden', !photoDone || videoDone);
+        if (addPhotoButton) addPhotoButton.classList.toggle('hidden', photoDone);
+        if (addVideoButton) addVideoButton.classList.toggle('hidden', !photoDone || videoDone);
     } else if (mode === 'talking_photo') {
-        if(addPhotoButton) addPhotoButton.classList.toggle('hidden', photoDone);
-        if(recordAudioButton) recordAudioButton.classList.toggle('hidden', !photoDone || audioDone);
-    } else if (mode === 'vip_mix') {
-        if(addPhotoButton) {
-            addPhotoButton.textContent = `Добавить фото (${files.photos?.length || 0}/${maxPhotos})`;
-            addPhotoButton.disabled = photoDone;
-        }
+        if (addPhotoButton) addPhotoButton.classList.toggle('hidden', photoDone);
+        if (recordAudioButton) recordAudioButton.classList.toggle('hidden', !photoDone || audioDone);
     } else {
-        if(processButton) processButton.classList.toggle('hidden', (files.photos?.length || 0) === 0);
-        if(addPhotoButton) {
+        if (addPhotoButton) {
             addPhotoButton.textContent = `Добавить фото (${files.photos?.length || 0}/${maxPhotos})`;
             addPhotoButton.disabled = photoDone;
         }
+        if (processButton) processButton.classList.toggle('hidden', (files.photos?.length || 0) === 0);
+    }
+
+    // Для VIP-Микс: отображаем счетчик (0/5)
+    if (mode === 'vip_mix' && addPhotoButton) {
+        addPhotoButton.textContent = `Добавить фото (${files.photos?.length || 0}/${maxPhotos})`;
+        addPhotoButton.disabled = photoDone;
     }
 }
 
@@ -284,10 +269,9 @@ function hideLoader() {
 
 function showOriginals(urls) {
     const container = document.getElementById('originalImageContainer');
-    if (urls && urls.length > 0) {
-        originalPreviewsContainer.innerHTML = '';
+    if (urls &&. > 0) {        originalPreviewsContainer.innerHTML = '';
         urls.forEach(url => {
-            if(!url) return;
+            if (!url) return;
             const el = document.createElement(url.includes('.mp4') ? 'video' : 'img');
             el.src = url; el.className = 'preview-image'; if (el.tagName === 'VIDEO') el.muted = true;
             originalPreviewsContainer.appendChild(el);
