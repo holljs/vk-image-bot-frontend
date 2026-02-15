@@ -6,94 +6,30 @@
     <title>Нейро-художник</title>
     <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
     <link rel="stylesheet" href="style.css">
-    <style>
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.9);
-        }
-        .modal-content {
-            margin: auto;
-            display: block;
-            max-width: 90%;
-            max-height: 90%;
-        }
-        .close {
-            position: absolute;
-            top: 15px;
-            right: 35px;
-            color: #f1f1f1;
-            font-size: 40px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .download-button {
-            display: block;
-            margin: 20px auto;
-            padding: 10px 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .hidden {
-            display: none;
-        }
-        .spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            border-radius: 50%;
-            border-top: 4px solid #3498db;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .preview-image {
-            max-width: 100px;
-            max-height: 100px;
-            margin: 5px;
-        }
-    </style>
 </head>
 <body>
     <div id="app">
-        <h1>Нейро-художник v2.0</h1>
+        <h1>Нейро-художник vFinal</h1>
+        
+        <!-- Загрузчик -->
         <div id="loader" class="hidden">
             <div class="spinner"></div>
             <p>Магия в процессе, подождите...</p>
         </div>
+
+        <!-- Блок результата -->
         <div id="result-wrapper" class="hidden">
+            <h2>Результат:</h2>
             <div class="result-container">
-                <div id="originalImageContainer" class="hidden">
-                    <h2>Оригинал:</h2>
-                    <div class="image-previews"></div>
-                </div>
-                <div id="resultContainer">
-                    <h2>Результат:</h2>
-                    <img id="resultImage" class="hidden" src="" alt="Result">
-                    <video id="resultVideo" class="hidden" controls src=""></video>
-                    <button id="downloadButton" class="download-button hidden">Скачать результат</button>
-                </div>
+                <img id="resultImage" class="hidden" src="" alt="Result">
+                <video id="resultVideo" class="hidden" controls src=""></video>
             </div>
+            <p class="hint">Нажмите на картинку, чтобы открыть оригинал</p>
+            <button id="downloadButton" class="download-button">Скачать результат</button>
         </div>
-
-        <div id="imageModal" class="modal">
-            <span class="close">&times;</span>
-            <img class="modal-content" id="modalImage">
-        </div>
-
+        
         <hr>
+
         <!-- РЕЖИМ 0: Текст в Картинку -->
         <div class="mode-section" data-mode="t2i">
             <h2>🎨 Нейро-Художник</h2>
@@ -101,114 +37,150 @@
             <input type="text" class="prompt-input" placeholder="Например: кот в скафандре на луне">
             <button class="process-button">Нарисовать</button>
         </div>
+
         <hr>
         <p style="text-align: center; font-weight: bold; margin: 20px 0;">📸 ОБРАБОТКА ФОТО 📸</p>
         <hr>
-        <!-- РЕЖИМ 1: Арт-Образ (1 фото) -->
-        <div class="mode-section" data-mode="vip_edit">
+        
+        <!-- РЕЖИМ 1: Арт-Образ -->
+        <div class="mode-section" data-mode="vip_edit" data-max-photos="1">
             <h2>🎨 Арт-Образ</h2>
             <p>Создай креативный портрет, сохранив свое лицо.</p>
+            <div class="image-previews"></div>
+            <input type="file" class="file-upload-input hidden" accept="image/*">
+            <div class="step-buttons">
+                <button class="universal-upload-button">1. Выбрать фото</button>
+            </div>
+            <p style="margin-top: 10px;">2. Напишите, кем хотите стать:</p>
             <input type="text" class="prompt-input" placeholder="Например: сделай из меня рыцаря">
-            <input type="file" id="vipEditFileInput" accept="image/*" style="display: none;">
-            <button class="process-button" onclick="document.getElementById('vipEditFileInput').click()">Выбрать 1 фото и запустить</button>
-        </div>
-        <hr>
-        <!-- РЕЖИМ 2: Фото Микс (до 3-х фото) -->
-        <div class="mode-section" data-mode="quick_edit" data-multistep="true" data-max-photos="3">
-            <h2>✨ Фото Микс</h2>
-            <p>Продвинутое смешивание до 3-х фото по инструкции.</p>
-            <input type="text" class="prompt-input" placeholder="Например: смешай два лица">
-            <div class="image-previews"></div>
-            <div class="step-buttons">
-                <input type="file" id="quickEditFileInput" accept="image/*" multiple style="display: none;">
-                <button class="add-photo-button" onclick="document.getElementById('quickEditFileInput').click()">Добавить фото</button>
-                <button class="process-button hidden">Запустить обработку</button>
-            </div>
-        </div>
-        <hr>
-        <!-- РЕЖИМ 3: VIP-Микс (до 5-ти фото) -->
-        <div class="mode-section" data-mode="vip_mix" data-multistep="true" data-max-photos="5">
-            <h2>👑 VIP-Микс</h2>
-            <p>Фотореалистичное смешивание нескольких фото.</p>
-            <input type="text" class="prompt-input" placeholder="Например: девушка на фоне Токио">
-            <div class="image-previews"></div>
-            <div class="step-buttons">
-                <input type="file" id="vipMixFileInput" accept="image/*" multiple style="display: none;">
-                <button class="add-photo-button" onclick="document.getElementById('vipMixFileInput').click()">Добавить фото</button>
-                <button class="process-button hidden">Запустить обработку</button>
-            </div>
-        </div>
-        <hr>
-        <p style="text-align: center; font-weight: bold; margin: 20px 0;">✨ ВИДЕО-МАГИЯ ✨</p>
-        <hr>
-        <!-- РЕЖИМ 4: Живое Фото (I2V) -->
-        <div class="mode-section" data-mode="i2v">
-            <h2>✨ Живое Фото</h2>
-            <p>Оживи свою фотографию! Можешь задать сценарий анимации.</p>
-            <input type="text" class="prompt-input" placeholder="Например: камера летит вперед (или оставь пустым)">
-            <input type="file" id="i2vFileInput" accept="image/*" style="display: none;">
-            <button class="process-button" onclick="document.getElementById('i2vFileInput').click()">Выбрать 1 фото и анимировать</button>
+            <button class="process-button hidden">3. Запустить</button>
         </div>
 
         <hr>
-        <!-- РЕЖИМ 5: Текст в Видео (T2V) -->
+
+        <!-- РЕЖИМ 2: Фото Микс -->
+        <div class="mode-section" data-mode="quick_edit" data-max-photos="3">
+            <h2>✨ Фото Микс</h2>
+            <p>Смешивание до 3-х фото.</p>
+            <div class="image-previews"></div>
+            <input type="file" class="file-upload-input hidden" accept="image/*" multiple>
+            <div class="step-buttons">
+                <button class="universal-upload-button">1. Добавить фото (0/3)</button>
+            </div>
+            <p style="margin-top: 10px;">2. Опишите, как смешать:</p>
+            <input type="text" class="prompt-input" placeholder="Например: лицо с первого фото, фон со второго">
+            <button class="process-button hidden">3. Запустить обработку</button>
+        </div>
+
+        <hr>
+
+        <!-- РЕЖИМ 3: VIP-Микс -->
+        <div class="mode-section" data-mode="vip_mix" data-max-photos="5">
+            <h2>👑 VIP-Микс</h2>
+            <p>Фотореалистичное смешивание до 5 фото.</p>
+            <div class="image-previews"></div>
+            <input type="file" class="file-upload-input hidden" accept="image/*" multiple>
+            <div class="step-buttons">
+                <button class="universal-upload-button">1. Добавить фото (0/5)</button>
+            </div>
+            <p style="margin-top: 10px;">2. Опишите результат (или код "Еда"/"Сетка"):</p>
+            <input type="text" class="prompt-input" placeholder="Например: девушка на фоне Токио">
+            <button class="process-button hidden">3. Запустить обработку</button>
+        </div>
+
+        <hr>
+        <p style="text-align: center; font-weight: bold; margin: 20px 0;">✨ ВИДЕО-МАГИЯ ✨</p>
+        <hr>
+
+        <!-- РЕЖИМ 4: Живое Фото -->
+        <div class="mode-section" data-mode="i2v" data-max-photos="1">
+            <h2>✨ Живое Фото</h2>
+            <p>Оживи свою фотографию!</p>
+            <div class="image-previews"></div>
+            <input type="file" class="file-upload-input hidden" accept="image/*">
+            <div class="step-buttons">
+                <button class="universal-upload-button">1. Выбрать фото</button>
+            </div>
+            <p style="margin-top: 10px;">2. Сценарий (можно оставить пустым):</p>
+            <input type="text" class="prompt-input" placeholder="Например: камера летит вперед">
+            <button class="process-button hidden">3. Анимировать</button>
+        </div>
+
+        <hr>
+
+        <!-- РЕЖИМ 5: Текст в Видео -->
         <div class="mode-section" data-mode="t2v">
             <h2>🎬 Видео-Клип</h2>
-            <p>Создает короткое видео по вашему текстовому описанию.</p>
+            <p>Создает короткое видео по описанию.</p>
             <input type="text" class="prompt-input" placeholder="Например: дрон пролетает над горами">
             <button class="process-button">Создать видео</button>
         </div>
+
         <hr>
+
         <!-- РЕЖИМ 6: VIP-Клип (Танцы) -->
-        <div class="mode-section" data-mode="vip_clip" data-multistep="true" data-max-photos="1" data-max-videos="1">
+        <!-- Для этого режима нам нужно ДВА инпута: для фото и для видео -->
+        <div class="mode-section" data-mode="vip_clip" data-max-photos="1">
             <h2>🎬 VIP-Клип (Танцы)</h2>
             <p>Перенеси персонажа с фото в любое видео с танцем!</p>
             <div class="image-previews"></div>
+            
+            <!-- Два разных инпута -->
+            <input type="file" class="file-upload-input hidden" accept="image/*">
+            <input type="file" class="video-upload-input hidden" accept="video/*">
+            
             <div class="step-buttons">
-                <input type="file" id="vipClipPhotoInput" accept="image/*" style="display: none;">
-                <button class="add-photo-button" onclick="document.getElementById('vipClipPhotoInput').click()">1. Добавить фото персонажа</button>
-                <input type="file" id="vipClipVideoInput" accept="video/*" style="display: none;">
-                <button class="add-video-button hidden" onclick="document.getElementById('vipClipVideoInput').click()">2. Добавить видео с танцем</button>
+                <button class="universal-upload-button">1. Выбрать фото персонажа</button>
+                <button class="universal-video-button">2. Выбрать видео танца</button>
             </div>
+            <button class="process-button hidden">3. Запустить</button>
         </div>
+
         <hr>
         <p style="text-align: center; font-weight: bold; margin: 20px 0;">🎙️ АУДИО И ТЕКСТ 🎙️</p>
         <hr>
+
         <!-- РЕЖИМ 7: Говорящее Фото -->
-        <div class="mode-section" data-mode="talking_photo" data-multistep="true" data-max-photos="1" data-max-audios="1">
+        <!-- Для этого режима нам нужно фото и кнопка записи (которую мы пока уберем и заменим на выбор аудио) -->
+        <div class="mode-section" data-mode="talking_photo" data-max-photos="1">
             <h2>🗣️ Говорящее Фото</h2>
-            <p>Оживи фото своим голосом (или любым звуком)!</p>
+            <p>Оживи фото! Выберите фото и аудио-файл.</p>
             <div class="image-previews"></div>
+            
+            <input type="file" class="file-upload-input hidden" accept="image/*">
+            <input type="file" class="audio-upload-input hidden" accept="audio/*">
+            
             <div class="step-buttons">
-                <input type="file" id="talkingPhotoInput" accept="image/*" style="display: none;">
-                <button class="add-photo-button" onclick="document.getElementById('talkingPhotoInput').click()">1. Добавить фото</button>
-                <button class="record-audio-button hidden">2. Записать голос (до 20 сек)</button>
+                <button class="universal-upload-button">1. Выбрать фото</button>
+                <button class="universal-audio-button">2. Выбрать аудио</button>
             </div>
+            <button class="process-button hidden">3. Запустить</button>
         </div>
+
         <hr>
-        <!-- РЕЖИМ 8: Нейро-Музыка -->
-        <div class="mode-section" data-mode="music">
-            <h2>🎵 Нейро-Музыка</h2>
-            <p>Напиши текст песни, а затем выбери стиль музыки.</p>
-            <textarea class="prompt-input" rows="4" placeholder="Здесь будет текст вашей будущей песни..."></textarea>
-            <div class="music-styles hidden">
-                <p>Шаг 2: Выберите стиль</p>
-                <button class="style-button" data-prompt="Epic Rock, Guitars, Drums">🎸 Эпичный Рок</button>
-                <button class="style-button" data-prompt="Romantic Pop, Piano, Melodic">🎹 Романтичный Поп</button>
-                <button class="style-button" data-prompt="Hip-Hop, Rap Beat, Heavy Bass">🎤 Хип-Хоп / Рэп</button>
-                <button class="style-button" data-prompt="Smooth Jazz, Saxophone, Relaxing">🎷 Расслабляющий Джаз</button>
-                <button class="style-button" data-prompt="Cinematic, Orchestral, Epic, Trailer">🎻 Кинематографичный</button>
-            </div>
-        </div>
-        <hr>
-        <!-- РЕЖИМ 9: Нейро-Помощник -->
+        
+        <!-- РЕЖИМ 8: Нейро-Помощник -->
         <div class="mode-section" data-mode="chat">
             <h2>🧠 Нейро-Помощник</h2>
-            <p>Задай мне любой вопрос, я помогу с идеями, текстами или кодом.</p>
+            <p>Любые вопросы и тексты.</p>
             <textarea class="prompt-input" rows="3" placeholder="Например: напиши пост про осень..."></textarea>
             <button class="process-button">Отправить</button>
         </div>
+
+        <!-- РЕЖИМ 9: Музыка -->
+        <div class="mode-section" data-mode="music">
+            <h2>🎵 Нейро-Музыка</h2>
+            <p>1. Напишите текст песни.</p>
+            <textarea class="prompt-input" rows="3" placeholder="Текст песни..."></textarea>
+            <p>2. Выберите стиль:</p>
+            <div class="music-styles">
+                <button class="process-button" data-style="Epic Rock">Рок</button>
+                <button class="process-button" data-style="Pop">Поп</button>
+                <button class="process-button" data-style="Rap">Рэп</button>
+            </div>
+        </div>
+
     </div>
-    <script src="script.js"></script>
+    <script src="script.js?v=21"></script>
 </body>
 </html>
