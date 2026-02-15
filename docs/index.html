@@ -43,13 +43,26 @@
             border-radius: 4px;
             cursor: pointer;
         }
+        .hidden {
+            display: none;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid #3498db;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
         .preview-image {
             max-width: 100px;
             max-height: 100px;
             margin: 5px;
-        }
-        .hidden {
-            display: none;
         }
     </style>
 </head>
@@ -108,7 +121,7 @@
             <div class="image-previews"></div>
             <div class="step-buttons">
                 <input type="file" id="quickEditFileInput" accept="image/*" multiple style="display: none;">
-                <button class="add-photo-button" onclick="document.getElementById('quickEditFileInput').click()">Добавить фото (0/3)</button>
+                <button class="add-photo-button" onclick="document.getElementById('quickEditFileInput').click()">Добавить фото</button>
                 <button class="process-button hidden">Запустить обработку</button>
             </div>
         </div>
@@ -121,7 +134,7 @@
             <div class="image-previews"></div>
             <div class="step-buttons">
                 <input type="file" id="vipMixFileInput" accept="image/*" multiple style="display: none;">
-                <button class="add-photo-button" onclick="document.getElementById('vipMixFileInput').click()">Добавить фото (0/5)</button>
+                <button class="add-photo-button" onclick="document.getElementById('vipMixFileInput').click()">Добавить фото</button>
                 <button class="process-button hidden">Запустить обработку</button>
             </div>
         </div>
@@ -196,6 +209,6 @@
             <button class="process-button">Отправить</button>
         </div>
     </div>
-    <script src="script.js?v=5"></script>
+    <script src="script.js"></script>
 </body>
 </html>
