@@ -1,4 +1,4 @@
-// script.js (v4 - ПОЛНАЯ И ОКОНЧАТЕЛЬНАЯ ВЕРСИЯ)
+// script.js (v5 - ОБНОВЛЕННАЯ ВЕРСИЯ)
 
 // --- Глобальные переменные ---
 const BRAIN_API_URL = 'https://neuro-master.online/api';
@@ -113,11 +113,16 @@ async function handleProcessClick(event) {
     showLoader();
 
     try {
+        const promptInput = section.querySelector('.prompt-input');
         const requestBody = {
             user_id: USER_ID, model: model,
-            prompt: section.querySelector('.prompt-input')?.value || (model === 'i2v' ? '.' : ''),
+            prompt: promptInput ? promptInput.value : (model === 'i2v' ? '.' : ''),
             image_urls: [], video_url: null, audio_url: null, lyrics: null, style_prompt: null
         };
+
+        if (promptInput) {
+            promptInput.value = ''; // Очистка поля ввода промта
+        }
 
         if (section.dataset.multistep === 'true') {
             const files = multiStepFiles[model] || {};
@@ -197,7 +202,7 @@ async function handleFileInput(event, fileType, mode) {
 
 document.getElementById('vipEditFileInput').addEventListener('change', (e) => handleFileInput(e, 'photo', 'vip_edit'));
 document.getElementById('quickEditFileInput').addEventListener('change', (e) => handleFileInput(e, 'photo', 'quick_edit'));
-document.getElementById('vipMixFileInput').addEventListener('change', (e) => handleFileInput(e, 'photo', 'vip_mix'));
+document.getElementById('vipMixFileInput').addEventListener('change', (e) handleFileInput(e, 'photo', 'vip_mix'));
 document.getElementById('i2vFileInput').addEventListener('change', (e) => handleFileInput(e, 'photo', 'i2v'));
 document.getElementById('vipClipPhotoInput').addEventListener('change', (e) => handleFileInput(e, 'photo', 'vip_clip'));
 document.getElementById('vipClipVideoInput').addEventListener('change', (e) => handleFileInput(e, 'video', 'vip_clip'));
@@ -358,7 +363,6 @@ function showOriginals(urls) {
 
 function showResult(result) {
     resultWrapper.classList.remove('hidden');
-    hideLoader
     const resultUrl = result.result_url;
     const responseText = result.response;
     const isVideo = resultUrl && ['.mp4', '.mov'].some(ext => resultUrl.includes(ext));
@@ -389,6 +393,6 @@ function handleError(error) {
 document.querySelectorAll('.process-button').forEach(b => b.addEventListener('click', handleProcessClick));
 document.querySelectorAll('.add-photo-button').forEach(b => b.addEventListener('click', (e) => handleAddFileClick(e, 'photo')));
 document.querySelectorAll('.add-video-button').forEach(b => b.addEventListener('click', (e) => handleAddFileClick(e, 'video')));
-document.querySelectorAll('.record-audio-').forEach(b => b.addEventListener('', handleRecordAudioClick));
+document.querySelectorAll('.record-audio-button').forEach(b => b.addEventListener('click', handleRecordAudioClick));
 document.querySelectorAll('.music-styles .style-button').forEach(b => b.addEventListener('click', handleMusicStyleClick));
 document.querySelector('[data-mode="music"] .prompt-input')?.addEventListener('input', handleMusicLyricsInput);
