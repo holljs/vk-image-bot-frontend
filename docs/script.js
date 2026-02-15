@@ -1,9 +1,11 @@
-// script.js (v5 - ОБНОВЛЕННАЯ ВЕРСИЯ)
+// script.js (ПОЛНАЯ И ОКОНЧАТЕЛЬНАЯ ВЕРСИЯ)
 
 // --- Глобальные переменные ---
 const BRAIN_API_URL = 'https://neuro-master.online/api';
 let USER_ID = null;
 let userIdInitialized = false;
+let retryCount = 0;
+const MAX_RETRIES = 3;
 
 // --- Поиск элементов ---
 const loader = document.getElementById('loader');
@@ -30,13 +32,13 @@ resultImage.addEventListener('click', function() {
 
 closeBtn.onclick = function() {
     modal.style.display = "none";
-}
+};
 
 window.onclick = function(event) {
     if (event.target == modal) {
         modal.style.display = "none";
     }
-}
+};
 
 // --- Обработчик скачивания ---
 downloadButton.addEventListener('click', function() {
@@ -58,43 +60,53 @@ downloadButton.addEventListener('click', function() {
 });
 
 // --- НАЧАЛО: САМАЯ НАДЕЖНАЯ ИНИЦИАЛИЗАЦИЯ ---
-vkBridge.send('VKWebAppInit');
+function initializeVKBridge() {
+    vkBridge.send('VKWebAppInit');
 
-vkBridge.subscribe(async (e) => {
-    if (e.detail && e.detail.type === 'VKWebAppUpdateConfig') {
-        if (!userIdInitialized) {
-            try {
-                const userInfo = await vkBridge.send('VKWebAppGetUserInfo');
-                if (userInfo.id) {
-                    USER_ID = userInfo.id;
-                    userIdInitialized = true;
-                    console.log("VK User ID получен по событию:", USER_ID);
-                    fetch(`${BRAIN_API_URL}/user/${USER_ID}`).catch(err => console.error("User registration failed:", err));
+    vkBridge.subscribe(async (e) => {
+        if (e.detail && e.detail.type === 'VKWebAppUpdateConfig') {
+            if (!userIdInitialized) {
+                try {
+                    const userInfo = await vkBridge.send('VKWebAppGetUserInfo');
+                    if (userInfo.id) {
+                        USER_ID = userInfo.id;
+                        userIdInitialized = true;
+                        console.log("VK User ID получен по событию:", USER_ID);
+                        fetch(`${BRAIN_API_URL}/user/${USER_ID}`).catch(err => console.error("User registration failed:", err));
+                    }
+                } catch (error) {
+                    handleError(new Error("Ошибка при запросе ID пользователя."));
                 }
-            } catch (error) {
-                handleError(new Error("Ошибка при запросе ID пользователя."));
             }
         }
-    }
-});
+    });
 
-setTimeout(() => {
-    if (!userIdInitialized) {
-        console.warn("Событие VKWebAppUpdateConfig не пришло вовремя. Запускаю запасной план.");
-        vkBridge.send('VKWebAppGetUserInfo')
-            .then(userInfo => {
-                if (userInfo.id && !userIdInitialized) {
-                    USER_ID = userInfo.id;
-                    userIdInitialized = true;
-                    console.log("VK User ID получен через ЗАПАСНОЙ ПЛАН:", USER_ID);
-                    fetch(`${BRAIN_API_URL}/user/${USER_ID}`).catch(err => console.error("User registration (fallback) failed:", err));
-                }
-            })
-            .catch(err => {
-                console.error("Запасной план получения ID не сработал:", err);
-            });
-    }
-}, 2000);
+    setTimeout(() => {
+        if (!userIdInitialized && retryCount < MAX_RETRIES) {
+            console.warn(`Событие VKWebAppUpdateConfig не пришло вовремя. Запускаю запасной план. Попытка ${retryCount + 1}/${MAX_RETRIES}.`);
+            vkBridge.send('VKWebAppGetUserInfo')
+                .then(userInfo => {
+                    if (userInfo.id && !userIdInitialized) {
+                        USER_ID = userInfo.id;
+                        userIdInitialized = true;
+                        console.log("VK User ID получен через ЗАПАСНОЙ ПЛАН:", USER_ID);
+                        fetch(`${BRAIN_API_URL}/user/${USER_ID}`).catch(err => console.error("User registration (fallback) failed:", err));
+                    }
+                })
+                .catch(err => {
+                    console.error("Запасной план получения ID не сработал:", err);
+                    retryCount++;
+                    if (retryCount < MAX_RETRIES) {
+                        initializeVKBridge();
+                    }
+                });
+        } else if (retryCount >= MAX_RETRIES) {
+            console.error("Максимальное количество попыток инициализации достигнуто.");
+        }
+    }, 2000);
+}
+
+initializeVKBridge();
 // --- КОНЕЦ ИНИЦИАЛИЗАЦИИ ---
 
 // --- ОСНОВНАЯ ЛОГИКА ---
@@ -113,16 +125,11 @@ async function handleProcessClick(event) {
     showLoader();
 
     try {
-        const promptInput = section.querySelector('.prompt-input');
         const requestBody = {
             user_id: USER_ID, model: model,
-            prompt: promptInput ? promptInput.value : (model === 'i2v' ? '.' : ''),
+            prompt: section.querySelector('.prompt-input')?.value || (model === 'i2v' ? '.' : ''),
             image_urls: [], video_url: null, audio_url: null, lyrics: null, style_prompt: null
         };
-
-        if (promptInput) {
-            promptInput.value = ''; // Очистка поля ввода промта
-        }
 
         if (section.dataset.multistep === 'true') {
             const files = multiStepFiles[model] || {};
@@ -132,7 +139,6 @@ async function handleProcessClick(event) {
 
             if (model === 'vip_clip' && (!requestBody.image_urls.length || !requestBody.video_url)) throw new Error('Нужно добавить и фото, и видео!');
             if (model === 'talking_photo' && (!requestBody.image_urls.length || !requestBody.audio_url)) throw new Error('Нужно добавить фото и записать аудио!');
-
         }
         else if (['vip_edit', 'i2v'].includes(model)) {
             if (!multiStepFiles[model] || !multiStepFiles[model].photos || multiStepFiles[model].photos.length === 0) {
@@ -151,7 +157,7 @@ async function handleProcessClick(event) {
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
+            const errorData = await response.json().catch(() => ({}));
             throw new Error(errorData.detail || `Сервер ответил ошибкой: ${response.status}`);
         }
 
@@ -194,7 +200,6 @@ async function handleFileInput(event, fileType, mode) {
         if (fileType === 'photo') {
             reader.readAsDataURL(file);
         } else if (fileType === 'video') {
-            // Для видео просто сохраняем URL (предполагается, что видео будет загружено на сервер в процессе обработки)
             multiStepFiles[mode].videos.push(URL.createObjectURL(file));
         }
     }
@@ -202,7 +207,7 @@ async function handleFileInput(event, fileType, mode) {
 
 document.getElementById('vipEditFileInput').addEventListener('change', (e) => handleFileInput(e, 'photo', 'vip_edit'));
 document.getElementById('quickEditFileInput').addEventListener('change', (e) => handleFileInput(e, 'photo', 'quick_edit'));
-document.getElementById('vipMixFileInput').addEventListener('change', (e) handleFileInput(e, 'photo', 'vip_mix'));
+document.getElementById('vipMixFileInput').addEventListener('change', (e) => handleFileInput(e, 'photo', 'vip_mix'));
 document.getElementById('i2vFileInput').addEventListener('change', (e) => handleFileInput(e, 'photo', 'i2v'));
 document.getElementById('vipClipPhotoInput').addEventListener('change', (e) => handleFileInput(e, 'photo', 'vip_clip'));
 document.getElementById('vipClipVideoInput').addEventListener('change', (e) => handleFileInput(e, 'video', 'vip_clip'));
@@ -363,6 +368,7 @@ function showOriginals(urls) {
 
 function showResult(result) {
     resultWrapper.classList.remove('hidden');
+    hideLoader();
     const resultUrl = result.result_url;
     const responseText = result.response;
     const isVideo = resultUrl && ['.mp4', '.mov'].some(ext => resultUrl.includes(ext));
