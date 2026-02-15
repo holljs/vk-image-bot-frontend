@@ -1,143 +1,163 @@
-// script.js (v4 - ПОЛНАЯ И ОКОНЧАТЕЛЬНАЯ ВЕРСИЯ)
+// script.js (v30 - ИСПРАВЛЕНА ЛОГИКА, СЧЕТЧИКИ, СКАЧИВАНИЕ)
 
-// --- Глобальные переменные ---
+// --- 1. ИНИЦИАЛИЗАЦИЯ ---
+vkBridge.send('VKWebAppInit');
 const BRAIN_API_URL = 'https://neuro-master.online/api';
 let USER_ID = null;
 let userIdInitialized = false;
+// Хранилище файлов: { "vip_edit": {photos: [], videos: [], audios: []}, ... }
+const filesByMode = {}; 
 
-// --- Поиск элементов ---
+// Поиск основных элементов
 const loader = document.getElementById('loader');
 const resultWrapper = document.getElementById('result-wrapper');
-const originalPreviewsContainer = document.querySelector('#originalImageContainer .image-previews');
-const resultContainer = document.getElementById('resultContainer');
 const resultImage = document.getElementById('resultImage');
 const resultVideo = document.getElementById('resultVideo');
 const downloadButton = document.getElementById('downloadButton');
-const modal = document.getElementById('imageModal');
-const modalImg = document.getElementById("modalImage");
-const closeBtn = document.querySelector(".close");
 
-// --- Глобальное хранилище ---
-const multiStepFiles = {};
-
-// --- Обработчики модального окна ---
-resultImage.addEventListener('click', function() {
-    if (resultImage.src) {
-        modal.style.display = "block";
-        modalImg.src = resultImage.src;
+// Надежное получение ID пользователя
+vkBridge.subscribe(e => {
+    if (e.detail && e.detail.type === 'VKWebAppUpdateConfig' && !userIdInitialized) {
+        initUser();
     }
 });
+setTimeout(() => { if (!userIdInitialized) initUser(); }, 2000);
 
-closeBtn.onclick = function() {
-    modal.style.display = "none";
-}
-
-window.onclick = function(event) {
-    if (event.target == modal) {
-        modal.style.display = "none";
-    }
-}
-
-// --- Обработчик скачивания ---
-downloadButton.addEventListener('click', function() {
-    if (resultImage.src) {
-        const link = document.createElement('a');
-        link.href = resultImage.src;
-        link.download = 'generated_image.png';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    } else if (resultVideo.src) {
-        const link = document.createElement('a');
-        link.href = resultVideo.src;
-        link.download = 'generated_video.mp4';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-});
-
-// --- НАЧАЛО: САМАЯ НАДЕЖНАЯ ИНИЦИАЛИЗАЦИЯ ---
-vkBridge.send('VKWebAppInit');
-
-vkBridge.subscribe(async (e) => {
-    if (e.detail && e.detail.type === 'VKWebAppUpdateConfig') {
-        if (!userIdInitialized) {
-            try {
-                const userInfo = await vkBridge.send('VKWebAppGetUserInfo');
-                if (userInfo.id) {
-                    USER_ID = userInfo.id;
-                    userIdInitialized = true;
-                    console.log("VK User ID получен по событию:", USER_ID);
-                    fetch(`${BRAIN_API_URL}/user/${USER_ID}`).catch(err => console.error("User registration failed:", err));
-                }
-            } catch (error) {
-                handleError(new Error("Ошибка при запросе ID пользователя."));
-            }
+async function initUser() {
+    try {
+        const data = await vkBridge.send('VKWebAppGetUserInfo');
+        if (data.id) {
+            USER_ID = data.id;
+            userIdInitialized = true;
+            console.log('User ID:', USER_ID);
+            fetch(`${BRAIN_API_URL}/user/${USER_ID}`).catch(console.error);
         }
+    } catch (e) {
+        console.error(e);
     }
+}
+
+// --- 2. ОБРАБОТЧИКИ СОБЫТИЙ ДЛЯ ЗАГРУЗКИ ---
+
+// Кнопка "Выбрать/Добавить..." -> нажимает на скрытый input
+document.querySelectorAll('.universal-upload-button').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        const section = e.target.closest('.mode-section');
+        const type = e.target.dataset.type || 'photo';
+        let input;
+        
+        if (type === 'video') input = section.querySelector('.video-upload-input');
+        else if (type === 'audio') input = section.querySelector('.audio-upload-input');
+        else input = section.querySelector('.file-upload-input'); // photo default
+
+        if (input) input.click();
+    });
 });
 
-setTimeout(() => {
-    if (!userIdInitialized) {
-        console.warn("Событие VKWebAppUpdateConfig не пришло вовремя. Запускаю запасной план.");
-        vkBridge.send('VKWebAppGetUserInfo')
-            .then(userInfo => {
-                if (userInfo.id && !userIdInitialized) {
-                    USER_ID = userInfo.id;
-                    userIdInitialized = true;
-                    console.log("VK User ID получен через ЗАПАСНОЙ ПЛАН:", USER_ID);
-                    fetch(`${BRAIN_API_URL}/user/${USER_ID}`).catch(err => console.error("User registration (fallback) failed:", err));
-                }
-            })
-            .catch(err => {
-                console.error("Запасной план получения ID не сработал:", err);
-            });
-    }
-}, 2000);
-// --- КОНЕЦ ИНИЦИАЛИЗАЦИИ ---
+// Обработка выбора файлов в input
+document.querySelectorAll('.file-upload-input, .video-upload-input, .audio-upload-input').forEach(input => {
+    input.addEventListener('change', (e) => {
+        const section = e.target.closest('.mode-section');
+        const mode = section.dataset.mode;
+        const newFiles = Array.from(e.target.files);
+        if (newFiles.length === 0) return;
 
-// --- ОСНОВНАЯ ЛОГИКА ---
+        // Определяем тип файла по классу инпута
+        let fileType = 'photos';
+        if (input.classList.contains('video-upload-input')) fileType = 'videos';
+        if (input.classList.contains('audio-upload-input')) fileType = 'audios';
+
+        // Инициализируем хранилище для этого режима
+        if (!filesByMode[mode]) filesByMode[mode] = { photos: [], videos: [], audios: [] };
+
+        // Определяем лимиты
+        const maxPhotos = parseInt(section.dataset.maxPhotos) || 1;
+        const maxVideos = parseInt(section.dataset.maxVideos) || 0;
+        const maxAudios = parseInt(section.dataset.maxAudios) || 0;
+
+        // Логика добавления: 
+        // Если лимит 1 - заменяем. Если больше - добавляем.
+        if (fileType === 'photos') {
+            if (maxPhotos === 1) filesByMode[mode].photos = [newFiles[0]];
+            else {
+                for (let f of newFiles) {
+                    if (filesByMode[mode].photos.length < maxPhotos) filesByMode[mode].photos.push(f);
+                }
+            }
+        } else if (fileType === 'videos') {
+            filesByMode[mode].videos = [newFiles[0]]; // Видео всегда одно пока
+        } else if (fileType === 'audios') {
+            filesByMode[mode].audios = [newFiles[0]]; // Аудио всегда одно пока
+        }
+        
+        updateUI(section);
+        input.value = ''; // Сброс инпута
+    });
+});
+
+
+// --- 3. ГЛАВНАЯ ЛОГИКА ГЕНЕРАЦИИ ---
+
+document.querySelectorAll('.process-button').forEach(btn => {
+    btn.addEventListener('click', handleProcessClick);
+});
 
 async function handleProcessClick(event) {
-    const button = event.target;
-    const section = button.closest('.mode-section');
-    const model = section.dataset.mode;
+    const btn = event.target;
+    const section = btn.closest('.mode-section');
+    const mode = section.dataset.mode;
+    
+    if (!USER_ID) { alert("ID не определен. Перезапустите приложение."); return; }
 
-    if (!USER_ID) {
-        alert("Не удалось определить ID пользователя. Пожалуйста, перезапустите приложение внутри VK.");
-        return;
+    const promptInput = section.querySelector('.prompt-input');
+    const prompt = promptInput ? promptInput.value : '';
+    
+    // Стиль музыки берется из кнопки
+    const stylePrompt = mode === 'music' ? btn.dataset.style : null;
+    // Текст для музыки - это prompt
+    const musicLyrics = mode === 'music' ? prompt : null;
+
+    // Валидация
+    if (!prompt && mode !== 'i2v' && mode !== 'music') {
+        alert("Пожалуйста, напишите промпт!"); return;
+    }
+    
+    const files = filesByMode[mode] || { photos: [], videos: [], audios: [] };
+    
+    // Проверка наличия файлов для режимов, где они обязательны
+    if (['vip_edit', 'i2v', 'quick_edit', 'vip_mix'].includes(model) && files.photos.length === 0) {
+        alert("Выберите фото!"); return;
+    }
+    if (model === 'vip_clip' && (files.photos.length === 0 || files.videos.length === 0)) {
+        alert("Выберите фото и видео!"); return;
+    }
+    if (model === 'talking_photo' && (files.photos.length === 0 || files.audios.length === 0)) {
+        alert("Выберите фото и аудио!"); return;
     }
 
-    button.disabled = true;
+    // --- СТАРТ ---
+    btn.disabled = true;
     showLoader();
 
     try {
+        // Шаг А: Загружаем файлы на сервер VK
+        const uploadedImageUrls = await uploadFiles(files.photos, 'photo');
+        const uploadedVideoUrls = await uploadFiles(files.videos, 'video');
+        const uploadedAudioUrls = await uploadFiles(files.audios, 'audio');
+
+        // Шаг Б: Собираем запрос
         const requestBody = {
-            user_id: USER_ID, model: model,
-            prompt: section.querySelector('.prompt-input')?.value || (model === 'i2v' ? '.' : ''),
-            image_urls: [], video_url: null, audio_url: null, lyrics: null, style_prompt: null
+            user_id: USER_ID,
+            model: model,
+            prompt: prompt,
+            image_urls: uploadedImageUrls,
+            video_url: uploadedVideoUrls[0] || null,
+            audio_url: uploadedAudioUrls[0] || null,
+            style_prompt: stylePrompt,
+            lyrics: musicLyrics
         };
 
-        if (section.dataset.multistep === 'true') {
-            const files = multiStepFiles[model] || {};
-            requestBody.image_urls = files.photos || [];
-            requestBody.video_url = files.videos ? files.videos[0] : null;
-            requestBody.audio_url = files.audios ? files.audios[0] : null;
-
-            if (model === 'vip_clip' && (!requestBody.image_urls.length || !requestBody.video_url)) throw new Error('Нужно добавить и фото, и видео!');
-            if (model === 'talking_photo' && (!requestBody.image_urls.length || !requestBody.audio_url)) throw new Error('Нужно добавить фото и записать аудио!');
-
-        }
-        else if (['vip_edit', 'i2v'].includes(model)) {
-            if (!multiStepFiles[model] || !multiStepFiles[model].photos || multiStepFiles[model].photos.length === 0) {
-                throw new Error('Необходимо загрузить фото.');
-            }
-            requestBody.image_urls = multiStepFiles[model].photos;
-        }
-
-        showOriginals(requestBody.image_urls.concat(requestBody.video_url || []));
-
+        // Шаг В: Отправляем на "Мозг"
         const endpoint = model === 'chat' ? `${BRAIN_API_URL}/chat` : `${BRAIN_API_URL}/generate`;
         const response = await fetch(endpoint, {
             method: 'POST',
@@ -146,249 +166,181 @@ async function handleProcessClick(event) {
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail || `Сервер ответил ошибкой: ${response.status}`);
+            const errData = await response.json();
+            throw new Error(errData.detail || "Ошибка сервера");
         }
 
         const result = await response.json();
-        showResult(result);
 
-        if (multiStepFiles[model]) {
-            multiStepFiles[model] = { photos: [], videos: [], audios: [] };
-            updateMultiStepUI(section);
-        }
+        // Шаг Г: Успех
+        showResult(result);
+        
+        // Очистка полей и файлов
+        filesByMode[mode] = { photos: [], videos: [], audios: [] };
+        if (promptInput) promptInput.value = '';
+        updateUI(section);
+        
+        // Скролл к результату
+        resultWrapper.scrollIntoView({ behavior: "smooth", block: "start" });
 
     } catch (error) {
         handleError(error);
     } finally {
         hideLoader();
-        button.disabled = false;
+        btn.disabled = false;
     }
 }
 
-async function handleFileInput(event, fileType, mode) {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
+// --- 4. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
 
-    if (!multiStepFiles[mode]) multiStepFiles[mode] = { photos: [], videos: [], audios: [] };
+async function uploadFiles(fileList, type) {
+    const uploadedUrls = [];
+    if (!fileList || fileList.length === 0) return uploadedUrls;
 
-    for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const reader = new FileReader();
+    for (const file of fileList) {
+        // 1. Получаем адрес
+        const uploadServer = await vkBridge.send('VKWebAppGetAppUploadServer', { app_id: 51884181 });
+        
+        // 2. Отправляем файл
+        const formData = new FormData();
+        // Имя поля зависит от типа файла, VK требователен к этому
+        let fieldName = 'photo';
+        if (type === 'video') fieldName = 'video_file';
+        if (type === 'audio') fieldName = 'file'; // Для аудио/документов часто 'file'
+        
+        formData.append(fieldName, file);
+        
+        const uploadResponse = await fetch(uploadServer.upload_url, { method: 'POST', body: formData });
+        const uploadResult = await uploadResponse.json();
 
-        reader.onload = function(e) {
-            if (fileType === 'photo') {
-                multiStepFiles[mode].photos.push(e.target.result);
-            } else if (fileType === 'video') {
-                multiStepFiles[mode].videos.push(e.target.result);
-            }
-
-            updateMultiStepUI(document.querySelector(`.mode-section[data-mode="${mode}"]`));
-        };
-
-        if (fileType === 'photo') {
-            reader.readAsDataURL(file);
-        } else if (fileType === 'video') {
-            // Для видео просто сохраняем URL (предполагается, что видео будет загружено на сервер в процессе обработки)
-            multiStepFiles[mode].videos.push(URL.createObjectURL(file));
+        // 3. Сохраняем (методы разные)
+        if (type === 'photo') {
+            const saved = await vkBridge.send('VKWebAppSaveAppPhoto', {
+                photo: uploadResult.photo, server: uploadResult.server, hash: uploadResult.hash
+            });
+            uploadedUrls.push(saved.images.sort((a,b) => b.width - a.width)[0].url);
+        } 
+        else if (type === 'video') {
+            // Для видео сохранение чуть сложнее, используем упрощенный вариант если доступен
+            // Или возвращаем ссылку если она есть в uploadResult (иногда бывает)
+            // Но для надежности лучше так:
+             const saved = await vkBridge.send('VKWebAppSaveAppVideo', {
+                video_file: uploadResult.video_file || uploadResult.file
+             });
+             uploadedUrls.push(saved.video_url || saved.access_key); // Тут может потребоваться доработка API VK, но пробуем
+        }
+        else if (type === 'audio') {
+             // Аудио загружаем как документ, т.к. аудио API закрыто
+             // Это "хак" для голосовых
+             // Если не сработает - вернемся к записи
+             // Пока просто пропустим этот шаг, т.к. VK не дает просто так грузить аудио
+             throw new Error("Загрузка аудио файлом пока недоступна в VK Mini Apps. Используйте запись (мы вернем её позже).");
         }
     }
+    return uploadedUrls;
 }
 
-document.getElementById('vipEditFileInput').addEventListener('change', (e) => handleFileInput(e, 'photo', 'vip_edit'));
-document.getElementById('quickEditFileInput').addEventListener('change', (e) => handleFileInput(e, 'photo', 'quick_edit'));
-document.getElementById('vipMixFileInput').addEventListener('change', (e) => handleFileInput(e, 'photo', 'vip_mix'));
-document.getElementById('i2vFileInput').addEventListener('change', (e) => handleFileInput(e, 'photo', 'i2v'));
-document.getElementById('vipClipPhotoInput').addEventListener('change', (e) => handleFileInput(e, 'photo', 'vip_clip'));
-document.getElementById('vipClipVideoInput').addEventListener('change', (e) => handleFileInput(e, 'video', 'vip_clip'));
-document.getElementById('talkingPhotoInput').addEventListener('change', (e) => handleFileInput(e, 'photo', 'talking_photo'));
-
-async function handleAddFileClick(event, fileType) {
-    const section = event.target.closest('.mode-section');
+function updateUI(section) {
     const mode = section.dataset.mode;
-    const method = fileType === 'video' ? 'VKWebAppGetVideos' : 'VKWebAppGetPhotos';
-
-    try {
-        const fileData = await vkBridge.send(method, { max_count: 1 });
-        const fileUrl = fileType === 'video'
-            ? (fileData.videos && fileData.videos.length > 0 ? fileData.videos[0].player : null)
-            : (fileData.images && fileData.images.length > 0 ? fileData.images.sort((a, b) => b.width - a.width)[0].url : null);
-
-        if (!fileUrl) {
-            console.warn("Пользователь не выбрал файл.");
-            return;
-        }
-
-        if (!multiStepFiles[mode]) multiStepFiles[mode] = { photos: [], videos: [], audios: [] };
-
-        const fileStore = fileType === 'video' ? 'videos' : 'photos';
-        multiStepFiles[mode][fileStore].push(fileUrl);
-
-        updateMultiStepUI(section);
-    } catch (error) {
-        // Игнорируем ошибки "User denied"
-        if (error.error_data && error.error_data.error_code === 4) {
-            console.log("Пользователь отменил выбор файла.");
-        } else {
-            handleError(error);
-        }
-    }
-}
-
-async function handleRecordAudioClick(event) {
-    const section = event.target.closest('.mode-section');
-    const mode = section.dataset.mode;
-    alert('Начинаю запись... Нажмите ОК и говорите. Запись остановится автоматически через 20 секунд или при сворачивании приложения.');
-    try {
-        await vkBridge.send('VKWebAppStartRecord', { max_duration: 20 });
-        const unsubscribe = vkBridge.subscribe(e => {
-            if (e.detail.type === 'VKWebAppRecordResult') {
-                const fileUrl = e.detail.data.url;
-                if (!multiStepFiles[mode]) multiStepFiles[mode] = { photos: [], videos: [], audios: [] };
-                multiStepFiles[mode].audios.push(fileUrl);
-                updateMultiStepUI(section);
-                unsubscribe();
-            } else if (e.detail.type === 'VKWebAppRecordFailed') {
-                handleError(new Error('Не удалось записать аудио.'));
-                unsubscribe();
-            }
-        });
-    } catch (error) {
-        handleError(error);
-    }
-}
-
-function handleMusicLyricsInput(event) {
-    const section = event.target.closest('.mode-section');
-    const musicStylesDiv = section.querySelector('.music-styles');
-    musicStylesDiv.classList.toggle('hidden', event.target.value.length < 10);
-}
-
-async function handleMusicStyleClick(event) {
-    const button = event.target;
-    const section = button.closest('.mode-section');
-    const lyrics = section.querySelector('.prompt-input').value;
-    const stylePrompt = button.dataset.prompt;
-
-    if (!USER_ID) { alert("ID пользователя не определен!"); return; }
-
-    button.disabled = true;
-    showLoader();
-    try {
-        const response = await fetch(`${BRAIN_API_URL}/generate`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user_id: USER_ID, model: 'music', lyrics: lyrics, style_prompt: stylePrompt })
-        });
-        if (!response.ok) throw new Error((await response.json()).detail);
-        const result = await response.json();
-        showOriginals([]);
-        showResult(result);
-    } catch (error) {
-        handleError(error);
-    } finally {
-        hideLoader();
-        button.disabled = false;
-    }
-}
-
-function updateMultiStepUI(section) {
-    const mode = section.dataset.mode;
-    const previewsContainer = section.querySelector('.image-previews');
-    const processButton = section.querySelector('.process-button');
-    const addPhotoButton = section.querySelector('.add-photo-button');
-    const addVideoButton = section.querySelector('.add-video-button');
-    const recordAudioButton = section.querySelector('.record-audio-button');
+    const files = filesByMode[mode] || { photos: [], videos: [], audios: [] };
     const maxPhotos = parseInt(section.dataset.maxPhotos) || 0;
-    const maxVideos = parseInt(section.dataset.maxVideos) || 0;
-    const maxAudios = parseInt(section.dataset.maxAudios) || 0;
-    const files = multiStepFiles[mode] || { photos: [], videos: [], audios: [] };
+    
+    // Превью
+    const previewDiv = section.querySelector('.image-previews');
+    if (previewDiv) {
+        previewDiv.innerHTML = '';
+        files.photos.forEach(f => {
+            const img = document.createElement('img');
+            img.src = URL.createObjectURL(f);
+            img.className = 'preview-image';
+            previewDiv.appendChild(img);
+        });
+        files.videos.forEach(f => {
+            const vid = document.createElement('video');
+            vid.src = URL.createObjectURL(f);
+            vid.className = 'preview-image';
+            previewDiv.appendChild(vid);
+        });
+        // Аудио иконка
+        files.audios.forEach(f => {
+            const span = document.createElement('span');
+            span.textContent = "🎵 Аудио";
+            span.className = 'preview-image'; // Просто стиль
+            previewDiv.appendChild(span);
+        });
+    }
 
-    previewsContainer.innerHTML = '';
-    [...(files.photos || []), ...(files.videos || []), ...(files.audios || [])].forEach(url => {
-        const el = document.createElement(url.includes('.mp4') ? 'video' : 'img');
-        el.src = url; el.className = 'preview-image';
-        if (el.tagName === 'VIDEO') el.muted = true;
-        previewsContainer.appendChild(el);
-    });
-
-    const photoDone = maxPhotos > 0 && (files.photos?.length || 0) >= maxPhotos;
-    const videoDone = maxVideos > 0 && (files.videos?.length || 0) >= maxVideos;
-    const audioDone = maxAudios > 0 && (files.audios?.length || 0) >= maxAudios;
-
-    if (mode === 'vip_clip') {
-        if(addPhotoButton) addPhotoButton.classList.toggle('hidden', photoDone);
-        if(addVideoButton) addVideoButton.classList.toggle('hidden', !photoDone || videoDone);
-    } else if (mode === 'talking_photo') {
-        if(addPhotoButton) addPhotoButton.classList.toggle('hidden', photoDone);
-        if(recordAudioButton) recordAudioButton.classList.toggle('hidden', !photoDone || audioDone);
-    } else {
-        if(processButton) processButton.classList.toggle('hidden', (files.photos?.length || 0) === 0);
-        if(addPhotoButton) {
-            addPhotoButton.textContent = `Добавить фото (${files.photos?.length || 0}/${maxPhotos})`;
-            addPhotoButton.disabled = photoDone;
+    // Текст кнопок (счетчики)
+    const photoBtn = section.querySelector('.universal-upload-button[data-type="photo"]') || section.querySelector('.universal-upload-button:not([data-type])');
+    if (photoBtn) {
+        if (maxPhotos > 1) {
+            photoBtn.textContent = `Добавить фото (${files.photos.length}/${maxPhotos})`;
+            photoBtn.disabled = files.photos.length >= maxPhotos;
+        } else {
+            photoBtn.textContent = files.photos.length > 0 ? "Выбрать другое" : "1. Выбрать фото";
         }
     }
-}
+    
+    // Кнопки видео/аудио
+    const videoBtn = section.querySelector('.universal-upload-button[data-type="video"]');
+    if (videoBtn) videoBtn.textContent = files.videos.length > 0 ? "Видео выбрано" : "2. Выбрать видео";
 
-function showLoader() {
-    resultWrapper.classList.add('hidden');
-    loader.classList.remove('hidden');
-}
-
-function hideLoader() {
-    loader.classList.add('hidden');
-}
-
-function showOriginals(urls) {
-    const container = document.getElementById('originalImageContainer');
-    if (urls && urls.length > 0) {
-        originalPreviewsContainer.innerHTML = '';
-        urls.forEach(url => {
-            if(!url) return;
-            const el = document.createElement(url.includes('.mp4') ? 'video' : 'img');
-            el.src = url; el.className = 'preview-image'; if (el.tagName === 'VIDEO') el.muted = true;
-            originalPreviewsContainer.appendChild(el);
-        });
-        container.classList.remove('hidden');
-    } else {
-        container.classList.add('hidden');
+    // Кнопка запуска
+    const processBtn = section.querySelector('.process-button');
+    if (processBtn) {
+        // Условие показа: если файлы нужны и их нет -> скрыть
+        let ready = true;
+        if (section.querySelector('.file-upload-input') && files.photos.length === 0) ready = false;
+        if (section.querySelector('.video-upload-input') && files.videos.length === 0) ready = false;
+        if (section.querySelector('.audio-upload-input') && files.audios.length === 0) ready = false;
+        
+        if (ready) processBtn.classList.remove('hidden');
+        else processBtn.classList.add('hidden');
     }
 }
+
+function showLoader() { loader.classList.remove('hidden'); resultWrapper.classList.add('hidden'); }
+function hideLoader() { loader.classList.add('hidden'); }
+function handleError(e) { console.error(e); alert("Ошибка: " + e.message); hideLoader(); }
 
 function showResult(result) {
+    const url = result.result_url || result.response;
+    if (result.model === 'chat' || !url.startsWith('http')) { alert(url); return; }
+    
     resultWrapper.classList.remove('hidden');
-    hideLoader
-    const resultUrl = result.result_url;
-    const responseText = result.response;
-    const isVideo = resultUrl && ['.mp4', '.mov'].some(ext => resultUrl.includes(ext));
-    const isImage = resultUrl && !isVideo;
-    const isAudio = resultUrl && ['.mp3', '.wav', '.ogg'].some(ext => resultUrl.includes(ext));
+    const isVideo = url.includes('.mp4') || url.includes('.mov');
+    const isAudio = url.includes('.mp3');
 
-    resultImage.src = isImage ? resultUrl : '';
-    resultImage.classList.toggle('hidden', !isImage);
-    resultVideo.src = isVideo ? resultUrl : '';
-    resultVideo.classList.toggle('hidden', !isVideo);
-
-    downloadButton.classList.toggle('hidden', !(isImage || isVideo));
-
-    if (isAudio) { alert("Ваша музыка готова! Ссылка: " + resultUrl); }
-    if (responseText) { alert("Ответ Нейро-помощника:\n\n" + responseText); }
+    if (isAudio) {
+        alert("Аудио готово! Ссылка: " + url); // Упрощенно
+    } else {
+        resultImage.src = !isVideo ? url : '';
+        resultImage.classList.toggle('hidden', isVideo);
+        resultVideo.src = isVideo ? url : '';
+        resultVideo.classList.toggle('hidden', !isVideo);
+        downloadButton.classList.remove('hidden');
+    }
+    // Клик для открытия
+    resultImage.onclick = () => window.open(url, '_blank');
 }
 
-function handleError(error) {
-    console.error('Ошибка в процессе:', error);
-    const message = (error.error_data && error.error_data.error_reason)
-        ? `Ошибка VK: ${error.error_data.error_reason}`
-        : `Произошла ошибка: ${error.message}`;
-    alert(message);
-    hideLoader();
-}
-
-// --- Привязка всех обработчиков ---
-document.querySelectorAll('.process-button').forEach(b => b.addEventListener('click', handleProcessClick));
-document.querySelectorAll('.add-photo-button').forEach(b => b.addEventListener('click', (e) => handleAddFileClick(e, 'photo')));
-document.querySelectorAll('.add-video-button').forEach(b => b.addEventListener('click', (e) => handleAddFileClick(e, 'video')));
-document.querySelectorAll('.record-audio-').forEach(b => b.addEventListener('', handleRecordAudioClick));
-document.querySelectorAll('.music-styles .style-button').forEach(b => b.addEventListener('click', handleMusicStyleClick));
-document.querySelector('[data-mode="music"] .prompt-input')?.addEventListener('input', handleMusicLyricsInput);
+// ПРАВИЛЬНОЕ СКАЧИВАНИЕ
+downloadButton.addEventListener('click', async () => {
+    const url = resultImage.src || resultVideo.src;
+    const isVideo = !resultVideo.classList.contains('hidden');
+    if (!url) return;
+    try {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = isVideo ? 'result.mp4' : 'result.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(blobUrl);
+    } catch(e) {
+        alert("Скачивание не удалось. Откройте картинку и сохраните вручную.");
+    }
+});
