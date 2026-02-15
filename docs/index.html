@@ -43,6 +43,14 @@
             border-radius: 4px;
             cursor: pointer;
         }
+        .preview-image {
+            max-width: 100px;
+            max-height: 100px;
+            margin: 5px;
+        }
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -100,7 +108,7 @@
             <div class="image-previews"></div>
             <div class="step-buttons">
                 <input type="file" id="quickEditFileInput" accept="image/*" multiple style="display: none;">
-                <button class="add-photo-button" onclick="document.getElementById('quickEditFileInput').click()">Добавить фото</button>
+                <button class="add-photo-button" onclick="document.getElementById('quickEditFileInput').click()">Добавить фото (0/3)</button>
                 <button class="process-button hidden">Запустить обработку</button>
             </div>
         </div>
@@ -113,7 +121,7 @@
             <div class="image-previews"></div>
             <div class="step-buttons">
                 <input type="file" id="vipMixFileInput" accept="image/*" multiple style="display: none;">
-                <button class="add-photo-button" onclick="document.getElementById('vipMixFileInput').click()">Добавить фото</button>
+                <button class="add-photo-button" onclick="document.getElementById('vipMixFileInput').click()">Добавить фото (0/5)</button>
                 <button class="process-button hidden">Запустить обработку</button>
             </div>
         </div>
@@ -188,7 +196,6 @@
             <button class="process-button">Отправить</button>
         </div>
     </div>
-    <script src="script.js?v=4"></script>
+    <script src="script.js?v=5"></script>
 </body>
 </html>
-
