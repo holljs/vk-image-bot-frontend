@@ -1,4 +1,4 @@
-// script.js (v4 - ПОЛНАЯ И ОКОНЧАТЕЛЬНАЯ ВЕРСИЯ)
+// script.js (v4 - ПОЛНАЯ И ОКОНЧАТЕЛЬНАЯ ВЕРСИЯ С ИЗМЕНЕНИЯМИ)
 
 // --- Глобальные переменные ---
 const BRAIN_API_URL = 'https://neuro-master.online/api';
@@ -12,50 +12,9 @@ const originalPreviewsContainer = document.querySelector('#originalImageContaine
 const resultContainer = document.getElementById('resultContainer');
 const resultImage = document.getElementById('resultImage');
 const resultVideo = document.getElementById('resultVideo');
-const downloadButton = document.getElementById('downloadButton');
-const modal = document.getElementById('imageModal');
-const modalImg = document.getElementById("modalImage");
-const closeBtn = document.querySelector(".close");
 
 // --- Глобальное хранилище ---
 const multiStepFiles = {};
-
-// --- Обработчики модального окна ---
-resultImage.addEventListener('click', function() {
-    if (resultImage.src) {
-        modal.style.display = "block";
-        modalImg.src = resultImage.src;
-    }
-});
-
-closeBtn.onclick = function() {
-    modal.style.display = "none";
-}
-
-window.onclick = function(event) {
-    if (event.target == modal) {
-        modal.style.display = "none";
-    }
-}
-
-// --- Обработчик скачивания ---
-downloadButton.addEventListener('click', function() {
-    if (resultImage.src) {
-        const link = document.createElement('a');
-        link.href = resultImage.src;
-        link.download = 'generated_image.png';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    } else if (resultVideo.src) {
-        const link = document.createElement('a');
-        link.href = resultVideo.src;
-        link.download = 'generated_video.mp4';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-});
 
 // --- НАЧАЛО: САМАЯ НАДЕЖНАЯ ИНИЦИАЛИЗАЦИЯ ---
 vkBridge.send('VKWebAppInit');
@@ -97,6 +56,7 @@ setTimeout(() => {
 }, 2000);
 // --- КОНЕЦ ИНИЦИАЛИЗАЦИИ ---
 
+
 // --- ОСНОВНАЯ ЛОГИКА ---
 
 async function handleProcessClick(event) {
@@ -130,10 +90,9 @@ async function handleProcessClick(event) {
 
         }
         else if (['vip_edit', 'i2v'].includes(model)) {
-            if (!multiStepFiles[model] || !multiStepFiles[model].photos || multiStepFiles[model].photos.length === 0) {
-                throw new Error('Необходимо загрузить фото.');
-            }
-            requestBody.image_urls = multiStepFiles[model].photos;
+            const photoData = await vkBridge.send('VKWebAppGetPhotos', { max_count: 1 });
+            const largestPhoto = photoData.images.sort((a, b) => b.width - a.width)[0];
+            requestBody.image_urls = [largestPhoto.url];
         }
 
         showOriginals(requestBody.image_urls.concat(requestBody.video_url || []));
@@ -153,10 +112,26 @@ async function handleProcessClick(event) {
         const result = await response.json();
         showResult(result);
 
+        // Очищаем все промпты
+        document.querySelectorAll('.prompt-input').forEach(input => {
+            input.value = '';
+        });
+
         if (multiStepFiles[model]) {
             multiStepFiles[model] = { photos: [], videos: [], audios: [] };
             updateMultiStepUI(section);
         }
+
+        // Автоматическая прокрутка и уведомление
+        setTimeout(() => {
+            resultWrapper.scrollIntoView({behavior: "smooth"});
+            // Выводим уведомление в верхней части экрана
+            vkBridge.send('VKWebAppShowNativeNotification', {
+                title: '🎉 Готово!',
+                text: 'Ваше изображение готово! Результат вверху страницы',
+                duration: 4000
+            });
+        }, 500);
 
     } catch (error) {
         handleError(error);
@@ -165,43 +140,6 @@ async function handleProcessClick(event) {
         button.disabled = false;
     }
 }
-
-async function handleFileInput(event, fileType, mode) {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
-
-    if (!multiStepFiles[mode]) multiStepFiles[mode] = { photos: [], videos: [], audios: [] };
-
-    for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const reader = new FileReader();
-
-        reader.onload = function(e) {
-            if (fileType === 'photo') {
-                multiStepFiles[mode].photos.push(e.target.result);
-            } else if (fileType === 'video') {
-                multiStepFiles[mode].videos.push(e.target.result);
-            }
-
-            updateMultiStepUI(document.querySelector(`.mode-section[data-mode="${mode}"]`));
-        };
-
-        if (fileType === 'photo') {
-            reader.readAsDataURL(file);
-        } else if (fileType === 'video') {
-            // Для видео просто сохраняем URL (предполагается, что видео будет загружено на сервер в процессе обработки)
-            multiStepFiles[mode].videos.push(URL.createObjectURL(file));
-        }
-    }
-}
-
-document.getElementById('vipEditFileInput').addEventListener('change', (e) => handleFileInput(e, 'photo', 'vip_edit'));
-document.getElementById('quickEditFileInput').addEventListener('change', (e) => handleFileInput(e, 'photo', 'quick_edit'));
-document.getElementById('vipMixFileInput').addEventListener('change', (e) => handleFileInput(e, 'photo', 'vip_mix'));
-document.getElementById('i2vFileInput').addEventListener('change', (e) => handleFileInput(e, 'photo', 'i2v'));
-document.getElementById('vipClipPhotoInput').addEventListener('change', (e) => handleFileInput(e, 'photo', 'vip_clip'));
-document.getElementById('vipClipVideoInput').addEventListener('change', (e) => handleFileInput(e, 'video', 'vip_clip'));
-document.getElementById('talkingPhotoInput').addEventListener('change', (e) => handleFileInput(e, 'photo', 'talking_photo'));
 
 async function handleAddFileClick(event, fileType) {
     const section = event.target.closest('.mode-section');
@@ -308,7 +246,6 @@ function updateMultiStepUI(section) {
     [...(files.photos || []), ...(files.videos || []), ...(files.audios || [])].forEach(url => {
         const el = document.createElement(url.includes('.mp4') ? 'video' : 'img');
         el.src = url; el.className = 'preview-image';
-        if (el.tagName === 'VIDEO') el.muted = true;
         previewsContainer.appendChild(el);
     });
 
@@ -322,6 +259,11 @@ function updateMultiStepUI(section) {
     } else if (mode === 'talking_photo') {
         if(addPhotoButton) addPhotoButton.classList.toggle('hidden', photoDone);
         if(recordAudioButton) recordAudioButton.classList.toggle('hidden', !photoDone || audioDone);
+    } else if (mode === 'vip_mix') {
+        if(addPhotoButton) {
+            addPhotoButton.textContent = `Добавить фото (${files.photos?.length || 0}/${maxPhotos})`;
+            addPhotoButton.disabled = photoDone;
+        }
     } else {
         if(processButton) processButton.classList.toggle('hidden', (files.photos?.length || 0) === 0);
         if(addPhotoButton) {
@@ -358,7 +300,7 @@ function showOriginals(urls) {
 
 function showResult(result) {
     resultWrapper.classList.remove('hidden');
-    hideLoader
+    hideLoader();
     const resultUrl = result.result_url;
     const responseText = result.response;
     const isVideo = resultUrl && ['.mp4', '.mov'].some(ext => resultUrl.includes(ext));
@@ -369,8 +311,6 @@ function showResult(result) {
     resultImage.classList.toggle('hidden', !isImage);
     resultVideo.src = isVideo ? resultUrl : '';
     resultVideo.classList.toggle('hidden', !isVideo);
-
-    downloadButton.classList.toggle('hidden', !(isImage || isVideo));
 
     if (isAudio) { alert("Ваша музыка готова! Ссылка: " + resultUrl); }
     if (responseText) { alert("Ответ Нейро-помощника:\n\n" + responseText); }
@@ -389,6 +329,6 @@ function handleError(error) {
 document.querySelectorAll('.process-button').forEach(b => b.addEventListener('click', handleProcessClick));
 document.querySelectorAll('.add-photo-button').forEach(b => b.addEventListener('click', (e) => handleAddFileClick(e, 'photo')));
 document.querySelectorAll('.add-video-button').forEach(b => b.addEventListener('click', (e) => handleAddFileClick(e, 'video')));
-document.querySelectorAll('.record-audio-').forEach(b => b.addEventListener('', handleRecordAudioClick));
+document.querySelectorAll('.record-audio-button').forEach(b => b.addEventListener('click', handleRecordAudioClick));
 document.querySelectorAll('.music-styles .style-button').forEach(b => b.addEventListener('click', handleMusicStyleClick));
 document.querySelector('[data-mode="music"] .prompt-input')?.addEventListener('input', handleMusicLyricsInput);
