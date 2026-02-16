@@ -25,9 +25,35 @@ async function initUser() {
         if (data.id) {
             USER_ID = data.id;
             userIdInitialized = true;
-            fetch(`${BRAIN_API_URL}/user/${USER_ID}`).catch(console.error);
+            console.log('User ID:', USER_ID);
+            
+            // Регистрируем пользователя и обновляем баланс в Личном Кабинете
+            fetch(`${BRAIN_API_URL}/user/${USER_ID}`)
+                .then(response => response.json())
+                .then(info => {
+                    const balanceEl = document.getElementById('user-balance-display');
+                    if (balanceEl && info.balance !== undefined) {
+                        balanceEl.textContent = `Баланс: ${info.balance} кр.`;
+                    }
+                })
+                .catch(console.error);
         }
-    } catch (e) { console.error(e); }
+    } catch (e) {
+        console.error("Ошибка инициализации:", e);
+    }
+}
+
+// Добавляем обработчик для кнопки "Пригласить друга"
+// (Вставьте это в конец файла или после initUser)
+const inviteBtn = document.getElementById('invite-friend-btn');
+if (inviteBtn) {
+    inviteBtn.addEventListener('click', () => {
+        if (!USER_ID) return;
+        // Формируем реферальную ссылку
+        const link = `https://vk.com/app51884181#${USER_ID}`; 
+        // Вызываем окно "Поделиться"
+        vkBridge.send("VKWebAppShare", { "link": link }); 
+    });
 }
 
 // --- ОБРАБОТЧИКИ ---
