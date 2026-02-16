@@ -278,31 +278,50 @@ function handleError(e) { alert("Ошибка: " + e.message); hideLoader(); }
 
 function showResult(res) {
     const url = res.result_url || res.response;
+    
+    // Если это просто текст (чат), показываем alert и выходим
     if (res.model === 'chat') { alert(url); return; }
     
     resultWrapper.classList.remove('hidden');
-    const isVideo = url.includes('.mp4');
-    resultImage.src = !isVideo ? url : '';
-    resultImage.classList.toggle('hidden', isVideo);
-    resultVideo.src = isVideo ? url : '';
-    resultVideo.classList.toggle('hidden', !isVideo);
-    downloadButton.classList.remove('hidden');
     
-    // МЫ УБРАЛИ ОБРАБОТЧИК КЛИКА ПО КАРТИНКЕ, ОН БОЛЬШЕ НЕ НУЖЕН
+    const isVideo = url.includes('.mp4');
+    const isAudio = url.includes('.mp3') || url.includes('.wav');
+    const isImage = !isVideo && !isAudio;
+
+    // Скрываем все, потом показываем нужное
+    resultImage.classList.add('hidden');
+    resultVideo.classList.add('hidden');
+    resultAudio.classList.add('hidden');
+
+    if (isImage) {
+        resultImage.src = url;
+        resultImage.classList.remove('hidden');
+        resultImage.onclick = () => window.open(url, '_blank');
+    } else if (isVideo) {
+        resultVideo.src = url;
+        resultVideo.classList.remove('hidden');
+    } else if (isAudio) {
+        resultAudio.src = url;
+        resultAudio.classList.remove('hidden');
+    }
+    
+    // Показываем кнопки
+    downloadButton.classList.remove('hidden');
+    shareButton.classList.remove('hidden');
+    
+    // Сохраняем текущий URL глобально для кнопки "Поделиться"
+    window.currentResultUrl = url;
 }
 
-// КЛИК ПО КНОПКЕ "СКАЧАТЬ"
-downloadButton.addEventListener('click', () => {
-    const url = resultImage.src || resultVideo.src;
-    if (!url) return;
-
-    const isVideo = url.includes('.mp4');
-
-    if (vkBridge.isWebView() && !isVideo) { 
-        // На телефоне фото открываем в нативном просмотрщике
-        vkBridge.send("VKWebAppShowImages", { images: [url] });
-    } else {
-        // Видео или компьютер - открываем в новой вкладке
-        window.open(url, '_blank');
-    }
-});
+// Обработчик "Поделиться"
+if (shareButton) {
+    shareButton.addEventListener('click', () => {
+        if (!window.currentResultUrl) return;
+        
+        // Используем встроенную функцию VK для шеринга
+        vkBridge.send("VKWebAppShare", { "link": window.currentResultUrl });
+        
+        // ИЛИ (если хотите постить на стену):
+        // vkBridge.send("VKWebAppShowWallPostBox", { "message": "Смотри, что я сделал в Нейро-художнике!", "attachments": window.currentResultUrl });
+    });
+}
