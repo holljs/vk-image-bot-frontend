@@ -95,7 +95,27 @@ async function handleProcessClick(e) {
     const prompt = promptInput ? promptInput.value : '';
     const files = filesByMode[mode] || { photos: [], videos: [], audios: [] };
 
-    // --- (Валидацию пропускаю, она у вас правильная) ---
+    // --- ВАЛИДАЦИЯ (ВЕРНУЛАСЬ!) ---
+    // 1. Проверка промпта (кроме режимов, где он не нужен)
+    if (!prompt && !['i2v', 'music', 'vip_clip', 'talking_photo'].includes(mode)) { 
+        alert("Напишите промпт!"); return; 
+    }
+    
+    // 2. Проверка фото (для фото-режимов)
+    if (['vip_edit', 'i2v', 'quick_edit', 'vip_mix'].includes(mode) && files.photos.length === 0) {
+        alert("Выберите фото!"); return;
+    }
+    
+    // 3. Проверка видео (для vip_clip)
+    if (mode === 'vip_clip' && (files.photos.length === 0 || files.videos.length === 0)) {
+        alert("Выберите и фото, и видео!"); return;
+    }
+    
+    // 4. Проверка аудио (для talking_photo)
+    if (mode === 'talking_photo' && (files.photos.length === 0 || files.audios.length === 0)) {
+        alert("Выберите фото и аудио!"); return;
+    }
+    // ------------------------------
 
     btn.disabled = true;
     showLoader();
@@ -107,13 +127,13 @@ async function handleProcessClick(e) {
             for (let file of files.photos) imageBase64s.push(await fileToBase64(file));
         }
 
-        // 2. Конвертируем ВИДЕО (НОВАЯ ЧАСТЬ)
+        // 2. Конвертируем ВИДЕО
         let videoBase64 = null;
         if (files.videos && files.videos.length > 0) {
             videoBase64 = await fileToBase64(files.videos[0]);
         }
 
-        // 3. Конвертируем АУДИО (НОВАЯ ЧАСТЬ)
+        // 3. Конвертируем АУДИО
         let audioBase64 = null;
         if (files.audios && files.audios.length > 0) {
             audioBase64 = await fileToBase64(files.audios[0]);
@@ -122,8 +142,8 @@ async function handleProcessClick(e) {
         const requestBody = {
             user_id: USER_ID, model: mode, prompt: prompt,
             image_urls: imageBase64s,
-            video_url: videoBase64, // <-- ТЕПЕРЬ ТУТ НЕ NULL!
-            audio_url: audioBase64, // <-- И ТУТ ТОЖЕ!
+            video_url: videoBase64, 
+            audio_url: audioBase64,
             style_prompt: mode === 'music' ? btn.dataset.style : null,
             lyrics: mode === 'music' ? prompt : null
         };
