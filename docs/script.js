@@ -1,6 +1,5 @@
-// script.js (vFinal-UX - Идеальный интерфейс)
+// script.js (v55 - ФИНАЛЬНЫЙ)
 
-// --- Инициализация ---
 vkBridge.send('VKWebAppInit');
 const BRAIN_API_URL = 'https://neuro-master.online/api';
 let USER_ID = null;
@@ -11,11 +10,17 @@ const loader = document.getElementById('loader');
 const resultWrapper = document.getElementById('result-wrapper');
 const resultImage = document.getElementById('resultImage');
 const resultVideo = document.getElementById('resultVideo');
+const resultAudio = document.getElementById('resultAudio');
 const downloadButton = document.getElementById('downloadButton');
+const shareButton = document.getElementById('shareButton');
+const helpModal = document.getElementById('helpModal');
 
-// Получение ID
+// --- 1. ИНИЦИАЛИЗАЦИЯ И ЛИЧНЫЙ КАБИНЕТ ---
+
 vkBridge.subscribe(e => {
-    if (e.detail?.type === 'VKWebAppUpdateConfig' && !userIdInitialized) initUser();
+    if (e.detail && e.detail.type === 'VKWebAppUpdateConfig' && !userIdInitialized) {
+        initUser();
+    }
 });
 setTimeout(() => { if (!userIdInitialized) initUser(); }, 2000);
 
@@ -25,63 +30,84 @@ async function initUser() {
         if (data.id) {
             USER_ID = data.id;
             userIdInitialized = true;
-            console.log('User ID:', USER_ID);
-            
-            // Регистрируем пользователя и обновляем баланс в Личном Кабинете
-            fetch(`${BRAIN_API_URL}/user/${USER_ID}`)
-                .then(response => response.json())
-                .then(info => {
-                    const balanceEl = document.getElementById('user-balance-display');
-                    if (balanceEl && info.balance !== undefined) {
-                        balanceEl.textContent = `Баланс: ${info.balance} кр.`;
-                    }
-                })
-                .catch(console.error);
+            updateBalance(); // Загружаем баланс
         }
-    } catch (e) {
-        console.error("Ошибка инициализации:", e);
-    }
+    } catch (e) { console.error(e); }
 }
 
-// Добавляем обработчик для кнопки "Пригласить друга"
-// (Вставьте это в конец файла или после initUser)
-const inviteBtn = document.getElementById('invite-friend-btn');
-if (inviteBtn) {
-    inviteBtn.addEventListener('click', () => {
-        if (!USER_ID) return;
-        // Формируем реферальную ссылку
-        const link = `https://vk.com/app51884181#${USER_ID}`; 
-        // Вызываем окно "Поделиться"
-        vkBridge.send("VKWebAppShare", { "link": link }); 
-    });
-}
-
-// --- ОБРАБОТЧИКИ ---
-
-document.addEventListener('click', (e) => {
-    if (e.target.matches('.universal-upload-button')) {
-        const section = e.target.closest('.mode-section');
-        const type = e.target.dataset.type || 'photo';
-        let selector = '.file-upload-input';
-        if (type === 'video') selector = '.video-upload-input';
-        if (type === 'audio') selector = '.audio-upload-input';
-        const input = section.querySelector(selector);
-        if (input) input.click();
-    }
+function updateBalance() {
+    if (!USER_ID) return;
+    const balanceEl = document.getElementById('user-balance-display');
+    if(balanceEl) balanceEl.textContent = "Обновление...";
     
-    if (e.target.matches('.process-button')) {
-        handleProcessClick(e);
-    }
+    fetch(`${BRAIN_API_URL}/user/${USER_ID}`)
+        .then(r => r.json())
+        .then(info => {
+            if (balanceEl) balanceEl.textContent = `Баланс: ${info.balance} кр.`;
+        })
+        .catch(() => { if (balanceEl) balanceEl.textContent = "Ошибка"; });
+}
+
+// Кнопки ЛК
+document.getElementById('refreshBalance')?.addEventListener('click', updateBalance);
+document.getElementById('invite-friend-btn')?.addEventListener('click', () => {
+    if (!USER_ID) return;
+    vkBridge.send("VKWebAppShare", { "link": `https://vk.com/app51884181#${USER_ID}` });
 });
 
-document.addEventListener('change', (e) => {
-    if (e.target.matches('.file-upload-input, .video-upload-input, .audio-upload-input')) {
-        const input = e.target;
-        const section = input.closest('.mode-section');
-        if (!section) return;
+// Кнопка Помощи (Модалка)
+document.getElementById('helpButton')?.addEventListener('click', () => {
+    if (helpModal) helpModal.classList.remove('hidden');
+});
+document.querySelector('.close-modal')?.addEventListener('click', () => {
+    if (helpModal) helpModal.classList.add('hidden');
+});
 
+// --- 2. БИЗНЕС-ЛОГИКА (Умные шорткаты) ---
+
+document.querySelectorAll('.business-shortcut').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        const targetMode = e.target.dataset.target;
+        const promptText = e.target.dataset.prompt;
+        
+        // Находим нужную секцию
+        const targetSection = document.querySelector(`.mode-section[data-mode="${targetMode}"]`);
+        if (targetSection) {
+            // Скроллим к ней
+            targetSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // Заполняем промпт
+            const input = targetSection.querySelector('.prompt-input');
+            if (input) {
+                input.value = promptText;
+                // Эффект мигания
+                input.style.borderColor = '#4CAF50';
+                setTimeout(() => input.style.borderColor = '#dce1e6', 1000);
+            }
+        }
+    });
+});
+
+
+// --- 3. ЗАГРУЗКА ФАЙЛОВ ---
+
+document.querySelectorAll('.universal-upload-button').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        const section = e.target.closest('.mode-section');
+        const type = e.target.dataset.type || 'photo';
+        let input;
+        if (type === 'video') input = section.querySelector('.video-upload-input');
+        else if (type === 'audio') input = section.querySelector('.audio-upload-input');
+        else input = section.querySelector('.file-upload-input');
+        if (input) input.click();
+    });
+});
+
+document.querySelectorAll('.file-upload-input, .video-upload-input, .audio-upload-input').forEach(input => {
+    input.addEventListener('change', (e) => {
+        const section = e.target.closest('.mode-section');
         const mode = section.dataset.mode;
-        const newFiles = Array.from(input.files);
+        const newFiles = Array.from(e.target.files);
         if (!newFiles.length) return;
 
         let typeKey = 'photos';
@@ -105,109 +131,83 @@ document.addEventListener('change', (e) => {
         
         updateUI(section);
         input.value = '';
-    }
+    });
 });
 
-// --- ГЛАВНАЯ ЛОГИКА ---
+
+// --- 4. ГЕНЕРАЦИЯ ---
+
+document.querySelectorAll('.process-button').forEach(btn => {
+    btn.addEventListener('click', handleProcessClick);
+});
 
 async function handleProcessClick(event) {
     const btn = event.target;
     const section = btn.closest('.mode-section');
     const mode = section.dataset.mode;
     
-    if (!USER_ID) { alert("ID не определен. Перезапустите приложение."); return; }
+    if (!USER_ID) { alert("ID не определен."); return; }
 
     const promptInput = section.querySelector('.prompt-input');
     const prompt = promptInput ? promptInput.value : '';
     
-    // --- ЛОГИКА ДЛЯ МУЗЫКИ ---
+    // Музыка
     let stylePrompt = null;
     let musicLyrics = null;
-
     if (mode === 'music') {
-        musicLyrics = prompt; // Текст песни берем из основного поля
-        
-        // Если нажата кнопка стиля
+        musicLyrics = prompt;
         if (btn.dataset.style) {
             stylePrompt = btn.dataset.style;
-            
-            // Если выбран "Свой стиль"
             if (stylePrompt === 'custom') {
-                const customStyleInput = section.querySelector('#custom-style-input');
-                stylePrompt = customStyleInput ? customStyleInput.value : '';
-                if (!stylePrompt || stylePrompt.length < 10) {
-                    alert("Описание стиля должно быть длиннее 10 символов!");
-                    return;
-                }
+                const customInp = section.querySelector('#custom-style-input');
+                stylePrompt = customInp ? customInp.value : '';
+                if (!stylePrompt || stylePrompt.length < 5) { alert("Введите стиль!"); return; }
             }
         }
     }
-    // --------------------------
 
-    const files = filesByMode[mode] || { photos: [], videos: [], audios: [] };
-
-    // --- ВАЛИДАЦИЯ ---
-    
-    // 1. Промпт (кроме исключений)
+    // Валидация
     if (!prompt && !['i2v', 'music', 'vip_clip', 'talking_photo'].includes(mode)) {
         alert("Напишите промпт!"); return;
     }
     
-    // 2. Фото
+    const files = filesByMode[mode] || { photos: [], videos: [], audios: [] };
+    
     if (['vip_edit', 'i2v', 'quick_edit', 'vip_mix'].includes(mode) && files.photos.length === 0) {
         alert("Выберите фото!"); return;
     }
-    
-    // 3. Фото + Видео (VIP-Клип)
     if (mode === 'vip_clip' && (files.photos.length === 0 || files.videos.length === 0)) {
-        alert("Выберите и фото, и видео!"); return;
-    }
-    
-    // 4. Фото + Аудио (Говорящее фото)
-    if (mode === 'talking_photo' && (files.photos.length === 0 || files.audios.length === 0)) {
-        alert("Выберите фото и аудио!"); return;
+        alert("Выберите фото и видео!"); return;
     }
 
-    // --- ЗАПУСК ---
     btn.disabled = true;
     showLoader();
 
     try {
-        // Конвертация файлов
         const imageBase64s = [];
         if (files.photos) {
-            for (let file of files.photos) imageBase64s.push(await fileToBase64(file));
+            for (let f of files.photos) imageBase64s.push(await fileToBase64(f));
         }
-
         let videoBase64 = null;
-        if (files.videos && files.videos.length > 0) {
-            videoBase64 = await fileToBase64(files.videos[0]);
-        }
-
+        if (files.videos && files.videos.length) videoBase64 = await fileToBase64(files.videos[0]);
         let audioBase64 = null;
-        if (files.audios && files.audios.length > 0) {
-            audioBase64 = await fileToBase64(files.audios[0]);
-        }
+        if (files.audios && files.audios.length) audioBase64 = await fileToBase64(files.audios[0]);
 
         const requestBody = {
             user_id: USER_ID, model: mode, prompt: prompt,
             image_urls: imageBase64s,
-            video_url: videoBase64,
-            audio_url: audioBase64,
-            style_prompt: stylePrompt,
-            lyrics: musicLyrics
+            video_url: videoBase64, audio_url: audioBase64,
+            style_prompt: stylePrompt, lyrics: musicLyrics
         };
 
         const endpoint = mode === 'chat' ? `${BRAIN_API_URL}/chat` : `${BRAIN_API_URL}/generate`;
         const response = await fetch(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(requestBody)
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody)
         });
 
         if (!response.ok) {
             const err = await response.json();
-            throw new Error(err.detail || "Ошибка сервера");
+            throw new Error(err.detail || "Ошибка");
         }
 
         const result = await response.json();
@@ -216,13 +216,9 @@ async function handleProcessClick(event) {
         // Очистка
         filesByMode[mode] = { photos: [], videos: [], audios: [] };
         if (promptInput) promptInput.value = '';
-        if (mode === 'music') {
-             const customStyleInput = section.querySelector('#custom-style-input');
-             if (customStyleInput) customStyleInput.value = '';
-        }
-        
         updateUI(section);
         resultWrapper.scrollIntoView({ behavior: "smooth", block: "start" });
+        updateBalance(); // Обновим баланс сразу
 
     } catch (error) {
         handleError(error);
@@ -232,7 +228,7 @@ async function handleProcessClick(event) {
     }
 }
 
-// --- ВСПОМОГАТЕЛЬНЫЕ ---
+// --- 5. ВСПОМОГАТЕЛЬНЫЕ ---
 
 function fileToBase64(file) {
     return new Promise((resolve, reject) => {
@@ -248,43 +244,37 @@ function updateUI(section) {
     const files = filesByMode[mode] || { photos: [], videos: [], audios: [] };
     const max = parseInt(section.dataset.maxPhotos) || 1;
     
+    // Превью
     const previewDiv = section.querySelector('.image-previews');
     if (previewDiv) {
         previewDiv.innerHTML = '';
-        files.photos.forEach(f => {
-            const img = document.createElement('img');
-            img.src = URL.createObjectURL(f);
-            img.className = 'preview-image';
-            previewDiv.appendChild(img);
-        });
-        files.videos.forEach(f => {
-            const vid = document.createElement('video');
-            vid.src = URL.createObjectURL(f);
-            vid.className = 'preview-image';
-            vid.muted = true; 
-            previewDiv.appendChild(vid);
-        });
-        if (files.audios.length > 0) {
+        files.photos.forEach(f => previewDiv.appendChild(createPreview(f, 'img')));
+        files.videos.forEach(f => previewDiv.appendChild(createPreview(f, 'video')));
+        files.audios.forEach(f => {
             const span = document.createElement('div');
-            span.textContent = "🎵 Аудио загружено";
-            span.style.marginTop = "5px";
+            span.textContent = "🎵 Аудио готово"; 
             previewDiv.appendChild(span);
-        }
+        });
     }
 
+    // Текст кнопки
     const uploadBtn = section.querySelector('.universal-upload-button:not([data-type])') || section.querySelector('.universal-upload-button[data-type="photo"]');
     if (uploadBtn) {
         if (max > 1) {
             uploadBtn.textContent = `Добавить фото (${files.photos.length}/${max})`;
             uploadBtn.disabled = files.photos.length >= max;
         } else {
-            uploadBtn.textContent = files.photos.length > 0 ? "Выбрать другое фото" : "1. Выбрать фото";
+            uploadBtn.textContent = files.photos.length > 0 ? "Выбрать другое" : "1. Выбрать фото";
         }
     }
     
     const videoBtn = section.querySelector('.universal-upload-button[data-type="video"]');
     if (videoBtn) videoBtn.textContent = files.videos.length > 0 ? "Видео выбрано" : "2. Выбрать видео";
+    
+    const audioBtn = section.querySelector('.universal-upload-button[data-type="audio"]');
+    if (audioBtn) audioBtn.textContent = files.audios.length > 0 ? "Аудио выбрано" : "2. Выбрать аудио";
 
+    // Показ кнопки запуска
     const processBtn = section.querySelector('.process-button');
     if (processBtn) {
         let ready = false;
@@ -298,74 +288,63 @@ function updateUI(section) {
     }
 }
 
+function createPreview(file, tag) {
+    const el = document.createElement(tag);
+    el.src = URL.createObjectURL(file);
+    el.className = 'preview-image';
+    return el;
+}
+
 function showLoader() { loader.classList.remove('hidden'); resultWrapper.classList.add('hidden'); }
 function hideLoader() { loader.classList.add('hidden'); }
 function handleError(e) { alert("Ошибка: " + e.message); hideLoader(); }
 
 function showResult(res) {
     const url = res.result_url || res.response;
-    
-    // Если это просто текст (чат), показываем alert и выходим
     if (res.model === 'chat') { alert(url); return; }
     
     resultWrapper.classList.remove('hidden');
-    
     const isVideo = url.includes('.mp4');
     const isAudio = url.includes('.mp3') || url.includes('.wav');
-    const isImage = !isVideo && !isAudio;
 
-    // Скрываем все, потом показываем нужное
+    // Скрываем все
     resultImage.classList.add('hidden');
     resultVideo.classList.add('hidden');
-    resultAudio.classList.add('hidden');
+    if(resultAudio) resultAudio.classList.add('hidden');
 
-    if (isImage) {
-        resultImage.src = url;
-        resultImage.classList.remove('hidden');
-        resultImage.onclick = () => window.open(url, '_blank');
-    } else if (isVideo) {
-        resultVideo.src = url;
-        resultVideo.classList.remove('hidden');
-    } else if (isAudio) {
-        resultAudio.src = url;
-        resultAudio.classList.remove('hidden');
+    if (isAudio) {
+        if(resultAudio) {
+            resultAudio.src = url;
+            resultAudio.classList.remove('hidden');
+        }
+    } else {
+        resultImage.src = !isVideo ? url : '';
+        resultImage.classList.toggle('hidden', isVideo);
+        resultVideo.src = isVideo ? url : '';
+        resultVideo.classList.toggle('hidden', !isVideo);
     }
     
-    // Показываем кнопки
     downloadButton.classList.remove('hidden');
-    shareButton.classList.remove('hidden');
-    
-    // Сохраняем текущий URL глобально для кнопки "Поделиться"
     window.currentResultUrl = url;
 }
 
-// Обработчик "Поделиться"
+// Кнопка Скачать
+downloadButton.addEventListener('click', () => {
+    const url = window.currentResultUrl;
+    if (!url) return;
+    const isVideo = url.includes('.mp4');
+    const isAudio = url.includes('.mp3');
+
+    if (vkBridge.isWebView() && !isVideo && !isAudio) {
+        vkBridge.send("VKWebAppShowImages", { images: [url] });
+    } else {
+        window.open(url, '_blank');
+    }
+});
+
+// Кнопка Поделиться
 if (shareButton) {
     shareButton.addEventListener('click', () => {
-        if (!window.currentResultUrl) return;
-        
-        // Используем встроенную функцию VK для шеринга
-        vkBridge.send("VKWebAppShare", { "link": window.currentResultUrl });
-        
-        // ИЛИ (если хотите постить на стену):
-        // vkBridge.send("VKWebAppShowWallPostBox", { "message": "Смотри, что я сделал в Нейро-художнике!", "attachments": window.currentResultUrl });
-    });
-}
-
-// Обработчик "Скачать"
-if (downloadButton) {
-    downloadButton.addEventListener('click', async () => {
-        if (!window.currentResultUrl) return;
-        const url = window.currentResultUrl;
-        const isVideo = url.includes('.mp4');
-        const isAudio = url.includes('.mp3') || url.includes('.wav');
-
-        // Для мобильного приложения VK
-        if (vkBridge.isWebView() && !isVideo && !isAudio) {
-            vkBridge.send("VKWebAppShowImages", { images: [url] });
-        } else {
-            // Для всего остального (компьютер, видео, аудио)
-            window.open(url, '_blank');
-        }
+        if (window.currentResultUrl) vkBridge.send("VKWebAppShare", { "link": window.currentResultUrl });
     });
 }
