@@ -1,4 +1,4 @@
-// script.js (vFinal-Base64)
+// script.js (vFinal-Polished)
 
 // --- Инициализация ---
 vkBridge.send('VKWebAppInit');
@@ -31,13 +31,12 @@ async function initUser() {
     } catch (e) { console.error(e); }
 }
 
-// --- УНИВЕРСАЛЬНЫЕ ОБРАБОТЧИКИ (без привязки к конкретным ID) ---
+// --- ОБРАБОТЧИКИ СОБЫТИЙ ---
 
-// 1. Клик по любой кнопке "Выбрать..."
+// 1. Клик по кнопке "Выбрать..."
 document.addEventListener('click', (e) => {
     if (e.target.matches('.universal-upload-button')) {
         const section = e.target.closest('.mode-section');
-        // Находим нужный input внутри этой же секции
         const type = e.target.dataset.type || 'photo';
         let selector = '.file-upload-input';
         if (type === 'video') selector = '.video-upload-input';
@@ -46,51 +45,49 @@ document.addEventListener('click', (e) => {
         const input = section.querySelector(selector);
         if (input) input.click();
     }
-});
-
-// 2. Выбор файла в любом input
-document.addEventListener('change', (e) => {
-    if (e.target.matches('.file-upload-input, .video-upload-input, .audio-upload-input')) {
-        const input = e.target;
-        const section = input.closest('.mode-section');
-        const mode = section.dataset.mode;
-        const files = Array.from(input.files);
-        
-        if (!files.length) return;
-
-        // Определяем тип хранилища
-        let storeType = 'photos';
-        if (input.classList.contains('video-upload-input')) storeType = 'videos';
-        if (input.classList.contains('audio-upload-input')) storeType = 'audios';
-
-        if (!filesByMode[mode]) filesByMode[mode] = { photos: [], videos: [], audios: [] };
-        
-        const max = parseInt(section.dataset.maxPhotos) || 1;
-
-        // Логика добавления
-        if (storeType === 'photos') {
-            if (max === 1) filesByMode[mode].photos = [files[0]];
-            else {
-                for (let f of files) {
-                    if (filesByMode[mode].photos.length < max) filesByMode[mode].photos.push(f);
-                }
-            }
-        } else {
-            filesByMode[mode][storeType] = [files[0]];
-        }
-        
-        updateUI(section);
-        input.value = ''; // Сброс
-    }
-});
-
-// 3. Клик по кнопке "Запустить/Нарисовать"
-document.addEventListener('click', (e) => {
+    
     if (e.target.matches('.process-button')) {
         handleProcessClick(e);
     }
 });
 
+// 2. Выбор файла (input change)
+document.addEventListener('change', (e) => {
+    if (e.target.matches('.file-upload-input, .video-upload-input, .audio-upload-input')) {
+        const input = e.target;
+        const section = input.closest('.mode-section');
+        if (!section) return; // Защита от undefined
+
+        const mode = section.dataset.mode;
+        const newFiles = Array.from(input.files);
+        
+        if (!newFiles.length) return;
+
+        // Тип хранилища
+        let typeKey = 'photos';
+        if (input.classList.contains('video-upload-input')) typeKey = 'videos';
+        if (input.classList.contains('audio-upload-input')) typeKey = 'audios';
+
+        if (!filesByMode[mode]) filesByMode[mode] = { photos: [], videos: [], audios: [] };
+        
+        const max = parseInt(section.dataset.maxPhotos) || 1;
+
+        if (typeKey === 'photos') {
+            if (max === 1) filesByMode[mode].photos = [newFiles[0]];
+            else {
+                // Добавляем, пока не достигнем лимита
+                for (let f of newFiles) {
+                    if (filesByMode[mode].photos.length < max) filesByMode[mode].photos.push(f);
+                }
+            }
+        } else {
+            filesByMode[mode][typeKey] = [newFiles[0]];
+        }
+        
+        updateUI(section);
+        input.value = '';
+    }
+});
 
 // --- ГЛАВНАЯ ЛОГИКА ---
 
@@ -101,13 +98,14 @@ async function handleProcessClick(e) {
     
     if (!USER_ID) { alert("ID не определен. Перезапустите."); return; }
 
-    const prompt = section.querySelector('.prompt-input')?.value || (mode === 'i2v' ? '.' : '');
+    const promptInput = section.querySelector('.prompt-input');
+    const prompt = promptInput ? promptInput.value : '';
     const files = filesByMode[mode] || { photos: [], videos: [], audios: [] };
 
     // Валидация
     if (!prompt && mode !== 'i2v' && mode !== 'music') { alert("Напишите промпт!"); return; }
     
-    // Проверка наличия файлов
+    // Проверка фото (для режимов где это обязательно)
     if (['vip_edit', 'i2v', 'quick_edit', 'vip_mix'].includes(mode) && files.photos.length === 0) {
         alert("Выберите фото!"); return;
     }
@@ -116,18 +114,18 @@ async function handleProcessClick(e) {
     showLoader();
 
     try {
-        // ШАГ 1: Конвертируем файлы в Base64 (текст)
+        // Конвертация в Base64
         const imageBase64s = [];
-        for (let file of files.photos) {
-            const b64 = await fileToBase64(file);
-            imageBase64s.push(b64);
+        if (files.photos) {
+            for (let file of files.photos) {
+                const b64 = await fileToBase64(file);
+                imageBase64s.push(b64);
+            }
         }
 
-        // ШАГ 2: Отправляем на "Мозг"
         const requestBody = {
             user_id: USER_ID, model: mode, prompt: prompt,
-            image_urls: imageBase64s, // Передаем картинку как текст!
-            // Для видео пока null, сложная логика
+            image_urls: imageBase64s,
             video_url: null, audio_url: null,
             style_prompt: mode === 'music' ? btn.dataset.style : null,
             lyrics: mode === 'music' ? prompt : null
@@ -148,9 +146,9 @@ async function handleProcessClick(e) {
         const result = await response.json();
         showResult(result);
         
-        // Очистка
+        // Успех: очистка
         filesByMode[mode] = { photos: [], videos: [], audios: [] };
-        if (section.querySelector('.prompt-input')) section.querySelector('.prompt-input').value = '';
+        if (promptInput) promptInput.value = '';
         updateUI(section);
         resultWrapper.scrollIntoView({ behavior: "smooth" });
 
@@ -162,7 +160,7 @@ async function handleProcessClick(e) {
     }
 }
 
-// --- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
+// --- ВСПОМОГАТЕЛЬНЫЕ ---
 
 function fileToBase64(file) {
     return new Promise((resolve, reject) => {
@@ -190,18 +188,30 @@ function updateUI(section) {
         });
     }
 
-    // Текст кнопки
+    // Текст кнопки и счетчик
     const uploadBtn = section.querySelector('.universal-upload-button');
     if (uploadBtn) {
-        if (max > 1) uploadBtn.textContent = `Добавить фото (${files.photos.length}/${max})`;
-        else uploadBtn.textContent = files.photos.length > 0 ? "Выбрать другое" : "1. Выбрать фото";
+        if (max > 1) {
+            uploadBtn.textContent = `Добавить фото (${files.photos.length}/${max})`;
+            uploadBtn.disabled = files.photos.length >= max;
+        } else {
+            uploadBtn.textContent = files.photos.length > 0 ? "Выбрать другое" : "1. Выбрать фото";
+        }
     }
 
-    // Показ кнопки "Запустить"
+    // Показ кнопки запуска
     const processBtn = section.querySelector('.process-button');
     if (processBtn) {
-        let ready = true;
-        if (section.querySelector('.file-upload-input') && files.photos.length === 0) ready = false;
+        let ready = false;
+        // Если это чисто текстовый режим
+        if (mode === 't2i' || mode === 't2v' || mode === 'chat' || mode === 'music') {
+            ready = true;
+        } 
+        // Если это фото-режим
+        else if (files.photos.length > 0) {
+            ready = true;
+        }
+        
         if (ready) processBtn.classList.remove('hidden');
         else processBtn.classList.add('hidden');
     }
@@ -217,28 +227,34 @@ function showResult(res) {
     
     resultWrapper.classList.remove('hidden');
     const isVideo = url.includes('.mp4');
+    
     resultImage.src = !isVideo ? url : '';
     resultImage.classList.toggle('hidden', isVideo);
+    
     resultVideo.src = isVideo ? url : '';
     resultVideo.classList.toggle('hidden', !isVideo);
-    downloadButton.classList.remove('hidden');
     
-    if(resultImage) resultImage.onclick = () => window.open(url, '_blank');
+    downloadButton.classList.remove('hidden');
 }
 
-// Клик по "Скачать"
-if (downloadButton) {
-    downloadButton.addEventListener('click', async () => {
-        const url = resultImage.src || resultVideo.src;
-        if(!url) return;
-        try {
-            const blob = await (await fetch(url)).blob();
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'result';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        } catch(e) { window.open(url, '_blank'); }
-    });
-}
+// --- НОВАЯ ЛОГИКА СКАЧИВАНИЯ ---
+downloadButton.addEventListener('click', () => {
+    const url = resultImage.src || resultVideo.src;
+    if (!url) return;
+
+    const isVideo = url.includes('.mp4');
+
+    if (!isVideo) {
+        // ДЛЯ ФОТО: Используем нативный просмотрщик VK
+        // Это самый надежный способ сохранить фото на телефоне
+        vkBridge.send("VKWebAppShowImages", { 
+            images: [url] 
+        }).catch(e => {
+            // Если вдруг не сработало (например, на компе) - открываем в новой вкладке
+            window.open(url, '_blank');
+        });
+    } else {
+        // ДЛЯ ВИДЕО: Открываем в новой вкладке (браузер сам предложит сохранить)
+        window.open(url, '_blank');
+    }
+});
