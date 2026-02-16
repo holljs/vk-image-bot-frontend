@@ -84,56 +84,80 @@ document.addEventListener('change', (e) => {
 
 // --- ГЛАВНАЯ ЛОГИКА ---
 
-async function handleProcessClick(e) {
-    const btn = e.target;
+async function handleProcessClick(event) {
+    const btn = event.target;
     const section = btn.closest('.mode-section');
     const mode = section.dataset.mode;
     
-    if (!USER_ID) { alert("ID не определен. Перезапустите."); return; }
+    if (!USER_ID) { alert("ID не определен. Перезапустите приложение."); return; }
 
     const promptInput = section.querySelector('.prompt-input');
     const prompt = promptInput ? promptInput.value : '';
+    
+    // --- ЛОГИКА ДЛЯ МУЗЫКИ ---
+    let stylePrompt = null;
+    let musicLyrics = null;
+
+    if (mode === 'music') {
+        musicLyrics = prompt; // Текст песни берем из основного поля
+        
+        // Если нажата кнопка стиля
+        if (btn.dataset.style) {
+            stylePrompt = btn.dataset.style;
+            
+            // Если выбран "Свой стиль"
+            if (stylePrompt === 'custom') {
+                const customStyleInput = section.querySelector('#custom-style-input');
+                stylePrompt = customStyleInput ? customStyleInput.value : '';
+                if (!stylePrompt || stylePrompt.length < 10) {
+                    alert("Описание стиля должно быть длиннее 10 символов!");
+                    return;
+                }
+            }
+        }
+    }
+    // --------------------------
+
     const files = filesByMode[mode] || { photos: [], videos: [], audios: [] };
 
-    // --- ВАЛИДАЦИЯ (ВЕРНУЛАСЬ!) ---
-    // 1. Проверка промпта (кроме режимов, где он не нужен)
-    if (!prompt && !['i2v', 'music', 'vip_clip', 'talking_photo'].includes(mode)) { 
-        alert("Напишите промпт!"); return; 
+    // --- ВАЛИДАЦИЯ ---
+    
+    // 1. Промпт (кроме исключений)
+    if (!prompt && !['i2v', 'music', 'vip_clip', 'talking_photo'].includes(mode)) {
+        alert("Напишите промпт!"); return;
     }
     
-    // 2. Проверка фото (для фото-режимов)
+    // 2. Фото
     if (['vip_edit', 'i2v', 'quick_edit', 'vip_mix'].includes(mode) && files.photos.length === 0) {
         alert("Выберите фото!"); return;
     }
     
-    // 3. Проверка видео (для vip_clip)
+    // 3. Фото + Видео (VIP-Клип)
     if (mode === 'vip_clip' && (files.photos.length === 0 || files.videos.length === 0)) {
         alert("Выберите и фото, и видео!"); return;
     }
     
-    // 4. Проверка аудио (для talking_photo)
+    // 4. Фото + Аудио (Говорящее фото)
     if (mode === 'talking_photo' && (files.photos.length === 0 || files.audios.length === 0)) {
         alert("Выберите фото и аудио!"); return;
     }
-    // ------------------------------
 
+    // --- ЗАПУСК ---
     btn.disabled = true;
     showLoader();
 
     try {
-        // 1. Конвертируем ФОТО
+        // Конвертация файлов
         const imageBase64s = [];
         if (files.photos) {
             for (let file of files.photos) imageBase64s.push(await fileToBase64(file));
         }
 
-        // 2. Конвертируем ВИДЕО
         let videoBase64 = null;
         if (files.videos && files.videos.length > 0) {
             videoBase64 = await fileToBase64(files.videos[0]);
         }
 
-        // 3. Конвертируем АУДИО
         let audioBase64 = null;
         if (files.audios && files.audios.length > 0) {
             audioBase64 = await fileToBase64(files.audios[0]);
@@ -142,10 +166,10 @@ async function handleProcessClick(e) {
         const requestBody = {
             user_id: USER_ID, model: mode, prompt: prompt,
             image_urls: imageBase64s,
-            video_url: videoBase64, 
+            video_url: videoBase64,
             audio_url: audioBase64,
-            style_prompt: mode === 'music' ? btn.dataset.style : null,
-            lyrics: mode === 'music' ? prompt : null
+            style_prompt: stylePrompt,
+            lyrics: musicLyrics
         };
 
         const endpoint = mode === 'chat' ? `${BRAIN_API_URL}/chat` : `${BRAIN_API_URL}/generate`;
@@ -163,10 +187,16 @@ async function handleProcessClick(e) {
         const result = await response.json();
         showResult(result);
         
+        // Очистка
         filesByMode[mode] = { photos: [], videos: [], audios: [] };
         if (promptInput) promptInput.value = '';
+        if (mode === 'music') {
+             const customStyleInput = section.querySelector('#custom-style-input');
+             if (customStyleInput) customStyleInput.value = '';
+        }
+        
         updateUI(section);
-        resultWrapper.scrollIntoView({ behavior: "smooth" });
+        resultWrapper.scrollIntoView({ behavior: "smooth", block: "start" });
 
     } catch (error) {
         handleError(error);
