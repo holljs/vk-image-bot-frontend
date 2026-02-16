@@ -325,3 +325,21 @@ if (shareButton) {
         // vkBridge.send("VKWebAppShowWallPostBox", { "message": "Смотри, что я сделал в Нейро-художнике!", "attachments": window.currentResultUrl });
     });
 }
+
+// Обработчик "Скачать"
+if (downloadButton) {
+    downloadButton.addEventListener('click', async () => {
+        if (!window.currentResultUrl) return;
+        const url = window.currentResultUrl;
+        const isVideo = url.includes('.mp4');
+        const isAudio = url.includes('.mp3') || url.includes('.wav');
+
+        // Для мобильного приложения VK
+        if (vkBridge.isWebView() && !isVideo && !isAudio) {
+            vkBridge.send("VKWebAppShowImages", { images: [url] });
+        } else {
+            // Для всего остального (компьютер, видео, аудио)
+            window.open(url, '_blank');
+        }
+    });
+}
