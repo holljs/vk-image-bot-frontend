@@ -11,20 +11,28 @@
     <div id="app">
         <h1>Нейро-художник</h1>
         
-        <div id="loader" class="hidden">
-            <div class="spinner"></div>
-            <p>Магия в процессе, подождите...</p>
-        </div>
+        <div id="loader" class="loader-overlay hidden">
+    <div class="loader-content">
+        <div class="spinner"></div>
+        <p>Магия в процессе... 🔮</p>
+        <p style="font-size: 14px; color: #ccc;">Это может занять 1-3 минуты</p>
+    </div>
+</div>
 
         <div id="result-wrapper" class="hidden">
-            <h2>Результат:</h2>
-            <div class="result-container">
-                <img id="resultImage" class="hidden" src="" alt="Result">
-                <video id="resultVideo" class="hidden" controls src=""></video>
-            </div>
-            <p class="hint">Нажмите на картинку, чтобы открыть оригинал</p>
-            <button id="downloadButton" class="download-button">Скачать результат</button>
-        </div>
+    <h2>Результат:</h2>
+    <div class="result-container">
+        <img id="resultImage" class="hidden" src="" alt="Result">
+        <video id="resultVideo" class="hidden" controls src=""></video>
+        <!-- Аудиоплеер -->
+        <audio id="resultAudio" class="hidden" controls style="width: 100%; margin-top: 10px;"></audio>
+    </div>
+    
+    <div class="result-buttons">
+        <button id="downloadButton" class="download-button">Посмотреть / Скачать</button>
+        <button id="shareButton" class="share-button">Поделиться в VK</button>
+    </div>
+</div>
         
         <hr>
 
