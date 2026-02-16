@@ -348,3 +348,29 @@ if (shareButton) {
         if (window.currentResultUrl) vkBridge.send("VKWebAppShare", { "link": window.currentResultUrl });
     });
 }
+
+// Обработчик оплаты VK Pay
+const buyCreditsBtn = document.getElementById('buy-credits-btn');
+
+if (buyCreditsBtn) {
+    buyCreditsBtn.addEventListener('click', () => {
+        // Вызываем окно покупки товара "credits_15" (15 голосов)
+        // Вы можете создать свои товары в коде сервера
+        vkBridge.send("VKWebAppShowOrderBox", { 
+            type: "item", 
+            item: "credits_15" // Этот ID должен совпадать с тем, что в image_server.py
+        })
+        .then(data => {
+            if (data.success) {
+                // Оплата прошла успешно!
+                // VK сам отправит уведомление на сервер, и сервер начислит кредиты.
+                // Нам нужно только подождать пару секунд и обновить баланс.
+                alert("Спасибо за покупку! Баланс обновляется...");
+                setTimeout(updateBalance, 3000); 
+            }
+        })
+        .catch(error => {
+            console.log("Оплата отменена или ошибка", error);
+        });
+    });
+}
