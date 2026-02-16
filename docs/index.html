@@ -6,27 +6,24 @@
     <title>Нейро-художник</title>
     <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
     <link rel="stylesheet" href="style.css">
-    <!-- Скрипт перенесен сюда и добавлен defer -->
-    <script src="script.js?v=32" defer></script>
 </head>
 <body>
     <div id="app">
         <h1>Нейро-художник</h1>
         
-        <!-- Загрузчик -->
         <div id="loader" class="hidden">
             <div class="spinner"></div>
             <p>Магия в процессе, подождите...</p>
         </div>
 
-        <!-- Блок результата -->
         <div id="result-wrapper" class="hidden">
             <h2>Результат:</h2>
             <div class="result-container">
                 <img id="resultImage" class="hidden" src="" alt="Result">
                 <video id="resultVideo" class="hidden" controls src=""></video>
             </div>
-            <button id="downloadButton" class="download-button">Посмотреть / Скачать</button>
+            <p class="hint">Нажмите на картинку, чтобы открыть оригинал</p>
+            <button id="downloadButton" class="download-button">Скачать результат</button>
         </div>
         
         <hr>
@@ -47,18 +44,13 @@
         <div class="mode-section" data-mode="vip_edit" data-max-photos="1">
             <h2>🎨 Арт-Образ</h2>
             <p>Создай креативный портрет, сохранив свое лицо.</p>
-            
             <div class="image-previews"></div>
-            <!-- Скрытый инпут -->
             <input type="file" class="file-upload-input hidden" accept="image/*">
-            
             <div class="step-buttons">
                 <button class="universal-upload-button">1. Выбрать фото</button>
             </div>
-            
             <p style="margin-top: 10px;">2. Напишите, кем хотите стать:</p>
             <input type="text" class="prompt-input" placeholder="Например: сделай из меня рыцаря">
-            
             <button class="process-button hidden">3. Запустить</button>
         </div>
 
@@ -68,37 +60,30 @@
         <div class="mode-section" data-mode="quick_edit" data-max-photos="3">
             <h2>✨ Фото Микс</h2>
             <p>Смешивание до 3-х фото.</p>
-            
             <div class="image-previews"></div>
             <input type="file" class="file-upload-input hidden" accept="image/*" multiple>
-            
             <div class="step-buttons">
                 <button class="universal-upload-button">1. Добавить фото (0/3)</button>
             </div>
-
             <p style="margin-top: 10px;">2. Опишите, как смешать:</p>
             <input type="text" class="prompt-input" placeholder="Например: лицо с первого фото, фон со второго">
-            
             <button class="process-button hidden">3. Запустить обработку</button>
         </div>
 
         <hr>
 
-        <!-- РЕЖИМ 3: VIP-Микс -->
+        <!-- РЕЖИМ 3: VIP-Микс (Исправлен текст) -->
         <div class="mode-section" data-mode="vip_mix" data-max-photos="5">
             <h2>👑 VIP-Микс</h2>
             <p>Фотореалистичное смешивание до 5 фото.</p>
-            
             <div class="image-previews"></div>
             <input type="file" class="file-upload-input hidden" accept="image/*" multiple>
-            
             <div class="step-buttons">
                 <button class="universal-upload-button">1. Добавить фото (0/5)</button>
             </div>
-
-            <p style="margin-top: 10px;">2. Опишите результат (или код "Еда"/"Сетка"):</p>
+            <!-- Убрали упоминание про Еда/Сетка -->
+            <p style="margin-top: 10px;">2. Опишите, что должно получиться:</p> 
             <input type="text" class="prompt-input" placeholder="Например: девушка на фоне Токио">
-            
             <button class="process-button hidden">3. Запустить обработку</button>
         </div>
 
@@ -110,17 +95,13 @@
         <div class="mode-section" data-mode="i2v" data-max-photos="1">
             <h2>✨ Живое Фото</h2>
             <p>Оживи свою фотографию!</p>
-            
             <div class="image-previews"></div>
             <input type="file" class="file-upload-input hidden" accept="image/*">
-            
             <div class="step-buttons">
                 <button class="universal-upload-button">1. Выбрать фото</button>
             </div>
-
             <p style="margin-top: 10px;">2. Сценарий (можно оставить пустым):</p>
             <input type="text" class="prompt-input" placeholder="Например: камера летит вперед">
-            
             <button class="process-button hidden">3. Анимировать</button>
         </div>
 
@@ -136,19 +117,18 @@
 
         <hr>
 
-        <!-- РЕЖИМ 6: VIP-Клип (Танцы) -->
+        <!-- РЕЖИМ 6: VIP-Клип (Исправлено название и описание) -->
         <div class="mode-section" data-mode="vip_clip" data-max-photos="1" data-max-videos="1">
-            <h2>🎬 VIP-Клип (Танцы)</h2>
-            <p>Перенеси персонажа с фото в любое видео с танцем!</p>
+            <h2>🎬 VIP-Клип</h2>
+            <p>Перенеси своего персонажа в любое видео (до 15 сек).</p>
             <div class="image-previews"></div>
             
-            <!-- Инпуты -->
             <input type="file" class="file-upload-input hidden" accept="image/*">
             <input type="file" class="video-upload-input hidden" accept="video/*">
             
             <div class="step-buttons">
                 <button class="universal-upload-button" data-type="photo">1. Выбрать фото персонажа</button>
-                <button class="universal-upload-button" data-type="video">2. Выбрать видео танца</button>
+                <button class="universal-upload-button" data-type="video">2. Выбрать видео</button>
             </div>
             
             <button class="process-button hidden" style="margin-top: 15px;">3. Запустить</button>
@@ -185,17 +165,42 @@
             <button class="process-button">Отправить</button>
         </div>
 
-        <!-- РЕЖИМ 9: Музыка -->
+        <!-- РЕЖИМ 9: Музыка (Исправлены промпты + добавлен свой стиль) -->
         <div class="mode-section" data-mode="music">
             <h2>🎵 Нейро-Музыка</h2>
             <p>1. Напишите текст песни.</p>
             <textarea class="prompt-input" rows="3" placeholder="Текст песни..."></textarea>
-            <p>2. Выберите стиль:</p>
-            <div class="music-styles">
-                <button class="process-button" data-style="Epic Rock">Рок</button>
-                <button class="process-button" data-style="Pop">Поп</button>
-                <button class="process-button" data-style="Rap">Рэп</button>
+            <p>2. Выберите стиль ИЛИ напишите свой:</p>
+            
+            <!-- Поле для своего стиля -->
+            <input type="text" id="custom-style-input" class="prompt-input" placeholder="Свой стиль (например: Jazz with saxophone, slow tempo)">
+            
+            <div class="music-styles" style="margin-top: 10px;">
+                <button class="process-button" data-style="Epic Rock music with electric guitars and heavy drums">Рок</button>
+                <button class="process-button" data-style="Romantic Pop music, piano melody, soft vocals style">Поп</button>
+                <button class="process-button" data-style="Hip-Hop beat, Rap style, heavy bass, street rhythm">Рэп</button>
+                <!-- Кнопка для своего стиля -->
+                <button class="process-button" id="custom-style-btn" data-style="custom">Использовать свой стиль</button>
             </div>
         </div>
 
-   
+        <hr>
+        
+        <!-- РЕЖИМ 10: ДЛЯ БИЗНЕСА (Добавлен!) -->
+        <div class="mode-section" data-mode="business">
+            <h2>💼 ДЛЯ БИЗНЕСА</h2>
+            <p>Инструменты для продаж и контента.</p>
+            <p style="font-size: 12px; color: #888;">(Выберите направление)</p>
+            
+            <!-- Кнопки-переключатели (просто для примера, логику можно расширить) -->
+            <div class="business-buttons">
+                <button class="process-button" onclick="alert('Используйте режим Фото-Микс! (Фото 1: Модель, Фото 2: Одежда)');">👗 Одежда / WB</button>
+                <button class="process-button" onclick="alert('Используйте режим VIP-Микс! (Фото: Блюдо, Код: Еда)');">🍰 Еда / Рестораны</button>
+                <button class="process-button" onclick="alert('Используйте режим Фото-Микс! (Фото 1: Комната, Фото 2: Мебель)');">🏠 Интерьер</button>
+            </div>
+        </div>
+
+    </div>
+    <script src="script.js?v=40"></script>
+</body>
+</html>
