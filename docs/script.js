@@ -95,30 +95,35 @@ async function handleProcessClick(e) {
     const prompt = promptInput ? promptInput.value : '';
     const files = filesByMode[mode] || { photos: [], videos: [], audios: [] };
 
-    if (!prompt && !['i2v', 'music', 'vip_clip', 'talking_photo'].includes(mode)) { 
-        alert("Напишите промпт!"); return; 
-    }
-    
-    if (['vip_edit', 'i2v', 'quick_edit', 'vip_mix'].includes(mode) && files.photos.length === 0) {
-        alert("Выберите фото!"); return;
-    }
-    if (mode === 'vip_clip' && (files.photos.length === 0 || files.videos.length === 0)) {
-        alert("Выберите фото и видео!"); return;
-    }
+    // --- (Валидацию пропускаю, она у вас правильная) ---
 
     btn.disabled = true;
     showLoader();
 
     try {
+        // 1. Конвертируем ФОТО
         const imageBase64s = [];
         if (files.photos) {
             for (let file of files.photos) imageBase64s.push(await fileToBase64(file));
         }
 
+        // 2. Конвертируем ВИДЕО (НОВАЯ ЧАСТЬ)
+        let videoBase64 = null;
+        if (files.videos && files.videos.length > 0) {
+            videoBase64 = await fileToBase64(files.videos[0]);
+        }
+
+        // 3. Конвертируем АУДИО (НОВАЯ ЧАСТЬ)
+        let audioBase64 = null;
+        if (files.audios && files.audios.length > 0) {
+            audioBase64 = await fileToBase64(files.audios[0]);
+        }
+
         const requestBody = {
             user_id: USER_ID, model: mode, prompt: prompt,
             image_urls: imageBase64s,
-            video_url: null, audio_url: null,
+            video_url: videoBase64, // <-- ТЕПЕРЬ ТУТ НЕ NULL!
+            audio_url: audioBase64, // <-- И ТУТ ТОЖЕ!
             style_prompt: mode === 'music' ? btn.dataset.style : null,
             lyrics: mode === 'music' ? prompt : null
         };
