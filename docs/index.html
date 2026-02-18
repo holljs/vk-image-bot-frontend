@@ -77,22 +77,34 @@
         
         <hr>
 
-        <!-- БИЗНЕС-ПАНЕЛЬ -->
-        <div class="mode-section" data-mode="business">
-            <h2>💼 ДЛЯ БИЗНЕСА</h2>
-            <p>Нажмите кнопку, чтобы перейти к нужному режиму и заполнить шаблон.</p>
-            <div class="business-buttons">
-                <button class="business-shortcut" data-target="quick_edit" data-prompt="HARD EDITING. Photo 1 is the Model. Photo 2 is the Clothes. Dress the model in the clothes. Realistic, 8k.">👗 Одежда / WB</button>
-                <button class="business-shortcut" data-target="vip_mix" data-prompt="Еда">🍰 Еда (Мишлен)</button>
-                <button class="business-shortcut" data-target="vip_mix" 
-        data-prompt="Professional food photography collage. A perfect 3x3 grid arranging 9 DIFFERENT shots of the SAME product. Show different angles: top-down, side, macro, close-up. Michelin-star styling. Elegant dark studio background. 8k.">
-    🍱 Еда (Коллаж)
-</button>
-                <button class="business-shortcut" data-target="quick_edit" data-prompt="HARD EDITING. Photo 1 is the Room. Photo 2 is the Furniture. Place furniture into the room. Realistic interior design.">🏠 Интерьер</button>
-            </div>
-        </div>
+       <!-- БИЗНЕС-ПАНЕЛЬ -->
+<div class="mode-section" data-mode="business">
+    <h2>💼 ДЛЯ БИЗНЕСА</h2>
+    <p>Нажмите кнопку, чтобы перейти к нужному режиму и заполнить шаблон.</p>
+    <div class="business-buttons">
+        <!-- Одежда -->
+        <button class="business-shortcut" data-target="quick_edit" data-prompt="Girl from photo 1 is wearing the clothes from photo 2. Professional fashion photography, studio lighting, white background, high quality">
+            👗 Одежда / WB
+        </button>
 
-        <hr>
+        <!-- Еда (Мишлен) -->
+        <button class="business-shortcut" data-target="vip_mix" data-prompt="Professional food photography, Michelin-star quality, high resolution, detailed texture, elegant composition, natural lighting">
+            🍰 Еда (Мишлен)
+        </button>
+
+        <!-- Еда (Коллаж 3x3) -->
+        <button class="business-shortcut" data-target="vip_mix"
+            data-prompt="Professional food photography collage. A perfect 3x3 grid arranging 9 DIFFERENT shots of the SAME product. Show different angles: top-down, side, macro, close-up. Michelin-star styling. Elegant dark studio background. 8k.">
+            🍱 Еда (Коллаж)
+        </button>
+
+        <!-- Интерьер -->
+        <button class="business-shortcut" data-target="quick_edit" data-prompt="HARD EDITING TASK. PHOTO 1 is the ROOM. PHOTOS 2 and 3 are the FURNITURE. Step 1: REMOVE all existing furniture from the room in Photo 1. Make the room empty. Step 2: TAKE the furniture items from Photo 2 and Photo 3. Step 3: PLACE these specific furniture items into the empty room from Photo 1. Keep the original room geometry, windows, and walls from Photo 1. Realistic interior design, correct perspective, shadows, and lighting. 8k.">
+            🏠 Интерьер
+        </button>
+    </div>
+</div>
+<hr>
 
         <!-- РЕЖИМ 0: Текст в Картинку -->
         <div class="mode-section" data-mode="t2i">
