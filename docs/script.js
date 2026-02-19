@@ -349,28 +349,63 @@ if (shareButton) {
     });
 }
 
-// Обработчик оплаты VK Pay
+// ОБРАБОТЧИК ОПЛАТЫ VK PAY (РУБЛИ)
 const buyCreditsBtn = document.getElementById('buy-credits-btn');
 
 if (buyCreditsBtn) {
-    buyCreditsBtn.addEventListener('click', () => {
-        // Вызываем окно покупки товара "credits_15" (15 голосов)
-        // Вы можете создать свои товары в коде сервера
-        vkBridge.send("VKWebAppShowOrderBox", { 
-            type: "item", 
-            item: "credits_15" // Этот ID должен совпадать с тем, что в image_server.py
-        })
-        .then(data => {
-            if (data.success) {
-                // Оплата прошла успешно!
-                // VK сам отправит уведомление на сервер, и сервер начислит кредиты.
-                // Нам нужно только подождать пару секунд и обновить баланс.
-                alert("Спасибо за покупку! Баланс обновляется...");
-                setTimeout(updateBalance, 3000); 
+    buyCreditsBtn.addEventListener('click', async () => {
+        if (!USER_ID) return;
+        
+        // 1. Сумма пополнения (можно сделать выбор)
+        const amount = 150; // 150 рублей = 15 кредитов
+        
+        showLoader();
+        
+        try {
+            // 2. Идем к "Мозгу" за подписью
+            const signResponse = await fetch(`${BRAIN_API_URL}/vk-pay/sign-order`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    user_id: USER_ID, 
+                    amount: amount, 
+                    description: "15 кредитов" 
+                })
+            });
+            
+            const signResult = await signResponse.json();
+            if (!signResult.success) throw new Error("Ошибка подписи");
+            
+            const params = signResult.params;
+
+            // 3. Открываем окно VK Pay
+            const payResult = await vkBridge.send("VKWebAppOpenPayForm", {
+                app_id: 51884181,
+                action: "pay-to-service",
+                params: params
+            });
+
+            // 4. Если оплата прошла
+            if (payResult.status) {
+                // Сообщаем серверу, чтобы начислил (временный метод для скорости)
+                await fetch(`${BRAIN_API_URL}/vk-pay/success`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: USER_ID, amount: amount, description: "success" })
+                });
+                
+                alert("Оплата прошла успешно! Баланс пополнен.");
+                updateBalance();
             }
-        })
-        .catch(error => {
-            console.log("Оплата отменена или ошибка", error);
-        });
+
+        } catch (error) {
+            console.error(error);
+            // Если юзер закрыл окно - это не страшно
+            if (error.error_type !== 'client_error') {
+                alert("Оплата не завершена.");
+            }
+        } finally {
+            hideLoader();
+        }
     });
 }
