@@ -327,34 +327,61 @@ if (shareButton) {
     });
 }
 
-// --- 6. ОПЛАТА (VK Pay - pay-to-group) ---
-document.querySelectorAll('.buy-btn').forEach(btn => {
+// --- 6. ЛОГИКА ОПЛАТЫ (МНОГО КНОПОК) ---
+const buyButtons = document.querySelectorAll('.buy-btn');
+
+buyButtons.forEach(btn => {
     btn.addEventListener('click', async () => {
         if (!USER_ID) return;
-        const amount = parseInt(btn.dataset.amount);
-        const credits = parseInt(btn.dataset.credits);
+        
+        // 1. Берем параметры из кнопки
+        const amount = parseInt(btn.dataset.amount); // 150 или 700
+        const credits = parseInt(btn.dataset.credits); // 15 или 100
+        const description = `Покупка ${credits} кредитов`; // Описание
+        
         showLoader();
+        
         try {
+            // 2. Идем к серверу за подписью (pay-to-group)
             const signResponse = await fetch(`${BRAIN_API_URL}/vk-pay/sign-order`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user_id: USER_ID, amount: amount, description: `${credits} кредитов` })
+                body: JSON.stringify({ 
+                    user_id: USER_ID, 
+                    amount: amount, 
+                    description: description 
+                })
             });
             const signResult = await signResponse.json();
             
+            if (!signResult.success) throw new Error("Ошибка подписи");
+
+            // 3. Открываем окно VK Pay с полученными параметрами
             const payResult = await vkBridge.send("VKWebAppOpenPayForm", signResult.params);
 
+            // 4. Если успех (на клиенте)
             if (payResult.status) {
+                // Начисляем кредиты
+                // ХАК: Передаем amount = credits * 10, чтобы сервер начислил правильно
+                // (сервер делит на 10: 150/10=15, 1000/10=100)
+                const fakeAmount = credits * 10; 
+                
                 await fetch(`${BRAIN_API_URL}/vk-pay/success`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: USER_ID, amount: credits * 10, description: "manual_success" })
+                    body: JSON.stringify({ 
+                        user_id: USER_ID, 
+                        amount: fakeAmount, 
+                        description: "manual_success" 
+                    })
                 });
+                
                 alert("Оплата прошла успешно!");
                 updateBalance();
             }
         } catch (e) {
-            console.log(e);
+            console.error(e);
+            // Игнорируем закрытие окна пользователем
         } finally {
             hideLoader();
         }
