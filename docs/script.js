@@ -349,52 +349,37 @@ if (shareButton) {
     });
 }
 
-// script.js (Простая оплата VK Pay)
+// script.js (Debug версия)
 
 const buyCreditsBtn = document.getElementById('buy-credits-btn');
 
 if (buyCreditsBtn) {
-    buyCreditsBtn.addEventListener('click', () => {
-        
-        const amount = 150; // Сумма
-        const description = "Покупка 15 кредитов";
-        const receiverId = 233876992; // ВАШ ID (получателя)
+    console.log("Кнопка оплаты найдена!"); // 1. Проверка
 
-        // Вызываем окно оплаты БЕЗ обращения к серверу за подписью
+    buyCreditsBtn.addEventListener('click', () => {
+        console.log("Кнопка оплаты нажата!"); // 2. Проверка
+
+        // Самый простой вызов
         vkBridge.send("VKWebAppOpenPayForm", {
-            app_id: 51884181, 
-            action: "pay-to-user", // Перевод пользователю (Вам)
+            app_id: 51884181,
+            action: "pay-to-user",
             params: {
-                user_id: receiverId,
-                amount: amount,
-                description: description
+                user_id: 233876992,
+                amount: 150,
+                description: "Test"
             }
         })
-        .then(async (data) => {
+        .then(data => {
+            console.log("Ответ от VK:", data); // 3. Успех или отказ
             if (data.status) {
-                // Оплата прошла!
-                // Так как сервер не получил уведомления, мы должны САМИ сказать ему начислить кредиты.
-                // ВНИМАНИЕ: Это небезопасно (можно подделать), но для теста - идеально.
-                
-                await fetch(`${BRAIN_API_URL}/vk-pay/success`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        user_id: USER_ID, 
-                        amount: amount, 
-                        description: "manual_success" 
-                    })
-                });
-                
-                alert("Оплата прошла успешно! Кредиты начислены.");
-                updateBalance();
-            } else {
-                alert("Оплата не завершена.");
+                alert("Успех!");
             }
         })
         .catch(error => {
-            console.error("Ошибка VK Pay:", error);
-            // alert("Ошибка при открытии окна оплаты: " + error.error_type);
+            console.error("ОШИБКА VK:", error); // 4. Ошибка
+            alert("Ошибка: " + JSON.stringify(error));
         });
     });
+} else {
+    console.error("Кнопка оплаты НЕ найдена в HTML!");
 }
