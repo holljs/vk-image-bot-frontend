@@ -349,37 +349,44 @@ if (shareButton) {
     });
 }
 
-// script.js (Debug версия)
-
-const buyCreditsBtn = document.getElementById('buy-credits-btn');
-
-if (buyCreditsBtn) {
-    console.log("Кнопка оплаты найдена!"); // 1. Проверка
-
-    buyCreditsBtn.addEventListener('click', () => {
-        console.log("Кнопка оплаты нажата!"); // 2. Проверка
-
-        // Самый простой вызов
-        vkBridge.send("VKWebAppOpenPayForm", {
-            app_id: 51884181,
-            action: "pay-to-user",
-            params: {
-                user_id: 233876992,
-                amount: 150,
-                description: "Test"
-            }
-        })
-        .then(data => {
-            console.log("Ответ от VK:", data); // 3. Успех или отказ
-            if (data.status) {
-                alert("Успех!");
-            }
-        })
-        .catch(error => {
-            console.error("ОШИБКА VK:", error); // 4. Ошибка
-            alert("Ошибка: " + JSON.stringify(error));
-        });
+// Инициализация приложения (обязательный шаг!)
+vkBridge.send("VKWebAppInit", {}).then(data => {
+  if (data.result) {
+    console.log("Инициализация успешна");
+    // Получаем ID пользователя
+    vkBridge.send("VKWebAppGetUserInfo").then(userData => {
+      const userId = userData.result.id;
+      // Настройки платежа
+      const paymentParams = {
+        app_id: 12345678, // Замените на ВАШ test app_id из портала
+        action: "pay-to-user",
+        user_id: userId,
+        amount: 10000, // 100 рублей (в копейках)
+        description: "Тестовая оплата в разработке",
+        version: 2,
+        sign: generateAppSignature(userId, 10000) // Генератор подписи
+      };
+      
+      // Вызов платёжного окна
+      vkBridge.send("VKWebAppOpenPayForm", paymentParams)
+        .then(result => handlePaymentResult(result))
+        .catch(err => console.error("Ошибка:", err));
     });
-} else {
-    console.error("Кнопка оплаты НЕ найдена в HTML!");
+  }
+});
+
+// Генератор подписи приложения (MD5)
+function generateAppSignature(userId, amount) {
+  const rawData = `amount=${amount}user_id=${userId}your_app_secret_key`; // Замените на ВАШ секретный ключ
+  return CryptoJS.MD5(rawData).toString();
+}
+
+// Обработчик результата
+function handlePaymentResult(result) {
+  if (result.status) {
+    console.log("Платеж успешен:", result);
+    // Здесь добавьте логику обновления баланса
+  } else {
+    console.error("Ошибка платежа:", result.error);
+  }
 }
