@@ -25,21 +25,17 @@
         <div class="mode-section profile-section" style="padding: 15px; border: 2px solid #4a76a8;">
             <h2 style="text-align: left; margin-bottom: 10px;">👤 Личный кабинет</h2>
             
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <span id="user-balance-display" style="font-weight: bold; font-size: 18px; color: #4a76a8;">Баланс: ...</span>
-                <button id="refreshBalance" style="width: auto; font-size: 12px; padding: 5px 10px; margin: 0; background: #ebf2fa; color: #4a76a8;">🔄</button>
-            </div>
-            
-            <div class="step-buttons">
-                <!-- Кнопка оплаты (пока ведет в ТГ) -->
-                <button id="buy-credits-btn">💎 Пополнить баланс</button>
-                
-                <div style="display: flex; gap: 10px;">
-                    <button id="invite-friend-btn" style="flex: 1;">🤝 Пригласить</button>
-                    <button id="helpButton" style="flex: 1; background-color: #6c8eb3;">ℹ️ Инфо/Цены</button>
-                </div>
-            </div>
-        </div>
+           <div style="display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px;">
+    <!-- Кнопка 1 -->
+    <button class="buy-btn" data-amount="150" data-credits="15" style="background-color: #4CAF50;">
+        💎 15 кредитов за 150₽
+    </button>
+    
+    <!-- Кнопка 2 (со скидкой!) -->
+    <button class="buy-btn" data-amount="700" data-credits="100" style="background-color: #E91E63;">
+        💎💎 100 кредитов за 700₽ (Выгодно!)
+    </button>
+</div>
         
       <!-- МОДАЛЬНОЕ ОКНО ПОМОЩИ -->
         <div id="helpModal" class="modal hidden">
