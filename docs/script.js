@@ -1,4 +1,4 @@
-// script.js (v55 - ФИНАЛЬНЫЙ)
+// script.js (v60 - ИСПРАВЛЕННЫЙ И ПОЛНЫЙ)
 
 vkBridge.send('VKWebAppInit');
 const BRAIN_API_URL = 'https://neuro-master.online/api';
@@ -7,7 +7,6 @@ let userIdInitialized = false;
 const filesByMode = {};
 
 const loader = document.getElementById('loader');
-const buyCreditsBtn = document.getElementById('buy-credits-btn');
 const resultWrapper = document.getElementById('result-wrapper');
 const resultImage = document.getElementById('resultImage');
 const resultVideo = document.getElementById('resultVideo');
@@ -16,9 +15,7 @@ const downloadButton = document.getElementById('downloadButton');
 const shareButton = document.getElementById('shareButton');
 const helpModal = document.getElementById('helpModal');
 
-
-// --- 1. ИНИЦИАЛИЗАЦИЯ И ЛИЧНЫЙ КАБИНЕТ ---
-
+// --- 1. ИНИЦИАЛИЗАЦИЯ ---
 vkBridge.subscribe(e => {
     if (e.detail && e.detail.type === 'VKWebAppUpdateConfig' && !userIdInitialized) {
         initUser();
@@ -32,7 +29,7 @@ async function initUser() {
         if (data.id) {
             USER_ID = data.id;
             userIdInitialized = true;
-            updateBalance(); // Загружаем баланс
+            updateBalance();
         }
     } catch (e) { console.error(e); }
 }
@@ -57,7 +54,7 @@ document.getElementById('invite-friend-btn')?.addEventListener('click', () => {
     vkBridge.send("VKWebAppShare", { "link": `https://vk.com/app51884181#${USER_ID}` });
 });
 
-// Кнопка Помощи (Модалка)
+// Кнопка Помощи
 document.getElementById('helpButton')?.addEventListener('click', () => {
     if (helpModal) helpModal.classList.remove('hidden');
 });
@@ -65,24 +62,17 @@ document.querySelector('.close-modal')?.addEventListener('click', () => {
     if (helpModal) helpModal.classList.add('hidden');
 });
 
-// --- 2. БИЗНЕС-ЛОГИКА (Умные шорткаты) ---
-
+// --- 2. БИЗНЕС-ЛОГИКА ---
 document.querySelectorAll('.business-shortcut').forEach(btn => {
     btn.addEventListener('click', (e) => {
         const targetMode = e.target.dataset.target;
         const promptText = e.target.dataset.prompt;
-        
-        // Находим нужную секцию
         const targetSection = document.querySelector(`.mode-section[data-mode="${targetMode}"]`);
         if (targetSection) {
-            // Скроллим к ней
             targetSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            
-            // Заполняем промпт
             const input = targetSection.querySelector('.prompt-input');
             if (input) {
                 input.value = promptText;
-                // Эффект мигания
                 input.style.borderColor = '#4CAF50';
                 setTimeout(() => input.style.borderColor = '#dce1e6', 1000);
             }
@@ -90,9 +80,7 @@ document.querySelectorAll('.business-shortcut').forEach(btn => {
     });
 });
 
-
 // --- 3. ЗАГРУЗКА ФАЙЛОВ ---
-
 document.querySelectorAll('.universal-upload-button').forEach(btn => {
     btn.addEventListener('click', (e) => {
         const section = e.target.closest('.mode-section');
@@ -130,15 +118,12 @@ document.querySelectorAll('.file-upload-input, .video-upload-input, .audio-uploa
         } else {
             filesByMode[mode][typeKey] = [newFiles[0]];
         }
-        
         updateUI(section);
         input.value = '';
     });
 });
 
-
 // --- 4. ГЕНЕРАЦИЯ ---
-
 document.querySelectorAll('.process-button').forEach(btn => {
     btn.addEventListener('click', handleProcessClick);
 });
@@ -153,7 +138,6 @@ async function handleProcessClick(event) {
     const promptInput = section.querySelector('.prompt-input');
     const prompt = promptInput ? promptInput.value : '';
     
-    // Музыка
     let stylePrompt = null;
     let musicLyrics = null;
     if (mode === 'music') {
@@ -168,7 +152,6 @@ async function handleProcessClick(event) {
         }
     }
 
-    // Валидация
     if (!prompt && !['i2v', 'music', 'vip_clip', 'talking_photo'].includes(mode)) {
         alert("Напишите промпт!"); return;
     }
@@ -215,12 +198,11 @@ async function handleProcessClick(event) {
         const result = await response.json();
         showResult(result);
         
-        // Очистка
         filesByMode[mode] = { photos: [], videos: [], audios: [] };
         if (promptInput) promptInput.value = '';
         updateUI(section);
         resultWrapper.scrollIntoView({ behavior: "smooth", block: "start" });
-        updateBalance(); // Обновим баланс сразу
+        updateBalance();
 
     } catch (error) {
         handleError(error);
@@ -231,7 +213,6 @@ async function handleProcessClick(event) {
 }
 
 // --- 5. ВСПОМОГАТЕЛЬНЫЕ ---
-
 function fileToBase64(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -246,7 +227,6 @@ function updateUI(section) {
     const files = filesByMode[mode] || { photos: [], videos: [], audios: [] };
     const max = parseInt(section.dataset.maxPhotos) || 1;
     
-    // Превью
     const previewDiv = section.querySelector('.image-previews');
     if (previewDiv) {
         previewDiv.innerHTML = '';
@@ -259,7 +239,6 @@ function updateUI(section) {
         });
     }
 
-    // Текст кнопки
     const uploadBtn = section.querySelector('.universal-upload-button:not([data-type])') || section.querySelector('.universal-upload-button[data-type="photo"]');
     if (uploadBtn) {
         if (max > 1) {
@@ -272,11 +251,9 @@ function updateUI(section) {
     
     const videoBtn = section.querySelector('.universal-upload-button[data-type="video"]');
     if (videoBtn) videoBtn.textContent = files.videos.length > 0 ? "Видео выбрано" : "2. Выбрать видео";
-    
     const audioBtn = section.querySelector('.universal-upload-button[data-type="audio"]');
     if (audioBtn) audioBtn.textContent = files.audios.length > 0 ? "Аудио выбрано" : "2. Выбрать аудио";
 
-    // Показ кнопки запуска
     const processBtn = section.querySelector('.process-button');
     if (processBtn) {
         let ready = false;
@@ -309,16 +286,12 @@ function showResult(res) {
     const isVideo = url.includes('.mp4');
     const isAudio = url.includes('.mp3') || url.includes('.wav');
 
-    // Скрываем все
     resultImage.classList.add('hidden');
     resultVideo.classList.add('hidden');
     if(resultAudio) resultAudio.classList.add('hidden');
 
     if (isAudio) {
-        if(resultAudio) {
-            resultAudio.src = url;
-            resultAudio.classList.remove('hidden');
-        }
+        if(resultAudio) { resultAudio.src = url; resultAudio.classList.remove('hidden'); }
     } else {
         resultImage.src = !isVideo ? url : '';
         resultImage.classList.toggle('hidden', isVideo);
@@ -327,12 +300,14 @@ function showResult(res) {
     }
     
     downloadButton.classList.remove('hidden');
-    window.currentResultUrl = url;
+    
+    // Клик для открытия оригинала
+    if(resultImage) resultImage.onclick = () => window.open(url, '_blank');
 }
 
 // Кнопка Скачать
 downloadButton.addEventListener('click', () => {
-    const url = window.currentResultUrl;
+    const url = resultImage.src || resultVideo.src || resultAudio.src;
     if (!url) return;
     const isVideo = url.includes('.mp4');
     const isAudio = url.includes('.mp3');
@@ -347,43 +322,45 @@ downloadButton.addEventListener('click', () => {
 // Кнопка Поделиться
 if (shareButton) {
     shareButton.addEventListener('click', () => {
-        if (window.currentResultUrl) vkBridge.send("VKWebAppShare", { "link": window.currentResultUrl });
+        if (resultImage.src) vkBridge.send("VKWebAppShare", { "link": resultImage.src });
     });
 }
 
-// ... (в обработчике кнопки) ...
-    buyCreditsBtn.addEventListener('click', async () => {
-        showLoader();
-        try {
-            // 1. Получаем подписанные параметры
-            const response = await fetch(`${BRAIN_API_URL}/vk-pay/sign-order`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    user_id: USER_ID, 
-                    amount: 150, 
-                    description: "Покупка кредитов" 
-                })
-            });
-            const result = await response.json();
-            
-            if (!result.success) throw new Error("Ошибка подписи");
+// --- 6. ЛОГИКА ОПЛАТЫ (МНОГО КНОПОК) ---
+const buyButtons = document.querySelectorAll('.buy-btn');
+const urlParams = new URLSearchParams(window.location.search);
+const platform = urlParams.get('vk_platform');
+const isMobile = ['mobile_android', 'mobile_iphone', 'mobile_ipad'].includes(platform);
 
-            // 2. Открываем VK Pay
-            // В result.params уже лежат: amount, data, description, sign, user_id, version, action
-            const payResult = await vkBridge.send("VKWebAppOpenPayForm", {
-                app_id: 51884181,
-                action: result.params.action,
-                params: result.params
-            });
+if (isMobile) {
+    buyButtons.forEach(btn => btn.style.display = 'none');
+} else {
+    buyButtons.forEach(btn => {
+        btn.addEventListener('click', async () => {
+            if (!USER_ID) return;
+            const amount = parseInt(btn.dataset.amount);
+            const credits = parseInt(btn.dataset.credits);
+            showLoader();
+            try {
+                const signResponse = await fetch(`${BRAIN_API_URL}/vk-pay/sign-order`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: USER_ID, amount: amount, description: `${credits} кредитов` })
+                });
+                const signResult = await signResponse.json();
+                
+                const payResult = await vkBridge.send("VKWebAppOpenPayForm", signResult.params);
 
-            if (payResult.status) {
-                // ... (успех) ...
-            }
-        } catch (e) {
-            console.error(e);
-            alert("Ошибка оплаты: " + e.error_type);
-        } finally {
-            hideLoader();
-        }
+                if (payResult.status) {
+                    await fetch(`${BRAIN_API_URL}/vk-pay/success`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ user_id: USER_ID, amount: credits * 10, description: "manual_success" })
+                    });
+                    alert("Оплата прошла успешно!");
+                    updateBalance();
+                }
+            } catch (e) { console.log(e); } finally { hideLoader(); }
+        });
     });
+}
