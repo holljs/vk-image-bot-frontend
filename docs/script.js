@@ -1,5 +1,6 @@
-// script.js (v60 - ИСПРАВЛЕННЫЙ И ПОЛНЫЙ)
+// script.js (vFinal - ПОЛНЫЙ)
 
+// --- 1. ИНИЦИАЛИЗАЦИЯ ---
 vkBridge.send('VKWebAppInit');
 const BRAIN_API_URL = 'https://neuro-master.online/api';
 let USER_ID = null;
@@ -15,11 +16,9 @@ const downloadButton = document.getElementById('downloadButton');
 const shareButton = document.getElementById('shareButton');
 const helpModal = document.getElementById('helpModal');
 
-// --- 1. ИНИЦИАЛИЗАЦИЯ ---
+// Получение ID (самое надежное)
 vkBridge.subscribe(e => {
-    if (e.detail && e.detail.type === 'VKWebAppUpdateConfig' && !userIdInitialized) {
-        initUser();
-    }
+    if (e.detail?.type === 'VKWebAppUpdateConfig' && !userIdInitialized) initUser();
 });
 setTimeout(() => { if (!userIdInitialized) initUser(); }, 2000);
 
@@ -80,7 +79,7 @@ document.querySelectorAll('.business-shortcut').forEach(btn => {
     });
 });
 
-// --- 3. ЗАГРУЗКА ФАЙЛОВ ---
+// --- 3. ЗАГРУЗКА ФАЙЛОВ (УНИВЕРСАЛЬНАЯ) ---
 document.querySelectorAll('.universal-upload-button').forEach(btn => {
     btn.addEventListener('click', (e) => {
         const section = e.target.closest('.mode-section');
@@ -123,7 +122,7 @@ document.querySelectorAll('.file-upload-input, .video-upload-input, .audio-uploa
     });
 });
 
-// --- 4. ГЕНЕРАЦИЯ ---
+// --- 4. ГЕНЕРАЦИЯ (BASE64) ---
 document.querySelectorAll('.process-button').forEach(btn => {
     btn.addEventListener('click', handleProcessClick);
 });
@@ -169,6 +168,7 @@ async function handleProcessClick(event) {
     showLoader();
 
     try {
+        // Конвертация в Base64 (НАДЕЖНО)
         const imageBase64s = [];
         if (files.photos) {
             for (let f of files.photos) imageBase64s.push(await fileToBase64(f));
@@ -322,45 +322,41 @@ downloadButton.addEventListener('click', () => {
 // Кнопка Поделиться
 if (shareButton) {
     shareButton.addEventListener('click', () => {
-        if (resultImage.src) vkBridge.send("VKWebAppShare", { "link": resultImage.src });
+        const url = resultImage.src || resultVideo.src || resultAudio.src;
+        if (url) vkBridge.send("VKWebAppShare", { "link": url });
     });
 }
 
-// --- 6. ЛОГИКА ОПЛАТЫ (МНОГО КНОПОК) ---
-const buyButtons = document.querySelectorAll('.buy-btn');
-const urlParams = new URLSearchParams(window.location.search);
-const platform = urlParams.get('vk_platform');
-const isMobile = ['mobile_android', 'mobile_iphone', 'mobile_ipad'].includes(platform);
+// --- 6. ОПЛАТА (VK Pay - pay-to-group) ---
+document.querySelectorAll('.buy-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+        if (!USER_ID) return;
+        const amount = parseInt(btn.dataset.amount);
+        const credits = parseInt(btn.dataset.credits);
+        showLoader();
+        try {
+            const signResponse = await fetch(`${BRAIN_API_URL}/vk-pay/sign-order`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: USER_ID, amount: amount, description: `${credits} кредитов` })
+            });
+            const signResult = await signResponse.json();
+            
+            const payResult = await vkBridge.send("VKWebAppOpenPayForm", signResult.params);
 
-if (isMobile) {
-    buyButtons.forEach(btn => btn.style.display = 'none');
-} else {
-    buyButtons.forEach(btn => {
-        btn.addEventListener('click', async () => {
-            if (!USER_ID) return;
-            const amount = parseInt(btn.dataset.amount);
-            const credits = parseInt(btn.dataset.credits);
-            showLoader();
-            try {
-                const signResponse = await fetch(`${BRAIN_API_URL}/vk-pay/sign-order`, {
+            if (payResult.status) {
+                await fetch(`${BRAIN_API_URL}/vk-pay/success`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: USER_ID, amount: amount, description: `${credits} кредитов` })
+                    body: JSON.stringify({ user_id: USER_ID, amount: credits * 10, description: "manual_success" })
                 });
-                const signResult = await signResponse.json();
-                
-                const payResult = await vkBridge.send("VKWebAppOpenPayForm", signResult.params);
-
-                if (payResult.status) {
-                    await fetch(`${BRAIN_API_URL}/vk-pay/success`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ user_id: USER_ID, amount: credits * 10, description: "manual_success" })
-                    });
-                    alert("Оплата прошла успешно!");
-                    updateBalance();
-                }
-            } catch (e) { console.log(e); } finally { hideLoader(); }
-        });
+                alert("Оплата прошла успешно!");
+                updateBalance();
+            }
+        } catch (e) {
+            console.log(e);
+        } finally {
+            hideLoader();
+        }
     });
-}
+});
