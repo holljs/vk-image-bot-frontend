@@ -332,65 +332,54 @@ const buyButtons = document.querySelectorAll('.buy-btn');
 const urlParams = new URLSearchParams(window.location.search);
 const platform = urlParams.get('vk_platform');
 
-// Список платформ, где оплата ЗАПРЕЩЕНА (нативные приложения)
+// Список мобильных платформ (приложения)
 const mobilePlatforms = ['mobile_android', 'mobile_iphone', 'mobile_ipad', 'android', 'ios'];
 
 if (mobilePlatforms.includes(platform)) {
-    // НА МОБИЛЬНОМ: СКРЫВАЕМ КНОПКИ ПОЛНОСТЬЮ
+    // НА МОБИЛЬНОМ: ПРОСТО СКРЫВАЕМ КНОПКИ. МОЛЧА.
     buyButtons.forEach(btn => {
         btn.style.display = 'none';
-        // Можно добавить текст вместо кнопки
-        const msg = document.createElement('p');
-        msg.textContent = "Пополнение баланса доступно в версии для компьютера (Web).";
-        msg.style.fontSize = "12px";
-        msg.style.color = "#999";
-        btn.parentNode.appendChild(msg);
+        // Никакого текста, никаких подсказок. Чистота.
     });
 } else {
-    // НА ВЕБЕ: ОСТАВЛЯЕМ И ЧINИМ
+    // НА ВЕБЕ (Компьютер / m.vk.com): ОСТАВЛЯЕМ КНОПКИ РАБОЧИМИ
     buyButtons.forEach(btn => {
-        btn.addEventListener('click', async () => {
+        btn.addEventListener('click', () => {
             if (!USER_ID) return;
             const amount = parseInt(btn.dataset.amount);
             const credits = parseInt(btn.dataset.credits);
             const description = `Покупка ${credits} кредитов`;
             
             showLoader();
-            try {
-                // 1. Пробуем нативный VK Pay (pay-to-group)
-                // На вебе это может вызвать QR-код
-                
-                vkBridge.send("VKWebAppOpenPayForm", {
-                    app_id: 51884181,
-                    action: "pay-to-group",
-                    params: {
-                        group_id: 191367447,
-                        amount: amount,
-                        description: description
-                    }
-                }).then(async (data) => {
-                    if (data.status) {
-                        await fetch(`${BRAIN_API_URL}/vk-pay/success`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ user_id: USER_ID, amount: credits * 10, description: "manual_success" })
-                        });
-                        alert("Оплата прошла!");
-                        updateBalance();
-                    }
-                }).catch(e => {
-                    console.error("VK Pay Web Error:", e);
-                    // ЕСЛИ НА ВЕБЕ НЕ ОТКРЫЛОСЬ - ПРЕДЛАГАЕМ ЗАПАСНОЙ ВАРИАНТ (Telegram)
-                    if (confirm("Не удалось открыть VK Pay. Перейти к оплате через Telegram?")) {
-                         window.open(`https://t.me/HolljsMagicBot?start=vk_${USER_ID}`, '_blank');
-                    }
-                });
-
-            } catch (e) {
-                console.log(e);
-            } finally {
-                hideLoader();
-            }
+            
+            // Пробуем вызвать VK Pay
+            vkBridge.send("VKWebAppOpenPayForm", {
+                app_id: 51884181,
+                action: "pay-to-group",
+                params: {
+                    group_id: 191367447,
+                    amount: amount,
+                    description: description
+                }
+            })
+            .then(async (data) => {
+                if (data.status) {
+                    await fetch(`${BRAIN_API_URL}/vk-pay/success`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ user_id: USER_ID, amount: credits * 10, description: "manual_success" })
+                    });
+                    alert("Оплата прошла успешно!");
+                    updateBalance();
+                }
+            })
+            .catch(error => {
+                console.error("VK Pay Error:", error);
+                // Если на вебе pay-to-group не сработал - можно предложить альтернативу или просто вывести ошибку
+                alert("Ошибка запуска VK Pay на этой платформе. Попробуйте с мобильной версии сайта (m.vk.com).");
+            });
+            
+            hideLoader();
         });
     });
 }
