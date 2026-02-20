@@ -349,44 +349,39 @@ if (shareButton) {
     });
 }
 
-// Инициализация приложения (обязательный шаг!)
-vkBridge.send("VKWebAppInit", {}).then(data => {
-  if (data.result) {
-    console.log("Инициализация успешна");
-    // Получаем ID пользователя
-    vkBridge.send("VKWebAppGetUserInfo").then(userData => {
-      const userId = userData.result.id;
-      // Настройки платежа
-      const paymentParams = {
-        app_id: 12345678, // Замените на ВАШ test app_id из портала
-        action: "pay-to-user",
-        user_id: userId,
-        amount: 10000, // 100 рублей (в копейках)
-        description: "Тестовая оплата в разработке",
-        version: 2,
-        sign: generateAppSignature(userId, 10000) // Генератор подписи
-      };
-      
-      // Вызов платёжного окна
-      vkBridge.send("VKWebAppOpenPayForm", paymentParams)
-        .then(result => handlePaymentResult(result))
-        .catch(err => console.error("Ошибка:", err));
+// ... (в обработчике кнопки) ...
+    buyCreditsBtn.addEventListener('click', async () => {
+        showLoader();
+        try {
+            // 1. Получаем подписанные параметры
+            const response = await fetch(`${BRAIN_API_URL}/vk-pay/sign-order`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    user_id: USER_ID, 
+                    amount: 150, 
+                    description: "Покупка кредитов" 
+                })
+            });
+            const result = await response.json();
+            
+            if (!result.success) throw new Error("Ошибка подписи");
+
+            // 2. Открываем VK Pay
+            // В result.params уже лежат: amount, data, description, sign, user_id, version, action
+            const payResult = await vkBridge.send("VKWebAppOpenPayForm", {
+                app_id: 51884181,
+                action: result.params.action,
+                params: result.params
+            });
+
+            if (payResult.status) {
+                // ... (успех) ...
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Ошибка оплаты: " + e.error_type);
+        } finally {
+            hideLoader();
+        }
     });
-  }
-});
-
-// Генератор подписи приложения (MD5)
-function generateAppSignature(userId, amount) {
-  const rawData = `amount=${amount}user_id=${userId}your_app_secret_key`; // Замените на ВАШ секретный ключ
-  return CryptoJS.MD5(rawData).toString();
-}
-
-// Обработчик результата
-function handlePaymentResult(result) {
-  if (result.status) {
-    console.log("Платеж успешен:", result);
-    // Здесь добавьте логику обновления баланса
-  } else {
-    console.error("Ошибка платежа:", result.error);
-  }
-}
