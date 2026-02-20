@@ -7,6 +7,7 @@ let userIdInitialized = false;
 const filesByMode = {};
 
 const loader = document.getElementById('loader');
+const buyCreditsBtn = document.getElementById('buy-credits-btn');
 const resultWrapper = document.getElementById('result-wrapper');
 const resultImage = document.getElementById('resultImage');
 const resultVideo = document.getElementById('resultVideo');
@@ -14,7 +15,7 @@ const resultAudio = document.getElementById('resultAudio');
 const downloadButton = document.getElementById('downloadButton');
 const shareButton = document.getElementById('shareButton');
 const helpModal = document.getElementById('helpModal');
-const buyCreditsBtn = document.getElementById('buy-credits-btn');
+
 
 // --- 1. ИНИЦИАЛИЗАЦИЯ И ЛИЧНЫЙ КАБИНЕТ ---
 
