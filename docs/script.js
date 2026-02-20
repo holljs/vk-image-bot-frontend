@@ -327,44 +327,32 @@ if (shareButton) {
     });
 }
 
-// --- 6. ЛОГИКА ОПЛАТЫ (МНОГО КНОПОК) ---
+// --- 6. ЛОГИКА ОПЛАТЫ (РАБОЧАЯ ВЕРСИЯ БЕЗ ПОДПИСИ) ---
 const buyButtons = document.querySelectorAll('.buy-btn');
 
 buyButtons.forEach(btn => {
-    btn.addEventListener('click', async () => {
+    btn.addEventListener('click', () => {
         if (!USER_ID) return;
         
-        // 1. Берем параметры из кнопки
         const amount = parseInt(btn.dataset.amount); // 150 или 700
         const credits = parseInt(btn.dataset.credits); // 15 или 100
-        const description = `Покупка ${credits} кредитов`; // Описание
+        const description = `Покупка ${credits} кредитов`;
         
-        showLoader();
-        
-        try {
-            // 2. Идем к серверу за подписью (pay-to-group)
-            const signResponse = await fetch(`${BRAIN_API_URL}/vk-pay/sign-order`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    user_id: USER_ID, 
-                    amount: amount, 
-                    description: description 
-                })
-            });
-            const signResult = await signResponse.json();
-            
-            if (!signResult.success) throw new Error("Ошибка подписи");
-
-            // 3. Открываем окно VK Pay с полученными параметрами
-            const payResult = await vkBridge.send("VKWebAppOpenPayForm", signResult.params);
-
-            // 4. Если успех (на клиенте)
-            if (payResult.status) {
-                // Начисляем кредиты
-                // ХАК: Передаем amount = credits * 10, чтобы сервер начислил правильно
-                // (сервер делит на 10: 150/10=15, 1000/10=100)
-                const fakeAmount = credits * 10; 
+        // 1. Прямой вызов VK Pay (pay-to-group)
+        vkBridge.send("VKWebAppOpenPayForm", {
+            app_id: 51884181,
+            action: "pay-to-group",
+            params: {
+                group_id: 191367447, // ВАШ ID ГРУППЫ
+                amount: amount,
+                description: description
+            }
+        })
+        .then(async (data) => {
+            if (data.status) {
+                // 2. Начисляем кредиты
+                // Хак для сервера: amount = credits * 10
+                const fakeAmount = credits * 10;
                 
                 await fetch(`${BRAIN_API_URL}/vk-pay/success`, {
                     method: 'POST',
@@ -376,14 +364,14 @@ buyButtons.forEach(btn => {
                     })
                 });
                 
-                alert("Оплата прошла успешно!");
+                alert("Оплата прошла успешно! Баланс пополнен.");
                 updateBalance();
             }
-        } catch (e) {
-            console.error(e);
-            // Игнорируем закрытие окна пользователем
-        } finally {
-            hideLoader();
-        }
+        })
+        .catch(error => {
+            console.error("Ошибка оплаты:", error);
+            // Если ошибка "Access denied", значит всё-таки нужна подпись, 
+            // но вы говорили, что этот вариант работал.
+        });
     });
 });
