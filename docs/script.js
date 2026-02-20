@@ -327,51 +327,70 @@ if (shareButton) {
     });
 }
 
-// --- 6. ЛОГИКА ОПЛАТЫ (РАБОЧАЯ ВЕРСИЯ БЕЗ ПОДПИСИ) ---
+// --- 6. ЛОГИКА ОПЛАТЫ (СТРОГО ПО ПРАВИЛАМ МОДЕРАТОРА) ---
 const buyButtons = document.querySelectorAll('.buy-btn');
+const urlParams = new URLSearchParams(window.location.search);
+const platform = urlParams.get('vk_platform');
 
-buyButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-        if (!USER_ID) return;
-        
-        const amount = parseInt(btn.dataset.amount); // 150 или 700
-        const credits = parseInt(btn.dataset.credits); // 15 или 100
-        const description = `Покупка ${credits} кредитов`;
-        
-        // 1. Прямой вызов VK Pay (pay-to-group)
-        vkBridge.send("VKWebAppOpenPayForm", {
-            app_id: 51884181,
-            action: "pay-to-group",
-            params: {
-                group_id: 191367447, // ВАШ ID ГРУППЫ
-                amount: amount,
-                description: description
-            }
-        })
-        .then(async (data) => {
-            if (data.status) {
-                // 2. Начисляем кредиты
-                // Хак для сервера: amount = credits * 10
-                const fakeAmount = credits * 10;
+// Список платформ, где оплата ЗАПРЕЩЕНА (нативные приложения)
+const mobilePlatforms = ['mobile_android', 'mobile_iphone', 'mobile_ipad', 'android', 'ios'];
+
+if (mobilePlatforms.includes(platform)) {
+    // НА МОБИЛЬНОМ: СКРЫВАЕМ КНОПКИ ПОЛНОСТЬЮ
+    buyButtons.forEach(btn => {
+        btn.style.display = 'none';
+        // Можно добавить текст вместо кнопки
+        const msg = document.createElement('p');
+        msg.textContent = "Пополнение баланса доступно в версии для компьютера (Web).";
+        msg.style.fontSize = "12px";
+        msg.style.color = "#999";
+        btn.parentNode.appendChild(msg);
+    });
+} else {
+    // НА ВЕБЕ: ОСТАВЛЯЕМ И ЧINИМ
+    buyButtons.forEach(btn => {
+        btn.addEventListener('click', async () => {
+            if (!USER_ID) return;
+            const amount = parseInt(btn.dataset.amount);
+            const credits = parseInt(btn.dataset.credits);
+            const description = `Покупка ${credits} кредитов`;
+            
+            showLoader();
+            try {
+                // 1. Пробуем нативный VK Pay (pay-to-group)
+                // На вебе это может вызвать QR-код
                 
-                await fetch(`${BRAIN_API_URL}/vk-pay/success`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        user_id: USER_ID, 
-                        amount: fakeAmount, 
-                        description: "manual_success" 
-                    })
+                vkBridge.send("VKWebAppOpenPayForm", {
+                    app_id: 51884181,
+                    action: "pay-to-group",
+                    params: {
+                        group_id: 191367447,
+                        amount: amount,
+                        description: description
+                    }
+                }).then(async (data) => {
+                    if (data.status) {
+                        await fetch(`${BRAIN_API_URL}/vk-pay/success`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ user_id: USER_ID, amount: credits * 10, description: "manual_success" })
+                        });
+                        alert("Оплата прошла!");
+                        updateBalance();
+                    }
+                }).catch(e => {
+                    console.error("VK Pay Web Error:", e);
+                    // ЕСЛИ НА ВЕБЕ НЕ ОТКРЫЛОСЬ - ПРЕДЛАГАЕМ ЗАПАСНОЙ ВАРИАНТ (Telegram)
+                    if (confirm("Не удалось открыть VK Pay. Перейти к оплате через Telegram?")) {
+                         window.open(`https://t.me/HolljsMagicBot?start=vk_${USER_ID}`, '_blank');
+                    }
                 });
-                
-                alert("Оплата прошла успешно! Баланс пополнен.");
-                updateBalance();
+
+            } catch (e) {
+                console.log(e);
+            } finally {
+                hideLoader();
             }
-        })
-        .catch(error => {
-            console.error("Ошибка оплаты:", error);
-            // Если ошибка "Access denied", значит всё-таки нужна подпись, 
-            // но вы говорили, что этот вариант работал.
         });
     });
-});
+}
