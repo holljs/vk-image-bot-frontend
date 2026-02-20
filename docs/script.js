@@ -327,55 +327,46 @@ if (shareButton) {
     });
 }
 
-// --- 6. ЛОГИКА ОПЛАТЫ ---
+// --- ОПЛАТА ЮKASSA ---
 const buyButtons = document.querySelectorAll('.buy-btn');
 const urlParams = new URLSearchParams(window.location.search);
 const platform = urlParams.get('vk_platform');
+const isMobileApp = ['mobile_android', 'mobile_iphone', 'mobile_ipad'].includes(platform);
 
-const mobilePlatforms = ['mobile_android', 'mobile_iphone', 'mobile_ipad', 'android', 'ios'];
-
-if (mobilePlatforms.includes(platform)) {
-    // НА МОБИЛЬНОМ: СКРЫВАЕМ
+if (isMobileApp) {
+    // НА МОБИЛЬНОМ ПРИЛОЖЕНИИ: СКРЫВАЕМ (Требование 1.2)
     buyButtons.forEach(btn => btn.style.display = 'none');
 } else {
-    // НА ВЕБЕ: РАБОТАЕМ
+    // НА ВЕБЕ И МОБ. САЙТЕ: ЮKASSA
     buyButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', async () => {
             if (!USER_ID) return;
             const amount = parseInt(btn.dataset.amount);
             const credits = parseInt(btn.dataset.credits);
-            const description = `Покупка ${credits} кредитов`;
             
             showLoader();
-            
-            vkBridge.send("VKWebAppOpenPayForm", {
-                app_id: 51884181,
-                action: "pay-to-group",
-                params: {
-                    group_id: 191367447,
-                    amount: amount,
-                    description: description
+            try {
+                const response = await fetch(`${BRAIN_API_URL}/yookassa/create-payment`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        user_id: USER_ID, 
+                        amount: amount, 
+                        description: `Покупка ${credits} кредитов` 
+                    })
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Открываем оплату в новой вкладке
+                    window.open(result.payment_url, '_blank');
                 }
-            })
-            .then(async (data) => {
-                if (data.status) {
-                    await fetch(`${BRAIN_API_URL}/vk-pay/success`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ user_id: USER_ID, amount: credits * 10, description: "manual_success" })
-                    });
-                    alert("Оплата прошла успешно!");
-                    updateBalance();
-                }
-            })
-            .catch(error => {
-                console.error(error);
-                // На вебе pay-to-group может не работать, можно показать alert
-                // alert("Для оплаты откройте приложение на телефоне."); 
-                // Но мы договорились не давать подсказок :)
-            });
-            
-            hideLoader();
+            } catch (e) {
+                console.error(e);
+                alert("Ошибка создания платежа.");
+            } finally {
+                hideLoader();
+            }
         });
     });
 }
