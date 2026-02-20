@@ -327,22 +327,18 @@ if (shareButton) {
     });
 }
 
-// --- 6. ЛОГИКА ОПЛАТЫ (СТРОГО ПО ПРАВИЛАМ МОДЕРАТОРА) ---
+// --- 6. ЛОГИКА ОПЛАТЫ ---
 const buyButtons = document.querySelectorAll('.buy-btn');
 const urlParams = new URLSearchParams(window.location.search);
 const platform = urlParams.get('vk_platform');
 
-// Список мобильных платформ (приложения)
 const mobilePlatforms = ['mobile_android', 'mobile_iphone', 'mobile_ipad', 'android', 'ios'];
 
 if (mobilePlatforms.includes(platform)) {
-    // НА МОБИЛЬНОМ: ПРОСТО СКРЫВАЕМ КНОПКИ. МОЛЧА.
-    buyButtons.forEach(btn => {
-        btn.style.display = 'none';
-        // Никакого текста, никаких подсказок. Чистота.
-    });
+    // НА МОБИЛЬНОМ: СКРЫВАЕМ
+    buyButtons.forEach(btn => btn.style.display = 'none');
 } else {
-    // НА ВЕБЕ (Компьютер / m.vk.com): ОСТАВЛЯЕМ КНОПКИ РАБОЧИМИ
+    // НА ВЕБЕ: РАБОТАЕМ
     buyButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             if (!USER_ID) return;
@@ -352,7 +348,6 @@ if (mobilePlatforms.includes(platform)) {
             
             showLoader();
             
-            // Пробуем вызвать VK Pay
             vkBridge.send("VKWebAppOpenPayForm", {
                 app_id: 51884181,
                 action: "pay-to-group",
@@ -374,9 +369,10 @@ if (mobilePlatforms.includes(platform)) {
                 }
             })
             .catch(error => {
-                console.error("VK Pay Error:", error);
-                // Если на вебе pay-to-group не сработал - можно предложить альтернативу или просто вывести ошибку
-                alert("Ошибка запуска VK Pay на этой платформе. Попробуйте с мобильной версии сайта (m.vk.com).");
+                console.error(error);
+                // На вебе pay-to-group может не работать, можно показать alert
+                // alert("Для оплаты откройте приложение на телефоне."); 
+                // Но мы договорились не давать подсказок :)
             });
             
             hideLoader();
