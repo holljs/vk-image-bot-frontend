@@ -14,6 +14,7 @@ const resultAudio = document.getElementById('resultAudio');
 const downloadButton = document.getElementById('downloadButton');
 const shareButton = document.getElementById('shareButton');
 const helpModal = document.getElementById('helpModal');
+const buyCreditsBtn = document.getElementById('buy-credits-btn');
 
 // --- 1. ИНИЦИАЛИЗАЦИЯ И ЛИЧНЫЙ КАБИНЕТ ---
 
