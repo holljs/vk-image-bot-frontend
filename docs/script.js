@@ -1,6 +1,5 @@
-// script.js (vFinal - ПОЛНЫЙ)
+// script.js (vFinal-SECURE-YOOKASSA)
 
-// --- 1. ИНИЦИАЛИЗАЦИЯ ---
 vkBridge.send('VKWebAppInit');
 const BRAIN_API_URL = 'https://neuro-master.online/api';
 let USER_ID = null;
@@ -16,7 +15,13 @@ const downloadButton = document.getElementById('downloadButton');
 const shareButton = document.getElementById('shareButton');
 const helpModal = document.getElementById('helpModal');
 
-// Получение ID (самое надежное)
+// --- ГЛАВНАЯ ФИШКА БЕЗОПАСНОСТИ ---
+function getAuthHeader() {
+    // Берет строку ?vk_user_id=...&sign=... из адреса для подписи
+    return window.location.search.slice(1);
+}
+
+// Инициализация
 vkBridge.subscribe(e => {
     if (e.detail?.type === 'VKWebAppUpdateConfig' && !userIdInitialized) initUser();
 });
@@ -38,7 +43,10 @@ function updateBalance() {
     const balanceEl = document.getElementById('user-balance-display');
     if(balanceEl) balanceEl.textContent = "Обновление...";
     
-    fetch(`${BRAIN_API_URL}/user/${USER_ID}`)
+    // ДОБАВЛЕН ЗАГОЛОВОК БЕЗОПАСНОСТИ
+    fetch(`${BRAIN_API_URL}/user/${USER_ID}`, {
+        headers: { 'X-VK-Sign': getAuthHeader() }
+    })
         .then(r => r.json())
         .then(info => {
             if (balanceEl) balanceEl.textContent = `Баланс: ${info.balance} кр.`;
@@ -52,8 +60,6 @@ document.getElementById('invite-friend-btn')?.addEventListener('click', () => {
     if (!USER_ID) return;
     vkBridge.send("VKWebAppShare", { "link": `https://vk.com/app51884181#${USER_ID}` });
 });
-
-// Кнопка Помощи
 document.getElementById('helpButton')?.addEventListener('click', () => {
     if (helpModal) helpModal.classList.remove('hidden');
 });
@@ -61,7 +67,7 @@ document.querySelector('.close-modal')?.addEventListener('click', () => {
     if (helpModal) helpModal.classList.add('hidden');
 });
 
-// --- 2. БИЗНЕС-ЛОГИКА ---
+// Бизнес-логика
 document.querySelectorAll('.business-shortcut').forEach(btn => {
     btn.addEventListener('click', (e) => {
         const targetMode = e.target.dataset.target;
@@ -79,7 +85,7 @@ document.querySelectorAll('.business-shortcut').forEach(btn => {
     });
 });
 
-// --- 3. ЗАГРУЗКА ФАЙЛОВ (УНИВЕРСАЛЬНАЯ) ---
+// Загрузка файлов
 document.querySelectorAll('.universal-upload-button').forEach(btn => {
     btn.addEventListener('click', (e) => {
         const section = e.target.closest('.mode-section');
@@ -104,7 +110,6 @@ document.querySelectorAll('.file-upload-input, .video-upload-input, .audio-uploa
         if (input.classList.contains('audio-upload-input')) typeKey = 'audios';
 
         if (!filesByMode[mode]) filesByMode[mode] = { photos: [], videos: [], audios: [] };
-        
         const max = parseInt(section.dataset.maxPhotos) || 1;
 
         if (typeKey === 'photos') {
@@ -122,7 +127,7 @@ document.querySelectorAll('.file-upload-input, .video-upload-input, .audio-uploa
     });
 });
 
-// --- 4. ГЕНЕРАЦИЯ (BASE64) ---
+// ГЕНЕРАЦИЯ
 document.querySelectorAll('.process-button').forEach(btn => {
     btn.addEventListener('click', handleProcessClick);
 });
@@ -168,7 +173,6 @@ async function handleProcessClick(event) {
     showLoader();
 
     try {
-        // Конвертация в Base64 (НАДЕЖНО)
         const imageBase64s = [];
         if (files.photos) {
             for (let f of files.photos) imageBase64s.push(await fileToBase64(f));
@@ -186,11 +190,19 @@ async function handleProcessClick(event) {
         };
 
         const endpoint = mode === 'chat' ? `${BRAIN_API_URL}/chat` : `${BRAIN_API_URL}/generate`;
+        
+        // ДОБАВЛЕН ЗАГОЛОВОК БЕЗОПАСНОСТИ
         const response = await fetch(endpoint, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody)
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-VK-Sign': getAuthHeader() // <--- ВАЖНО!
+            },
+            body: JSON.stringify(requestBody)
         });
 
         if (!response.ok) {
+            if (response.status === 403) throw new Error("Ошибка безопасности. Перезапустите приложение.");
             const err = await response.json();
             throw new Error(err.detail || "Ошибка");
         }
@@ -212,7 +224,7 @@ async function handleProcessClick(event) {
     }
 }
 
-// --- 5. ВСПОМОГАТЕЛЬНЫЕ ---
+// Вспомогательные
 function fileToBase64(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -248,7 +260,6 @@ function updateUI(section) {
             uploadBtn.textContent = files.photos.length > 0 ? "Выбрать другое" : "1. Выбрать фото";
         }
     }
-    
     const videoBtn = section.querySelector('.universal-upload-button[data-type="video"]');
     if (videoBtn) videoBtn.textContent = files.videos.length > 0 ? "Видео выбрано" : "2. Выбрать видео";
     const audioBtn = section.querySelector('.universal-upload-button[data-type="audio"]');
@@ -300,12 +311,9 @@ function showResult(res) {
     }
     
     downloadButton.classList.remove('hidden');
-    
-    // Клик для открытия оригинала
     if(resultImage) resultImage.onclick = () => window.open(url, '_blank');
 }
 
-// Кнопка Скачать
 downloadButton.addEventListener('click', () => {
     const url = resultImage.src || resultVideo.src || resultAudio.src;
     if (!url) return;
@@ -319,7 +327,6 @@ downloadButton.addEventListener('click', () => {
     }
 });
 
-// Кнопка Поделиться
 if (shareButton) {
     shareButton.addEventListener('click', () => {
         const url = resultImage.src || resultVideo.src || resultAudio.src;
@@ -327,17 +334,15 @@ if (shareButton) {
     });
 }
 
-// --- ОПЛАТА ЮKASSA ---
+// --- ОПЛАТА ЮKASSA (С КРЕДИТАМИ И ЗАЩИТОЙ) ---
 const buyButtons = document.querySelectorAll('.buy-btn');
 const urlParams = new URLSearchParams(window.location.search);
 const platform = urlParams.get('vk_platform');
 const isMobileApp = ['mobile_android', 'mobile_iphone', 'mobile_ipad'].includes(platform);
 
 if (isMobileApp) {
-    // НА МОБИЛЬНОМ ПРИЛОЖЕНИИ: СКРЫВАЕМ (Требование 1.2)
     buyButtons.forEach(btn => btn.style.display = 'none');
 } else {
-    // НА ВЕБЕ И МОБ. САЙТЕ: ЮKASSA
     buyButtons.forEach(btn => {
         btn.addEventListener('click', async () => {
             if (!USER_ID) return;
@@ -346,9 +351,13 @@ if (isMobileApp) {
             
             showLoader();
             try {
+                // ДОБАВЛЕН ЗАГОЛОВОК
                 const response = await fetch(`${BRAIN_API_URL}/yookassa/create-payment`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-VK-Sign': getAuthHeader() // <--- ВАЖНО!
+                    },
                     body: JSON.stringify({ 
                         user_id: USER_ID, 
                         amount: amount, 
@@ -358,7 +367,6 @@ if (isMobileApp) {
                 const result = await response.json();
                 
                 if (result.success) {
-                    // Открываем оплату в новой вкладке
                     window.open(result.payment_url, '_blank');
                 }
             } catch (e) {
