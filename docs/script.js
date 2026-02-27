@@ -1,5 +1,8 @@
 // script.js (vFinal-FULL-SECURE-VKBRIDGE_FIX)
 
+// ✅ Твой домен. Убедись, что Nginx перенаправляет запросы с /api на порт 8001
+const BRAIN_API_URL = 'https://neuro-master.online'; 
+
 let USER_ID = null;
 let userIdInitialized = false;
 
@@ -54,7 +57,7 @@ async function initUser() {
 }
 
 
-// --- 2. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ (без изменений) ---
+// --- 2. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
 
 function getAuthHeader() {
     return window.location.search.slice(1);
@@ -68,7 +71,7 @@ const fileToBase64 = file => new Promise((resolve, reject) => {
 });
 
 
-// --- 3. МОДАЛЬНЫЕ ОКНА И ИНТЕРФЕЙС (без изменений) ---
+// --- 3. МОДАЛЬНЫЕ ОКНА И ИНТЕРФЕЙС ---
 
 function showCustomAlert(message, title = "Уведомление") {
     const modal = document.getElementById('customAlertModal');
@@ -104,7 +107,7 @@ function hideLoader() {
 }
 
 
-// --- 4. БАЛАНС (без изменений) ---
+// --- 4. БАЛАНС ---
 
 function updateBalance() {
     if (!USER_ID) return;
@@ -126,7 +129,7 @@ function updateBalance() {
 }
 
 
-// --- 5. ОТОБРАЖЕНИЕ РЕЗУЛЬТАТОВ (без изменений) ---
+// --- 5. ОТОБРАЖЕНИЕ РЕЗУЛЬТАТОВ ---
 
 function showResult(result) {
     const resultWrapper = document.getElementById('result-wrapper');
@@ -159,7 +162,7 @@ function showResult(result) {
 }
 
 
-// --- 6. ПОЛЛИНГ (ОПРОС СЕРВЕРА) (без изменений) ---
+// --- 6. ПОЛЛИНГ (ОПРОС СЕРВЕРА) ---
 
 async function pollTaskStatus(taskId) {
     const pollInterval = setInterval(async () => {
@@ -188,7 +191,7 @@ async function pollTaskStatus(taskId) {
 }
 
 
-// --- 7. ЗАГРУЗКА ФАЙЛОВ И UI КНОПОК (без изменений) ---
+// --- 7. ЗАГРУЗКА ФАЙЛОВ И UI КНОПОК ---
 
 document.querySelectorAll('.universal-upload-button').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -256,7 +259,7 @@ function updateUI(section) {
 }
 
 
-// --- 8. ОБРАБОТЧИК ГЕНЕРАЦИИ (ГЛАВНАЯ КНОПКА) (без изменений) ---
+// --- 8. ОБРАБОТЧИК ГЕНЕРАЦИИ (ГЛАВНАЯ КНОПКА) ---
 
 document.querySelectorAll('.process-button').forEach(btn => {
     btn.addEventListener('click', async (event) => {
@@ -341,7 +344,7 @@ document.querySelectorAll('.process-button').forEach(btn => {
 });
 
 
-// --- 9. ДОПОЛНИТЕЛЬНЫЕ ФУНКЦИИ (СКАЧИВАНИЕ, ПЛАТЕЖИ) (без изменений) ---
+// --- 9. ДОПОЛНИТЕЛЬНЫЕ ФУНКЦИИ (СКАЧИВАНИЕ, ПЛАТЕЖИ) ---
 
 document.getElementById('downloadButton')?.addEventListener('click', () => {
     const activeMedia = document.querySelector('#result-wrapper img:not(.hidden), #result-wrapper video:not(.hidden), #result-wrapper audio:not(.hidden)');
@@ -428,4 +431,3 @@ document.getElementById('shareButton')?.addEventListener('click', () => {
 });
 
 document.getElementById('refreshBalance')?.addEventListener('click', updateBalance);
-
