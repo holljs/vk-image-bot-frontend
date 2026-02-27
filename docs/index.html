@@ -17,6 +17,189 @@
                 <button id="refreshBalance" class="icon-btn">🔄</button>
             </div>
         </header>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Neuro-Master</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Шапка -->
+        <header class="app-header">
+            <h1>✨ Neuro-Master</h1>
+            <div class="user-info">
+                <span id="user-balance-display">Баланс: -- кр</span>
+                <button id="refreshBalance" class="icon-btn">🔄</button>
+            </div>
+        </header>
+
+        <!-- Быстрые действия -->
+        <section class="shortcuts">
+            <button class="business-shortcut" data-target="t2i" data-prompt="Фотореалистичный интерьер офиса в стиле лофт">🏢 Офис</button>
+            <button class="business-shortcut" data-target="t2i" data-prompt="Минималистичный логотип для кофейни, вектор">☕ Лого</button>
+            <button class="business-shortcut" data-target="t2i" data-prompt="Профессиональное фото товара: кроссовки на белом фоне">👟 Товар</button>
+        </section>
+
+        <!-- Основной контент -->
+        <main id="main-content">
+            <section class="mode-section" data-mode="t2i" data-max-photos="0">
+                <h2>🖼️ Создать фото</h2>
+                <textarea class="prompt-input" placeholder="Опишите, что нужно создать..."></textarea>
+                <div class="actions">
+                    <button class="process-button">Создать (1 кр)</button>
+                </div>
+            </section>
+
+            <section class="mode-section" data-mode="i2v" data-max-photos="1">
+                <h2>🎬 Оживить фото</h2>
+                <textarea class="prompt-input" placeholder="Как должно двигаться фото?"></textarea>
+                <div class="image-previews"></div>
+                <div class="actions">
+                    <button class="universal-upload-button" data-type="photos" accept="image/*">1. Выбрать фото</button>
+                    <button class="process-button">Оживить (3 кр)</button>
+                </div>
+                <input type="file" class="hidden" accept="image/*">
+            </section>
+            
+            <section class="mode-section" data-mode="vip_edit" data-max-photos="1">
+                <h2>🎨 Арт-Образ</h2>
+                <textarea class="prompt-input" placeholder="Опишите стиль..."></textarea>
+                <div class="image-previews"></div>
+                <div class="actions">
+                    <button class="universal-upload-button" data-type="photos" accept="image/*">1. Выбрать фото</button>
+                    <button class="process-button">Создать (1 кр)</button>
+                </div>
+                <input type="file" class="hidden" accept="image/*">
+            </section>
+
+            <section class="mode-section" data-mode="quick_edit" data-max-photos="3">
+                <h2>📸 Фото Микс</h2>
+                <textarea class="prompt-input" placeholder="Что смешиваем?"></textarea>
+                <div class="image-previews"></div>
+                <div class="actions">
+                    <button class="universal-upload-button" data-type="photos" accept="image/*">1. Выбрать до 3 фото</button>
+                    <button class="process-button">Смешать (2 кр)</button>
+                </div>
+                <input type="file" class="hidden" multiple accept="image/*">
+            </section>
+
+            <section class="mode-section" data-mode="vip_mix" data-max-photos="3">
+                <h2>👑 VIP-Микс</h2>
+                <textarea class="prompt-input" placeholder="Что смешиваем?"></textarea>
+                <div class="image-previews"></div>
+                <div class="actions">
+                    <button class="universal-upload-button" data-type="photos" accept="image/*">1. Выбрать до 3 фото</button>
+                    <button class="process-button">Смешать (3 кр)</button>
+                </div>
+                <input type="file" class="hidden" multiple accept="image/*">
+            </section>
+
+            <section class="mode-section" data-mode="t2v" data-max-photos="0">
+                <h2>🎬 Видео-Клип</h2>
+                <textarea class="prompt-input" placeholder="Опишите видео..."></textarea>
+                <div class="actions">
+                    <button class="process-button">Создать (5 кр)</button>
+                </div>
+            </section>
+
+            <section class="mode-section" data-mode="vip_clip" data-max-photos="1">
+                <h2>🎬 VIP-Клип</h2>
+                <textarea class="prompt-input" placeholder="Что должен делать персонаж?"></textarea>
+                <div class="image-previews"></div>
+                <div class="actions">
+                    <button class="universal-upload-button" data-type="photos" accept="image/*">1. Выбрать фото персонажа</button>
+                    <button class="universal-upload-button" data-type="videos" accept="video/*">2. Выбрать видео-референс</button>
+                    <button class="process-button">Создать (10 кр)</button>
+                </div>
+                <input type="file" class="hidden" data-type="photos" accept="image/*">
+                <input type="file" class="hidden" data-type="videos" accept="video/*">
+            </section>
+
+            <section class="mode-section" data-mode="talking_photo" data-max-photos="1">
+                <h2>🗣️ Говорящее Фото</h2>
+                <textarea class="prompt-input" placeholder="Текст, который будет говорить персонаж..."></textarea>
+                <div class="image-previews"></div>
+                <div class="actions">
+                    <button class="universal-upload-button" data-type="photos" accept="image/*">1. Выбрать фото</button>
+                    <button class="universal-upload-button" data-type="audios" accept="audio/*">2. Выбрать аудио</button>
+                    <button class="process-button">Создать (10 кр)</button>
+                </div>
+                <input type="file" class="hidden" data-type="photos" accept="image/*">
+                <input type="file" class="hidden" data-type="audios" accept="audio/*">
+            </section>
+
+            <section class="mode-section" data-mode="music" data-max-photos="0">
+                <h2>🎵 Нейро-Музыка</h2>
+                <textarea class="prompt-input" placeholder="Введите текст или тему песни..."></textarea>
+                <input type="text" id="custom-style-input" class="prompt-input" placeholder="Введите стиль музыки (например, 'Рок', 'Джаз')...">
+                <div class="actions">
+                    <button class="process-button">Создать (2 кр)</button>
+                </div>
+            </section>
+
+            <section class="mode-section" data-mode="chat" data-max-photos="0">
+                <h2>🧠 Нейро-Помощник</h2>
+                <textarea class="prompt-input" placeholder="Задайте свой вопрос..."></textarea>
+                <div class="actions">
+                    <button class="process-button">Спросить (0 кр)</button>
+                </div>
+            </section>
+        </main>
+
+        <!-- Блок результата -->
+        <section id="result-wrapper" class="hidden">
+            <div class="result-container">
+                <h2>✅ Готово!</h2>
+                <img id="resultImage" class="hidden" src="" alt="Результат">
+                <video id="resultVideo" class="hidden" controls autoplay loop muted></video>
+                <audio id="resultAudio" class="hidden" controls></audio>
+                <div class="result-actions">
+                    <button id="downloadButton" class="action-btn download">⬇️ Скачать</button>
+                    <button id="shareButton" class="action-btn share">📢 Поделиться</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Футер с кнопками -->
+        <footer class="app-footer">
+            <button id="helpButton">❓ Помощь</button>
+            <button class="buy-btn" data-amount="150" data-credits="15">💳 Пополнить (15 кр)</button>
+             <button class="buy-btn" data-amount="250" data-credits="30">💳 Пополнить (30 кр)</button>
+        </footer>
+    </div>
+
+    <!-- Модальные окна -->
+    <div id="loader" class="modal hidden">
+        <div class="modal-content loader-content">
+            <div class="spinner"></div>
+            <p>Магия в процессе... 🔮<br><span class="small">Это может занять до 1-2 минут</span></p>
+        </div>
+    </div>
+    <div id="customAlertModal" class="modal hidden">
+        <div class="modal-content">
+            <h2 id="customAlertTitle">Уведомление</h2>
+            <p id="customAlertMessage"></p>
+            <button id="closeCustomAlert" class="primary-btn">ОК</button>
+        </div>
+    </div>
+    <div id="helpModal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Справка</h2>
+            <p>1. Введите описание на русском или английском.</p>
+            <p>2. Загрузите фото, если это требуется режимом.</p>
+            <p>3. Нажмите кнопку создания и дождитесь результата.</p>
+            <button class="close-modal primary-btn">Закрыть</button>
+        </div>
+    </div>
+
+    <!-- ССЫЛКИ НА СКРИПТЫ. VK BRIDGE ИДЕТ ПЕРВЫМ И С ОФИЦИАЛЬНОГО САЙТА -->
+    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
 
         <!-- Быстрые действия (Shortcuts) -->
         <section class="shortcuts">
