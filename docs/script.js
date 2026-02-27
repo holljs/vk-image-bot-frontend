@@ -1,83 +1,52 @@
-// script.js (vFinal-FULL-SECURE-VKBRIDGE_FIX)
-
-// ✅ Твой домен. Убедись, что Nginx перенаправляет запросы с /api на порт 8001
-const BRAIN_API_URL = 'https://neuro-master.online'; 
-
+const BRAIN_API_URL = 'https://neuro-master.online/api'; // Вернули /api, как было изначально!
 let USER_ID = null;
-let userIdInitialized = false;
-
 const filesByMode = {};
 
-// --- 1. ИНИЦИАЛИЗАЦИЯ VK BRIDGE и ПОЛЬЗОВАТЕЛЯ ---
-
-// ✅ НОВАЯ ФУНКЦИЯ: Ожидаем VK Bridge, потом инициализируем
-async function initApp() {
-    // Ждем, пока vkBridge станет доступен (максимум 5 секунд)
-    let attempts = 0;
-    while (typeof vkBridge === 'undefined' && attempts < 50) {
-        await new Promise(resolve => setTimeout(resolve, 100)); // Ждем 100 мс
-        attempts++;
-    }
-
-    if (typeof vkBridge !== 'undefined') {
-        try {
-            await vkBridge.send('VKWebAppInit');
-            await initUser(); // Инициализируем пользователя, как только Bridge готов
-            // Теперь можно безопасно вызывать остальные функции, зависящие от vkBridge
-        } catch (e) {
-            console.error("Ошибка инициализации VKWebApp:", e);
-            showCustomAlert("Не удалось инициализировать VK Mini App. Проверьте настройки приложения.", "Ошибка");
-        }
-    } else {
-        console.error("VK Bridge не был загружен. Приложение может работать некорректно.");
-        showCustomAlert("VK Bridge не загрузился. Приложение может работать некорректно. Обновите страницу.", "Ошибка");
-    }
-}
-
-// Запускаем инициализацию приложения
-initApp();
-
+// 1. СРАЗУ ИНИЦИАЛИЗИРУЕМ VK BRIDGE
+vkBridge.send('VKWebAppInit');
 
 async function initUser() {
     try {
         const data = await vkBridge.send('VKWebAppGetUserInfo');
         if (data.id) {
             USER_ID = data.id;
-            userIdInitialized = true;
             updateBalance();
-        } else {
-            // ✅ Улучшенная обработка: если ID не пришел
-            showCustomAlert("Не удалось получить ID пользователя ВК. Попробуйте обновить страницу.", "Ошибка");
         }
     } catch (e) {
-        // ✅ Улучшенная обработка ошибок
-        console.error("Ошибка VK Bridge при получении данных пользователя:", e);
-        showCustomAlert("Не удалось получить данные профиля ВК. Проверьте настройки приложения.", "Ошибка");
+        console.error("Ошибка получения профиля:", e);
     }
 }
 
+// Запуск при старте
+initUser();
 
-// --- 2. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ---
-
+// 2. ФУНКЦИИ БАЛАНСА И АВТОРИЗАЦИИ
 function getAuthHeader() {
     return window.location.search.slice(1);
 }
 
-const fileToBase64 = file => new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = error => reject(error);
-});
+function updateBalance() {
+    if (!USER_ID) return;
+    const balanceEl = document.getElementById('user-balance-display');
+    if (balanceEl) balanceEl.textContent = "⌛ Обновление...";
 
+    fetch(`${BRAIN_API_URL}/user/${USER_ID}`, {
+        headers: { 'X-VK-Sign': getAuthHeader() }
+    })
+    .then(r => r.json())
+    .then(info => {
+        if (balanceEl) balanceEl.textContent = `Баланс: ${info.balance} кр`;
+    })
+    .catch(() => {
+        if (balanceEl) balanceEl.textContent = "⚠️ Ошибка";
+    });
+}
 
-// --- 3. МОДАЛЬНЫЕ ОКНА И ИНТЕРФЕЙС ---
-
+// 3. UI И МОДАЛЬНЫЕ ОКНА
 function showCustomAlert(message, title = "Уведомление") {
     const modal = document.getElementById('customAlertModal');
     const messageEl = document.getElementById('customAlertMessage');
     const titleEl = document.getElementById('customAlertTitle');
-
     if (modal && messageEl) {
         if (titleEl) titleEl.textContent = title;
         messageEl.textContent = message;
@@ -86,15 +55,10 @@ function showCustomAlert(message, title = "Уведомление") {
     }
 }
 
-function hideCustomAlert() {
-    const modal = document.getElementById('customAlertModal');
-    if (modal) {
-        modal.classList.add('hidden');
-        document.body.classList.remove('modal-open');
-    }
-}
-
-document.getElementById('closeCustomAlert')?.addEventListener('click', hideCustomAlert);
+document.getElementById('closeCustomAlert')?.addEventListener('click', () => {
+    document.getElementById('customAlertModal').classList.add('hidden');
+    document.body.classList.remove('modal-open');
+});
 
 function showLoader() {
     document.getElementById('loader')?.classList.remove('hidden');
@@ -106,37 +70,11 @@ function hideLoader() {
     document.body.classList.remove('modal-open');
 }
 
-
-// --- 4. БАЛАНС ---
-
-function updateBalance() {
-    if (!USER_ID) return;
-    const balanceEl = document.getElementById('user-balance-display');
-    if (balanceEl) balanceEl.textContent = "⌛ Обновление...";
-
-    fetch(`${BRAIN_API_URL}/api/user/${USER_ID}`, {
-        headers: { 'X-VK-Sign': getAuthHeader() }
-    })
-    .then(r => r.json())
-    .then(info => {
-        if (balanceEl) balanceEl.textContent = `Баланс: ${info.balance} кр`;
-    })
-    .catch((e) => {
-        console.error("Ошибка получения баланса:", e);
-        if (balanceEl) balanceEl.textContent = "⚠️ Ошибка";
-        showCustomAlert("Не удалось загрузить баланс. Проверьте подключение.", "Ошибка");
-    });
-}
-
-
-// --- 5. ОТОБРАЖЕНИЕ РЕЗУЛЬТАТОВ ---
-
 function showResult(result) {
     const resultWrapper = document.getElementById('result-wrapper');
     const resultImage = document.getElementById('resultImage');
     const resultVideo = document.getElementById('resultVideo');
     const resultAudio = document.getElementById('resultAudio');
-
     if (!resultWrapper) return;
 
     resultWrapper.classList.remove('hidden');
@@ -157,17 +95,14 @@ function showResult(result) {
         resultImage.src = url;
         resultImage.classList.remove('hidden');
     }
-
     resultWrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
-
-// --- 6. ПОЛЛИНГ (ОПРОС СЕРВЕРА) ---
-
+// 4. ОПРОС СТАТУСА (ПОЛЛИНГ)
 async function pollTaskStatus(taskId) {
     const pollInterval = setInterval(async () => {
         try {
-            const response = await fetch(`${BRAIN_API_URL}/api/task_status/${taskId}?user_id=${USER_ID}`, {
+            const response = await fetch(`${BRAIN_API_URL}/task_status/${taskId}?user_id=${USER_ID}`, {
                 headers: { 'X-VK-Sign': getAuthHeader() }
             });
             const data = await response.json();
@@ -180,18 +115,23 @@ async function pollTaskStatus(taskId) {
             } else if (data.success === false) {
                 clearInterval(pollInterval);
                 hideLoader();
-                showCustomAlert(data.error || "Произошла ошибка при генерации.", "Ошибка");
+                showCustomAlert(data.error || "Ошибка при генерации.");
             }
         } catch (e) {
             clearInterval(pollInterval);
             hideLoader();
-            showCustomAlert("Потеряно соединение с сервером.", "Ошибка");
+            showCustomAlert("Связь с сервером потеряна.");
         }
     }, 3000);
 }
 
-
-// --- 7. ЗАГРУЗКА ФАЙЛОВ И UI КНОПОК ---
+// 5. РАБОТА С ФАЙЛАМИ
+const fileToBase64 = file => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = error => reject(error);
+});
 
 document.querySelectorAll('.universal-upload-button').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -204,21 +144,17 @@ document.querySelectorAll('.universal-upload-button').forEach(btn => {
                 const files = Array.from(event.target.files);
                 const typeKey = input.dataset.type || 'photos';
                 
-                if (!filesByMode[mode]) {
-                    filesByMode[mode] = { photos: [], videos: [], audios: [] };
-                }
-
+                if (!filesByMode[mode]) filesByMode[mode] = { photos: [], videos: [], audios: [] };
+                
                 const accept = input.getAttribute('accept');
                 for (let file of files) {
                     if (accept && accept !== '*/*' && !file.type.startsWith(accept.split('/')[0])) {
-                        showCustomAlert(`Файл ${file.name} имеет неверный формат.`, "Ошибка");
+                        showCustomAlert(`Файл ${file.name} неверного формата.`);
                         continue;
                     }
-
                     const max = parseInt(section.dataset.maxPhotos) || 1;
                     if (filesByMode[mode][typeKey].length < max) {
                         filesByMode[mode][typeKey].push(file);
-
                         if (typeKey === 'photos') {
                             const base64 = await fileToBase64(file);
                             const previewDiv = section.querySelector('.image-previews');
@@ -230,7 +166,7 @@ document.querySelectorAll('.universal-upload-button').forEach(btn => {
                             }
                         }
                     } else {
-                        showCustomAlert(`Достигнут лимит файлов для этого режима (${max}).`, "Лимит");
+                        showCustomAlert(`Достигнут лимит файлов.`);
                     }
                 }
                 updateUI(section);
@@ -244,120 +180,82 @@ document.querySelectorAll('.universal-upload-button').forEach(btn => {
 function updateUI(section) {
     const mode = section.dataset.mode;
     const files = filesByMode[mode] || { photos: [], videos: [], audios: [] };
-    
     const photoBtn = section.querySelector('.universal-upload-button:not([data-type]), .universal-upload-button[data-type="photos"]');
     if (photoBtn) {
         const max = parseInt(section.dataset.maxPhotos) || 1;
         photoBtn.textContent = files.photos.length > 0 ? `Выбрано (${files.photos.length}/${max})` : "1. Выбрать фото";
     }
-
     const videoBtn = section.querySelector('.universal-upload-button[data-type="videos"]');
     if (videoBtn) videoBtn.textContent = files.videos.length > 0 ? "Видео выбрано ✅" : "2. Выбрать видео";
-
     const audioBtn = section.querySelector('.universal-upload-button[data-type="audios"]');
     if (audioBtn) audioBtn.textContent = files.audios.length > 0 ? "Аудио выбрано ✅" : "2. Выбрать аудио";
 }
 
-
-// --- 8. ОБРАБОТЧИК ГЕНЕРАЦИИ (ГЛАВНАЯ КНОПКА) ---
-
+// 6. ОТПРАВКА НА ГЕНЕРАЦИЮ
 document.querySelectorAll('.process-button').forEach(btn => {
     btn.addEventListener('click', async (event) => {
         const section = event.target.closest('.mode-section');
         const mode = section.dataset.mode;
 
-        if (!USER_ID) {
-            showCustomAlert("Авторизуйтесь в приложении через ВК.", "Ошибка");
-            return;
-        }
+        if (!USER_ID) return showCustomAlert("Пожалуйста, авторизуйтесь в приложении.");
 
         const promptInput = section.querySelector('.prompt-input');
         const prompt = promptInput ? promptInput.value.trim() : '';
 
         if (!prompt && !['talking_photo', 'vip_clip'].includes(mode)) {
-            showCustomAlert("Пожалуйста, опишите словами, что нужно сделать.", "Ошибка");
-            return;
+            return showCustomAlert("Пожалуйста, введите текстовое описание.");
         }
 
         const files = filesByMode[mode] || { photos: [], videos: [], audios: [] };
-        
         if (['vip_edit', 'i2v', 'quick_edit', 'vip_mix'].includes(mode) && files.photos.length === 0) {
-            showCustomAlert("Для этого режима нужно загрузить хотя бы одно фото.", "Ошибка");
-            return;
+            return showCustomAlert("Для этого режима нужно загрузить фото.");
         }
 
         showLoader();
         btn.disabled = true;
 
         try {
-            const requestBody = {
-                user_id: USER_ID,
-                model: mode,
-                prompt: prompt,
-                image_urls: [],
-                video_url: null,
-                audio_url: null
-            };
+            const requestBody = { user_id: USER_ID, model: mode, prompt: prompt, image_urls: [] };
 
             if (files.photos.length > 0) {
-                for (let f of files.photos) {
-                    requestBody.image_urls.push(await fileToBase64(f));
-                }
+                for (let f of files.photos) requestBody.image_urls.push(await fileToBase64(f));
             }
-            if (files.videos.length > 0) {
-                requestBody.video_url = await fileToBase64(files.videos[0]);
-            }
-            if (files.audios.length > 0) {
-                requestBody.audio_url = await fileToBase64(files.audios[0]);
-            }
+            if (files.videos.length > 0) requestBody.video_url = await fileToBase64(files.videos[0]);
+            if (files.audios.length > 0) requestBody.audio_url = await fileToBase64(files.audios[0]);
 
-            const response = await fetch(`${BRAIN_API_URL}/api/generate`, {
+            const response = await fetch(`${BRAIN_API_URL}/generate`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-VK-Sign': getAuthHeader()
-                },
+                headers: { 'Content-Type': 'application/json', 'X-VK-Sign': getAuthHeader() },
                 body: JSON.stringify(requestBody)
             });
 
             const result = await response.json();
-
             if (response.ok && result.task_id) {
                 pollTaskStatus(result.task_id);
-                
                 if (promptInput) promptInput.value = '';
                 filesByMode[mode] = { photos: [], videos: [], audios: [] };
                 const previews = section.querySelector('.image-previews');
                 if (previews) previews.innerHTML = '';
                 updateUI(section);
             } else {
-                throw new Error(result.detail || "Не удалось запустить генерацию.");
+                throw new Error(result.detail || "Ошибка запуска генерации.");
             }
-
         } catch (e) {
             hideLoader();
-            showCustomAlert("Ошибка: " + e.message, "Ошибка");
+            showCustomAlert("Ошибка: " + e.message);
         } finally {
             btn.disabled = false;
         }
     });
 });
 
-
-// --- 9. ДОПОЛНИТЕЛЬНЫЕ ФУНКЦИИ (СКАЧИВАНИЕ, ПЛАТЕЖИ) ---
-
+// 7. СКАЧИВАНИЕ И ПРОЧЕЕ
 document.getElementById('downloadButton')?.addEventListener('click', () => {
     const activeMedia = document.querySelector('#result-wrapper img:not(.hidden), #result-wrapper video:not(.hidden), #result-wrapper audio:not(.hidden)');
     const url = activeMedia?.src;
-
     if (!url) return;
-
-    if (vkBridge.isWebView()) {
-        if (!url.includes('.mp4') && !url.includes('.mov')) {
-            vkBridge.send("VKWebAppShowImages", { images: [url] });
-        } else {
-            window.open(url, '_blank');
-        }
+    if (vkBridge.isWebView() && !url.includes('.mp4')) {
+        vkBridge.send("VKWebAppShowImages", { images: [url] });
     } else {
         const a = document.createElement('a');
         a.href = url;
@@ -365,68 +263,6 @@ document.getElementById('downloadButton')?.addEventListener('click', () => {
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-    }
-});
-
-document.querySelectorAll('.business-shortcut').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        const targetMode = e.target.dataset.target;
-        const promptText = e.target.dataset.prompt;
-        const targetSection = document.querySelector(`.mode-section[data-mode="${targetMode}"]`);
-        
-        if (targetSection) {
-            targetSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            const input = targetSection.querySelector('.prompt-input');
-            if (input) {
-                input.value = promptText;
-                input.style.borderColor = '#4CAF50';
-                setTimeout(() => input.style.borderColor = '#dce1e6', 1500);
-            }
-        }
-    });
-});
-
-const buyButtons = document.querySelectorAll('.buy-btn');
-buyButtons.forEach(btn => {
-    btn.addEventListener('click', async () => {
-        if (!USER_ID) {
-            showCustomAlert("Ошибка: ID пользователя не найден.", "Ошибка");
-            return;
-        }
-        const amount = parseInt(btn.dataset.amount);
-        const credits = parseInt(btn.dataset.credits);
-        showLoader();
-        try {
-            const response = await fetch(`${BRAIN_API_URL}/api/yookassa/create-payment`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-VK-Sign': getAuthHeader()
-                },
-                body: JSON.stringify({
-                    user_id: USER_ID,
-                    amount: amount,
-                    description: `Пополнение баланса: ${credits} кредитов`
-                })
-            });
-            const result = await response.json();
-            if (result.success && result.payment_url) {
-                window.open(result.payment_url, '_blank');
-            } else {
-                throw new Error(result.detail || "Неизвестная ошибка платежа");
-            }
-        } catch (e) {
-            showCustomAlert("Не удалось создать счет на оплату: " + e.message, "Ошибка");
-        } finally {
-            hideLoader();
-        }
-    });
-});
-
-document.getElementById('shareButton')?.addEventListener('click', () => {
-    const activeMedia = document.querySelector('#result-wrapper img:not(.hidden), #result-wrapper video:not(.hidden)');
-    if (activeMedia?.src) {
-        vkBridge.send("VKWebAppShare", { "link": activeMedia.src });
     }
 });
 
