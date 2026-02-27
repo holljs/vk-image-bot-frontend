@@ -82,6 +82,7 @@ document.getElementById('helpButton')?.addEventListener('click', () => {
     document.getElementById('helpModal')?.classList.remove('hidden');
     document.body.classList.add('modal-open');
 });
+
 document.querySelector('.close-modal')?.addEventListener('click', () => {
     document.getElementById('helpModal')?.classList.add('hidden');
     document.body.classList.remove('modal-open');
@@ -226,6 +227,7 @@ function showResult(result) {
     const resultImage = document.getElementById('resultImage');
     const resultVideo = document.getElementById('resultVideo');
     const resultAudio = document.getElementById('resultAudio');
+
     if (!resultWrapper) return;
 
     resultWrapper.classList.remove('hidden');
@@ -234,6 +236,7 @@ function showResult(result) {
     resultAudio?.classList.add('hidden');
 
     const url = result.result_url || result.response;
+
     if (result.model === 'chat') { showCustomAlert(url, "Ответ помощника"); resultWrapper.classList.add('hidden'); return; }
 
     const isVideo = url.includes('.mp4') || url.includes('.mov');
@@ -246,6 +249,7 @@ function showResult(result) {
     } else {
         resultImage.src = url; resultImage.classList.remove('hidden');
     }
+
     resultWrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -261,6 +265,7 @@ document.querySelectorAll('.process-button').forEach(btn => {
 
         let stylePrompt = null;
         let musicLyrics = null;
+
         if (mode === 'music') {
             musicLyrics = prompt;
             if (btn.dataset.style) {
@@ -330,6 +335,7 @@ document.querySelectorAll('.process-button').forEach(btn => {
             } else {
                 throw new Error(result.detail || "Ошибка сервера");
             }
+
         } catch (e) {
             hideLoader();
             showCustomAlert(e.message, "Ошибка");
@@ -340,11 +346,13 @@ document.querySelectorAll('.process-button').forEach(btn => {
 });
 
 // --- 6. ДОП. ФУНКЦИИ (Бизнес, Скачивание, Оплата) ---
+
 document.querySelectorAll('.business-shortcut').forEach(btn => {
     btn.addEventListener('click', (e) => {
         const targetMode = e.target.dataset.target;
         const promptText = e.target.dataset.prompt;
         const targetSection = document.querySelector(`.mode-section[data-mode="${targetMode}"]`);
+
         if (targetSection) {
             targetSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
             const input = targetSection.querySelector('.prompt-input');
@@ -357,27 +365,23 @@ document.querySelectorAll('.business-shortcut').forEach(btn => {
     });
 });
 
+
+// ИСПРАВЛЕННОЕ СКАЧИВАНИЕ: ОТКРЫВАЕМ В НОВОЙ ВКЛАДКЕ, ЧТОБЫ НЕ ПРОПАДАЛ РЕЗУЛЬТАТ
 document.getElementById('downloadButton')?.addEventListener('click', () => {
-    const resultImage = document.getElementById('resultImage');
-    const resultVideo = document.getElementById('resultVideo');
-    const resultAudio = document.getElementById('resultAudio');
-    const url = resultImage.src || resultVideo.src || resultAudio.src;
+    const activeMedia = document.querySelector('#result-wrapper img:not(.hidden), #result-wrapper video:not(.hidden), #result-wrapper audio:not(.hidden)');
+    const url = activeMedia?.src;
+
     if (!url) return;
 
-    const isVideo = url.includes('.mp4');
-    const isAudio = url.includes('.mp3');
-
-    if (vkBridge.isWebView() && !isVideo && !isAudio) {
+    if (vkBridge.isWebView() && !url.includes('.mp4') && !url.includes('.mov')) {
+        // Мобильное приложение ВК: открывает в просмотрщике
         vkBridge.send("VKWebAppShowImages", { images: [url] });
     } else {
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `neuro_master_${Date.now()}`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        // Десктоп или мобильный веб: открываем в новой вкладке!
+        window.open(url, '_blank');
     }
 });
+
 
 document.getElementById('shareButton')?.addEventListener('click', () => {
     const url = document.getElementById('resultImage').src || document.getElementById('resultVideo').src;
@@ -387,17 +391,23 @@ document.getElementById('shareButton')?.addEventListener('click', () => {
 document.querySelectorAll('.buy-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
         if (!USER_ID) return;
+
         const amount = parseInt(btn.dataset.amount);
         const credits = parseInt(btn.dataset.credits);
+
         showLoader();
+
         try {
             const response = await fetch(`${BRAIN_API_URL}/yookassa/create-payment`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-VK-Sign': getAuthHeader() },
                 body: JSON.stringify({ user_id: USER_ID, amount: amount, description: `Покупка ${credits} кредитов` })
             });
+
             const result = await response.json();
+
             if (result.success) window.open(result.payment_url, '_blank');
+
         } catch (e) {
             showCustomAlert("Ошибка платежа", "Ошибка");
         } finally {
