@@ -2,227 +2,107 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Нейро-художник</title>
-    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Neuro-Master</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Подключаем VK Bridge -->
+    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.js"></script>
 </head>
 <body>
     <div id="app">
-        <!-- ШАПКА -->
-        <h1>Нейро-художник</h1>
-        
-        <!-- ЗАГРУЗЧИК -->
-        <div id="loader" class="loader-overlay hidden">
-            <div class="loader-content">
-                <div class="spinner"></div>
-                <p>Магия в процессе... 🔮</p>
-                <p style="font-size: 14px; color: #ccc;">Это может занять 1-3 минуты</p>
+        <!-- Шапка -->
+        <header class="app-header">
+            <h1>✨ Neuro-Master</h1>
+            <div class="user-info">
+                <span id="user-balance-display">Баланс: -- кр</span>
+                <button id="refreshBalance" class="icon-btn">🔄</button>
             </div>
-        </div>
+        </header>
 
-        <!-- ЛИЧНЫЙ КАБИНЕТ -->
-        <div class="mode-section profile-section" style="padding: 15px; border: 2px solid #4a76a8;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <span id="user-balance-display" style="font-weight: bold; font-size: 18px; color: #4a76a8;">Баланс: ...</span>
-                <button id="refreshBalance" style="width: auto; padding: 5px 10px; margin: 0; background: #ebf2fa; color: #4a76a8;">🔄</button>
-            </div>
-            
-            <div class="step-buttons">
-                <!-- ДВЕ КНОПКИ ОПЛАТЫ -->
-                <button class="buy-btn" data-amount="150" data-credits="15" style="background-color: #4CAF50;">💎 15 кредитов (150₽)</button>
-                <button class="buy-btn" data-amount="700" data-credits="100" style="background-color: #E91E63;">💎💎 100 кредитов (700₽)</button>
-                
-                <div style="display: flex; gap: 10px; margin-top: 5px;">
-                    <button id="invite-friend-btn" style="background-color: #4a76a8; flex: 1;">🤝 Пригласить</button>
-                    <button id="helpButton" style="background-color: #6c8eb3; flex: 1;">ℹ️ Помощь</button>
+        <!-- Быстрые действия (Shortcuts) -->
+        <section class="shortcuts">
+            <button class="business-shortcut" data-target="t2i" data-prompt="Фотореалистичный интерьер офиса в стиле лофт">🏢 Офис</button>
+            <button class="business-shortcut" data-target="t2i" data-prompt="Минималистичный логотип для кофейни, вектор">☕ Лого</button>
+            <button class="business-shortcut" data-target="t2i" data-prompt="Профессиональное фото товара: кроссовки на белом фоне">👟 Товар</button>
+        </section>
+
+        <!-- Основной контент (Секции режимов) -->
+        <main id="main-content">
+            <!-- Пример секции: Текст в фото -->
+            <section class="mode-section" data-mode="t2i" data-max-photos="0">
+                <h2>🖼️ Создать фото</h2>
+                <textarea class="prompt-input" placeholder="Опишите, что нужно создать..."></textarea>
+                <div class="actions">
+                    <button class="process-button">Создать (1 кр)</button>
                 </div>
-            </div>
-        </div>
+            </section>
 
-        <!-- МОДАЛКА ПОМОЩИ -->
-        <div id="helpModal" class="modal hidden">
-            <div class="modal-content">
-                <span class="close-modal">&times;</span>
-                <h2 style="margin-bottom: 15px;">Гиды и Цены</h2>
-                <ul style="text-align: left; font-size: 14px; padding-left: 20px; line-height: 1.6;">
-                    <li><b>🎨 Нейро-Художник (1 кр):</b> Рисует по тексту.</li>
-                    <li><b>🎨 Арт-Образ (1 кр):</b> Меняет стиль фото.</li>
-                    <li><b>✨ Фото Микс (2 кр):</b> Смешивает до 3 фото.</li>
-                    <li><b>👑 VIP-Микс (3 кр):</b> Идеальное смешивание.</li>
-                    <li><b>✨ Живое Фото (3 кр):</b> Анимация статики.</li>
-                    <li><b>🎬 Видео-Клип (5 кр):</b> Текст -> Видео.</li>
-                    <li><b>🎬 VIP-Клип (10 кр):</b> Замена персонажа.</li>
-                    <li><b>🗣️ Говорящее Фото (10 кр):</b> Оживляет фото.</li>
-                    <li><b>🎵 Музыка (2 кр):</b> Пишет треки.</li>
-                </ul>
-                <hr style="margin: 15px 0;">
-                <div style="font-size: 12px; color: #666; text-align: left;">
-                    <p><b>Продавец:</b> Самозанятая Селяхова Наталья Викторовна</p>
-                    <p>ИНН: 502209781184</p>
-                    <p>Email: holljs@mail.ru</p>
-                    <p><a href="https://vk.com/nataliselyahova" target="_blank" style="color: #4a76a8;">Поддержка</a></p>
+            <!-- Секция: Оживить фото -->
+            <section class="mode-section" data-mode="i2v" data-max-photos="1">
+                <h2>🎬 Оживить фото</h2>
+                <textarea class="prompt-input" placeholder="Как должно двигаться фото?"></textarea>
+                <div class="image-previews"></div>
+                <div class="actions">
+                    <button class="universal-upload-button" data-type="photos" accept="image/*">1. Выбрать фото</button>
+                    <button class="process-button">Оживить (3 кр)</button>
                 </div>
-            </div>
-        </div>
+                <input type="file" class="hidden" accept="image/*">
+            </section>
 
-        <!-- РЕЗУЛЬТАТ -->
-        <div id="result-wrapper" class="hidden">
-            <h2>Результат:</h2>
+            <!-- Добавь сюда остальные секции аналогично... -->
+        </main>
+
+        <!-- Блок результата (скрыт по умолчанию) -->
+        <section id="result-wrapper" class="hidden">
             <div class="result-container">
-                <img id="resultImage" class="hidden" src="" alt="Result">
-                <video id="resultVideo" class="hidden" controls src=""></video>
-                <audio id="resultAudio" class="hidden" controls style="width: 100%; margin-top: 10px;"></audio>
+                <h2>✅ Готово!</h2>
+                <img id="resultImage" class="hidden" src="" alt="Результат">
+                <video id="resultVideo" class="hidden" controls></video>
+                <audio id="resultAudio" class="hidden" controls></audio>
+                <div class="result-actions">
+                    <button id="downloadButton" class="action-btn download">⬇️ Скачать</button>
+                    <button id="shareButton" class="action-btn share">📢 Поделиться</button>
+                </div>
             </div>
-            <div class="result-buttons">
-                <button id="downloadButton" class="download-button" style="background-color: #333;">Скачать / Посмотреть</button>
-                <button id="shareButton" class="share-button" style="background-color: #5181b8;">Поделиться</button>
-            </div>
-        </div>
-        
-        <hr>
+        </section>
 
-        <!-- БИЗНЕС-ПАНЕЛЬ -->
-        <div class="mode-section" data-mode="business">
-            <h2>💼 ДЛЯ БИЗНЕСА</h2>
-            <div class="business-buttons">
-                <button class="business-shortcut" data-target="quick_edit" data-prompt="HARD EDITING. Photo 1 is the Model. Photo 2 is the Clothes. Dress the model in the clothes. Realistic, 8k." style="background-color: #4a76a8;">👗 Одежда / WB</button>
-                <button class="business-shortcut" data-target="vip_mix" data-prompt="TRANSFORM THIS PHOTO. Make it look like professional Michelin-star food photography. High resolution, detailed texture, elegant composition, natural lighting, dark moody background. 8k." style="background-color: #4a76a8;">🍰 Еда (Мишлен)</button>
-                <button class="business-shortcut" data-target="vip_mix" data-prompt="Professional food photography collage. A perfect 3x3 grid arranging 9 DIFFERENT shots of the SAME product. Show different angles: top-down, side, macro, close-up. Michelin-star styling. Elegant dark studio background. 8k." style="background-color: #4a76a8;">🍱 Еда (Коллаж)</button>
-                <button class="business-shortcut" data-target="quick_edit" data-prompt="HARD EDITING. Photo 1 is the Room. Photo 2 is the Furniture." style="background-color: #4a76a8;">🏠 Интерьер</button>
-            </div>
-        </div>
-
-        <hr>
-
-        <!-- РЕЖИМЫ (ВСЕ СИНИЕ) -->
-        <div class="mode-section" data-mode="t2i">
-            <h2>🎨 Нейро-Художник</h2>
-            <input type="text" class="prompt-input" placeholder="Например: кот в скафандре">
-            <button class="process-button" style="background-color: #4a76a8;">Нарисовать</button>
-        </div>
-
-        <hr>
-        <p style="text-align: center; font-weight: bold; margin: 20px 0;">📸 ОБРАБОТКА ФОТО 📸</p>
-        <hr>
-        
-        <div class="mode-section" data-mode="vip_edit" data-max-photos="1">
-            <h2>🎨 Арт-Образ</h2>
-            <div class="image-previews"></div>
-            <input type="file" class="file-upload-input hidden" accept="image/*">
-            <div class="step-buttons">
-                <button class="universal-upload-button" style="background-color: #4a76a8;">1. Выбрать фото</button>
-            </div>
-            <p style="margin-top: 10px;">2. Напишите, кем хотите стать:</p>
-            <input type="text" class="prompt-input" placeholder="Например: сделай из меня рыцаря">
-            <button class="process-button hidden" style="background-color: #4a76a8;">3. Запустить</button>
-        </div>
-
-        <hr>
-
-        <div class="mode-section" data-mode="quick_edit" data-max-photos="3">
-            <h2>✨ Фото Микс</h2>
-            <div class="image-previews"></div>
-            <input type="file" class="file-upload-input hidden" accept="image/*" multiple>
-            <div class="step-buttons">
-                <button class="universal-upload-button" style="background-color: #4a76a8;">1. Добавить фото (0/3)</button>
-            </div>
-            <p style="margin-top: 10px;">2. Опишите, как смешать:</p>
-            <input type="text" class="prompt-input" placeholder="Например: лицо с первого фото, фон со второго">
-            <button class="process-button hidden" style="background-color: #4a76a8;">3. Запустить</button>
-        </div>
-
-        <hr>
-
-        <div class="mode-section" data-mode="vip_mix" data-max-photos="5">
-            <h2>👑 VIP-Микс</h2>
-            <div class="image-previews"></div>
-            <input type="file" class="file-upload-input hidden" accept="image/*" multiple>
-            <div class="step-buttons">
-                <button class="universal-upload-button" style="background-color: #4a76a8;">1. Добавить фото (0/5)</button>
-            </div>
-            <p style="margin-top: 10px;">2. Опишите результат:</p>
-            <input type="text" class="prompt-input" placeholder="Например: девушка на фоне Токио">
-            <button class="process-button hidden" style="background-color: #4a76a8;">3. Запустить</button>
-        </div>
-
-        <hr>
-        <p style="text-align: center; font-weight: bold; margin: 20px 0;">✨ ВИДЕО-МАГИЯ ✨</p>
-        <hr>
-
-        <div class="mode-section" data-mode="i2v" data-max-photos="1">
-            <h2>✨ Живое Фото</h2>
-            <div class="image-previews"></div>
-            <input type="file" class="file-upload-input hidden" accept="image/*">
-            <div class="step-buttons">
-                <button class="universal-upload-button" style="background-color: #4a76a8;">1. Выбрать фото</button>
-            </div>
-            <p style="margin-top: 10px;">2. Сценарий (можно оставить пустым):</p>
-            <input type="text" class="prompt-input" placeholder="Например: камера летит вперед">
-            <button class="process-button hidden" style="background-color: #4a76a8;">3. Анимировать</button>
-        </div>
-
-        <hr>
-
-        <div class="mode-section" data-mode="t2v">
-            <h2>🎬 Видео-Клип</h2>
-            <input type="text" class="prompt-input" placeholder="Например: дрон пролетает над горами">
-            <button class="process-button" style="background-color: #4a76a8;">Создать видео</button>
-        </div>
-
-        <hr>
-
-        <div class="mode-section" data-mode="vip_clip" data-max-photos="1" data-max-videos="1">
-            <h2>🎬 VIP-Клип</h2>
-            <div class="image-previews"></div>
-            <input type="file" class="file-upload-input hidden" accept="image/*">
-            <input type="file" class="video-upload-input hidden" accept="video/*">
-            <div class="step-buttons">
-                <button class="universal-upload-button" data-type="photo" style="background-color: #4a76a8;">1. Выбрать фото</button>
-                <button class="universal-upload-button" data-type="video" style="background-color: #4a76a8;">2. Выбрать видео</button>
-            </div>
-            <button class="process-button hidden" style="margin-top: 15px; background-color: #4a76a8;">3. Запустить</button>
-        </div>
-
-        <hr>
-        <p style="text-align: center; font-weight: bold; margin: 20px 0;">🎙️ АУДИО И ТЕКСТ 🎙️</p>
-        <hr>
-
-        <div class="mode-section" data-mode="talking_photo" data-max-photos="1" data-max-audios="1">
-            <h2>🗣️ Говорящее Фото</h2>
-            <div class="image-previews"></div>
-            <input type="file" class="file-upload-input hidden" accept="image/*">
-            <input type="file" class="audio-upload-input hidden" accept="audio/*">
-            <div class="step-buttons">
-                <button class="universal-upload-button" data-type="photo" style="background-color: #4a76a8;">1. Выбрать фото</button>
-                <button class="universal-upload-button" data-type="audio" style="background-color: #4a76a8;">2. Выбрать аудио</button>
-            </div>
-            <button class="process-button hidden" style="margin-top: 15px; background-color: #4a76a8;">3. Запустить</button>
-        </div>
-
-        <hr>
-        
-        <div class="mode-section" data-mode="chat">
-            <h2>🧠 Нейро-Помощник</h2>
-            <textarea class="prompt-input" rows="3" placeholder="Например: напиши пост про осень..."></textarea>
-            <button class="process-button" style="background-color: #4a76a8;">Отправить</button>
-        </div>
-
-        <div class="mode-section" data-mode="music">
-            <h2>🎵 Нейро-Музыка</h2>
-            <p>1. Напишите текст песни.</p>
-            <textarea class="prompt-input" rows="3" placeholder="Текст песни..."></textarea>
-            <p>2. Выберите стиль ИЛИ напишите свой:</p>
-            <input type="text" id="custom-style-input" class="prompt-input" placeholder="Свой стиль (например: Jazz)">
-            <div class="music-styles" style="margin-top: 10px;">
-                <button class="process-button" data-style="Epic Rock" style="background-color: #4a76a8;">Рок</button>
-                <button class="process-button" data-style="Pop" style="background-color: #4a76a8;">Поп</button>
-                <button class="process-button" data-style="Rap" style="background-color: #4a76a8;">Рэп</button>
-                <button class="process-button" data-style="custom" style="background-color: #4a76a8;">Свой стиль</button>
-            </div>
-        </div>
-
+        <!-- Футер с кнопками -->
+        <footer class="app-footer">
+            <button id="helpButton">❓ Помощь</button>
+            <button class="buy-btn" data-amount="100" data-credits="100">💳 Пополнить (100 кр)</button>
+        </footer>
     </div>
-    <script src="script.js?v=70"></script>
+
+    <!-- МОДАЛЬНЫЕ ОКНА -->
+
+    <!-- 1. Загрузчик (Лоадер) -->
+    <div id="loader" class="modal hidden">
+        <div class="modal-content loader-content">
+            <div class="spinner"></div>
+            <p>Магия в процессе...<br><span class="small">Это может занять до 1-2 минут</span></p>
+        </div>
+    </div>
+
+    <!-- 2. Кастомное Уведомление (Ошибка №1) -->
+    <div id="customAlertModal" class="modal hidden">
+        <div class="modal-content">
+            <h2 id="customAlertTitle">Уведомление</h2>
+            <p id="customAlertMessage"></p>
+            <button id="closeCustomAlert" class="primary-btn">ОК</button>
+        </div>
+    </div>
+
+    <!-- 3. Окно помощи -->
+    <div id="helpModal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Справка</h2>
+            <p>1. Введите описание на русском или английском.</p>
+            <p>2. Загрузите фото, если это требуется режимом.</p>
+            <p>3. Нажмите кнопку создания и дождитесь результата.</p>
+            <button class="close-modal primary-btn">Закрыть</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
