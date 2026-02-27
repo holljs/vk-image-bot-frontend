@@ -1,244 +1,158 @@
-/* style.css */
-
-:root {
-    --primary-color: #4CAF50;
-    --bg-color: #f0f2f5;
-    --text-color: #2c3e50;
-    --white: #ffffff;
-    --border-color: #dce1e6;
-}
-
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
 body {
-    font-family: -apple-system, system-ui, "Helvetica Neue", Roboto, sans-serif;
-    background-color: var(--bg-color);
-    color: var(--text-color);
-    line-height: 1.5;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: #f0f2f5;
+    color: #333;
+    margin: 0;
+    padding: 12px;
+    padding-bottom: 50px;
 }
 
-/* Ошибка №2: Блокировка скролла при открытых модалках */
+/* ФИКС СТРОГО ОТ ТЕСТИРОВЩИКОВ: Блокировка скролла при открытых окнах */
 body.modal-open {
     overflow: hidden;
-    position: fixed; /* Fixes body scroll on iOS */
-    width: 100%;
 }
 
 #app {
-    max-width: 600px; /* Ограничивает ширину контента */
+    max-width: 600px;
     margin: 0 auto;
-    padding: 15px;
-    padding-bottom: 80px; /* Место под футер */
 }
 
-/* Шапка */
-.app-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
+h1, h2 {
+    color: #2c2d2e;
+    text-align: center;
 }
 
-.user-info {
-    background: var(--white);
-    padding: 5px 12px;
-    border-radius: 20px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    display: flex;
-    align-items: center;
-    gap: 10px;
+h2 { margin-top: 0; font-size: 18px; }
+p { color: #6d6d78; text-align: center; font-size: 14px; margin-bottom: 10px; }
+
+hr {
+    border: none;
+    height: 1px;
+    background-color: #dce1e6;
+    margin: 20px 0;
 }
 
-/* Секции */
 .mode-section {
-    background: var(--white);
+    background: #fff;
+    padding: 16px;
     border-radius: 12px;
-    padding: 15px;
-    margin-bottom: 15px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    margin-bottom: 16px;
+    text-align: center;
 }
 
-.mode-section h2 {
-    font-size: 18px;
-    margin-bottom: 12px;
+.profile-section {
+    border: 2px solid #4a76a8;
 }
 
-/* Ошибка №6/11: Настройка поля ввода */
+/* ФИКС: resize: vertical чтобы не ломали верстку вширь */
 .prompt-input {
     width: 100%;
-    min-height: 80px;
-    padding: 10px;
-    border: 1px solid var(--border-color);
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid #dce1e6;
     border-radius: 8px;
-    font-size: 14px;
-    resize: vertical; /* Разрешаем тянуть только вниз */
-    margin-bottom: 10px;
-    font-family: inherit; /* Наследует шрифт из body */
+    margin-bottom: 12px;
+    box-sizing: border-box;
+    outline: none;
+    resize: vertical; 
 }
+.prompt-input:focus { border-color: #4a76a8; }
 
-/* Ошибка №9: Чтобы текст в плейсхолдере не обрезался некрасиво */
+/* ФИКС: Троеточие для длинных плейсхолдеров */
 .prompt-input::placeholder {
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
 }
 
-/* Кнопки */
 button {
-    cursor: pointer;
+    width: 100%;
     border: none;
+    padding: 12px 24px;
     border-radius: 8px;
-    transition: opacity 0.2s;
-    font-family: inherit;
-}
-
-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.primary-btn, .process-button {
-    background-color: var(--primary-color);
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+    margin-bottom: 8px;
+    background-color: #4a76a8; 
     color: white;
-    padding: 10px 20px;
-    font-weight: bold;
-    width: 100%;
 }
+button:active { opacity: 0.8; }
+button:disabled { background-color: #aeb7c2; cursor: not-allowed; }
 
-.universal-upload-button {
-    background: #e1e3e6;
-    padding: 8px 15px;
-    font-size: 13px;
-    margin-bottom: 10px;
-    width: 100%;
-}
-
-/* Превью изображений */
-.image-previews {
+.step-buttons {
     display: flex;
+    flex-direction: column; 
     gap: 8px;
     margin-bottom: 10px;
-    overflow-x: auto;
-    padding-bottom: 5px; /* Для скроллбара */
 }
 
+.image-previews {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0;
+}
 .preview-image {
-    width: 60px;
-    height: 60px;
-    background-size: cover;
-    background-position: center;
-    border-radius: 6px;
-    border: 1px solid var(--border-color);
-    flex-shrink: 0; /* Не сжимать при наличии других превью */
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 2px solid #e1e3e6;
 }
 
-/* Результат */
+.loader-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 9999;
+    flex-direction: column;
+}
+.loader-content { text-align: center; color: white; }
+.spinner {
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    width: 40px; height: 40px; border-radius: 50%;
+    border-left-color: #ffffff;
+    margin: 0 auto 15px;
+    animation: spin 1s linear infinite;
+}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
 #result-wrapper {
-    margin-top: 20px;
-    background: var(--white);
-    padding: 15px;
+    background: #fff;
+    padding: 20px;
     border-radius: 12px;
-    text-align: center;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
 }
-
-#result-wrapper img, #result-wrapper video, #result-wrapper audio {
+.result-container img, .result-container video {
     max-width: 100%;
     border-radius: 8px;
-    margin-top: 10px;
-    display: block; /* Убираем лишний отступ */
-    margin-left: auto;
-    margin-right: auto;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
-
-.result-actions {
+.result-buttons {
     display: flex;
     gap: 10px;
+    justify-content: center;
     margin-top: 15px;
 }
 
-.action-btn {
-    flex: 1;
-    padding: 10px;
-    font-size: 14px;
-}
+.hidden { display: none !important; }
 
-/* Модальные окна */
+/* Модальное окно */
 .modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.6);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6); z-index: 10000;
 }
-
 .modal-content {
-    background: white;
-    padding: 25px;
-    border-radius: 16px;
-    width: 90%;
-    max-width: 400px;
-    text-align: center;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    background: #fff; margin: 15% auto; padding: 20px;
+    width: 80%; max-width: 400px; border-radius: 12px; position: relative;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
 }
-
-.hidden {
-    display: none !important;
+.close-modal {
+    position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: #999;
 }
-
-/* Спиннер лоадера */
-.spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid var(--primary-color);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 15px;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.small {
-    font-size: 12px;
-    color: #777;
-}
-
-/* Футер */
-.app-footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background: var(--white);
-    padding: 10px 15px;
-    display: flex;
-    gap: 10px;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
-    justify-content: space-around; /* Равномерное распределение кнопок */
-    z-index: 999;
-}
-
-/* Скрытые инпуты для файлов */
-input[type="file"].hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0,0,0,0);
-    border: 0;
-}
+.close-modal:hover { color: #333; }
