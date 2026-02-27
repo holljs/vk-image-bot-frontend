@@ -273,9 +273,24 @@ document.querySelectorAll('.process-button').forEach(btn => {
             }
         }
 
-        if (!prompt && !['i2v', 'music', 'vip_clip', 'talking_photo'].includes(mode)) {
-            return showCustomAlert("Напишите промпт!", "Ошибка");
+         // БАЗОВАЯ ПРОВЕРКА ПРОМПТА
+        if (!prompt && !['talking_photo', 'vip_clip'].includes(mode)) {
+            return showCustomAlert("Пожалуйста, введите текстовое описание.", "Пустой запрос");
         }
+
+        // --- НОВЫЕ ПРОВЕРКИ ДЛЯ ЗАЩИТЫ REPLICATE (Ошибки из логов) ---
+        if (mode === 'music') {
+            const lyricsLength = musicLyrics ? musicLyrics.length : 0;
+            const styleLength = stylePrompt ? stylePrompt.length : 0;
+            
+            if (lyricsLength < 10 || lyricsLength > 600) {
+                return showCustomAlert("Текст песни должен быть от 10 до 600 символов. У вас: " + lyricsLength, "Ошибка текста");
+            }
+            if (styleLength < 10 || styleLength > 300) {
+                return showCustomAlert("Стиль музыки должен быть от 10 до 300 символов. У вас: " + styleLength, "Ошибка стиля");
+            }
+        }
+        // -------------------------------------------------------------
 
         const files = filesByMode[mode] || { photos: [], videos: [], audios: [] };
         
