@@ -15,7 +15,6 @@ h1, h2 { color: #2c2d2e; text-align: center; }
 h2 { margin-top: 0; font-size: 18px; }
 p { color: #6d6d78; text-align: center; font-size: 14px; margin-bottom: 10px; }
 
-/* Описания разделов (Баг №20) */
 .section-desc {
     font-size: 13px;
     color: #818c99;
@@ -36,8 +35,10 @@ hr { border: none; height: 1px; background-color: #dce1e6; margin: 20px 0; }
 
 .profile-section { border: 2px solid #4a76a8; }
 
+/* Баги №4, №6, №11, №15: Исправлены инпуты */
 .prompt-input {
     width: 100%;
+    min-height: 50px;
     padding: 12px;
     font-size: 14px;
     border: 1px solid #dce1e6;
@@ -45,18 +46,23 @@ hr { border: none; height: 1px; background-color: #dce1e6; margin: 20px 0; }
     margin-bottom: 12px;
     box-sizing: border-box;
     outline: none;
-    resize: vertical; /* Баги №6, 11 */
+    resize: vertical;
     background: #f2f3f5;
+    font-family: inherit;
+    line-height: 1.4;
 }
 
-/* Баг №27: Выравнивание плейсхолдеров */
+/* Баг №27: Выравнивание плейсхолдеров сверху */
 .prompt-input::placeholder {
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    color: #818C99;
+    white-space: normal;
     overflow: hidden;
+}
+textarea.prompt-input::placeholder {
     vertical-align: top;
 }
 
+/* Баг №13: Отступы между кнопками */
 button {
     width: 100%;
     border: none;
@@ -67,6 +73,12 @@ button {
     cursor: pointer;
     background-color: #4a76a8; 
     color: white;
+    margin-bottom: 8px; /* Добавлен отступ снизу */
+}
+button:last-child { margin-bottom: 0; } /* У последней кнопки убираем отступ */
+
+.business-buttons button, .music-styles button {
+    margin-bottom: 8px;
 }
 
 .image-previews {
@@ -86,7 +98,6 @@ button {
     border: 1px solid #e1e3e6;
 }
 
-/* Баг №15: Кнопка удаления на фото */
 .remove-btn {
     position: absolute; top: -5px; right: -5px;
     background: #ef5350; color: white;
@@ -95,35 +106,62 @@ button {
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
+/* Баг №6: Центрирование модалок */
 .modal {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0.6); z-index: 10000;
-    display: flex; justify-content: center; align-items: center;
+    display: flex; justify-content: center; align-items: center; /* Центрирует окно */
 }
 
 .modal-content {
     background: #fff; padding: 25px;
     width: 85%; max-width: 380px; border-radius: 16px; position: relative;
+    max-height: 90vh; /* Чтобы не уезжало за экран */
+    overflow-y: auto;
 }
 
+/* Баг №5: Нормальный крестик закрытия */
+.close-modal-icon {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: #f2f3f5;
+    color: #333;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    font-size: 20px;
+    line-height: 30px;
+    text-align: center;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Баг №8: Центрирование лоадера */
 .loader-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0, 0, 0, 0.85);
     display: flex; justify-content: center; align-items: center;
     z-index: 9999; flex-direction: column; color: white;
+    text-align: center;
 }
 
 .spinner {
     border: 4px solid rgba(255, 255, 255, 0.3);
     width: 40px; height: 40px; border-radius: 50%;
     border-left-color: #ffffff; animation: spin 1s linear infinite;
-    margin-bottom: 15px;
+    margin: 0 auto 15px auto;
 }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
 .hidden { display: none !important; }
 
-/* --- БЛОК РЕЗУЛЬТАТОВ --- */
+/* БЛОК РЕЗУЛЬТАТОВ */
 #result-wrapper {
     margin-top: 20px;
     background: var(--white, #fff);
@@ -133,39 +171,13 @@ button {
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-/* Ограничиваем размер картинок и видео, чтобы они не вылезали за экран */
 #result-wrapper img, #result-wrapper video, #result-wrapper audio {
     max-width: 100%;
-    max-height: 55vh; /* Высота не больше 55% от высоты экрана */
-    object-fit: contain; /* Сохраняем пропорции, без искажений */
+    max-height: 55vh;
+    object-fit: contain;
     border-radius: 12px;
     margin-top: 15px;
     display: block;
     margin-left: auto;
     margin-right: auto;
-}
-
-.result-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 15px;
-}
-
-.action-btn {
-    flex: 1;
-    padding: 12px;
-    font-size: 14px;
-    font-weight: 500;
-    background: #F2F3F5;
-    color: #000;
-}
-
-.download {
-    background-color: #333;
-    color: white;
-}
-
-.share {
-    background-color: #4a76a8;
-    color: white;
 }
