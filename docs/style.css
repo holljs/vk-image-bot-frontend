@@ -122,3 +122,50 @@ button {
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
 .hidden { display: none !important; }
+
+/* --- БЛОК РЕЗУЛЬТАТОВ --- */
+#result-wrapper {
+    margin-top: 20px;
+    background: var(--white, #fff);
+    padding: 16px;
+    border-radius: 16px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Ограничиваем размер картинок и видео, чтобы они не вылезали за экран */
+#result-wrapper img, #result-wrapper video, #result-wrapper audio {
+    max-width: 100%;
+    max-height: 55vh; /* Высота не больше 55% от высоты экрана */
+    object-fit: contain; /* Сохраняем пропорции, без искажений */
+    border-radius: 12px;
+    margin-top: 15px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.result-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.action-btn {
+    flex: 1;
+    padding: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    background: #F2F3F5;
+    color: #000;
+}
+
+.download {
+    background-color: #333;
+    color: white;
+}
+
+.share {
+    background-color: #4a76a8;
+    color: white;
+}
