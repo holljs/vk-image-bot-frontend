@@ -360,6 +360,19 @@ document.getElementById('downloadButton')?.addEventListener('click', () => {
     }
 });
 
+// --- ОТКРЫТИЕ ГРУППЫ С ПРОМПТАМИ ИЗ ОКНА СПРАВКИ ---
+document.getElementById('gallery-link')?.addEventListener('click', () => {
+    // ВКонтакте рекомендует открывать внутренние ссылки через этот метод
+    // Так группа откроется "поверх" вашего приложения, и пользователь сможет вернуться назад
+    vkBridge.send("VKWebAppOpenApp", { 
+        "app_id": 51884181, 
+        "location": "https://vk.com/hollie_ai_bot" // <--- Ваша правильная ссылка!
+    }).catch(() => {
+        // Запасной вариант для десктопа: открываем в новой вкладке
+        window.open("https://vk.com/hollie_ai_bot", "_blank");
+    });
+});
+
 // ОПЛАТА (ЮKASSA)
 document.querySelectorAll('.buy-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
