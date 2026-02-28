@@ -165,12 +165,19 @@ document.querySelectorAll('.universal-upload-button').forEach(btn => {
                         }
                     }
 
-                    const max = parseInt(section.dataset.maxPhotos) || 1;
-                    if (filesByMode[mode][typeKey].length < max) {
-                        filesByMode[mode][typeKey].push(file);
+                     const max = parseInt(section.dataset.maxPhotos) || 1;
+                    
+                    // БАГ №9: Замена файла вместо ошибки лимита
+                    if (max === 1) {
+                        // Если режим требует 1 файл (Арт-Образ, Живое Фото), просто заменяем старый на новый
+                        filesByMode[mode][typeKey] = [file];
                     } else {
-                        showCustomAlert(`Достигнут лимит файлов.`, "Лимит");
-                    }
+                        // Если режим требует несколько файлов (Микс)
+                        if (filesByMode[mode][typeKey].length < max) {
+                            filesByMode[mode][typeKey].push(file);
+                        } else {
+                            showCustomAlert(`Лимит файлов (${max}). Сначала удалите старое фото (нажмите на крестик).`, "Лимит");
+                        }
                 }
                 updateUI(section);
                 input.value = '';
