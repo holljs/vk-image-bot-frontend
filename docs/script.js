@@ -416,6 +416,7 @@ document.querySelectorAll('.process-button').forEach(btn => {
 
 
 // --- 6. ДОП. ФУНКЦИИ ---
+
 document.querySelectorAll('.business-shortcut').forEach(btn => {
     btn.addEventListener('click', (e) => {
         const targetMode = e.target.dataset.target;
@@ -423,12 +424,30 @@ document.querySelectorAll('.business-shortcut').forEach(btn => {
         const targetSection = document.querySelector(`.mode-section[data-mode="${targetMode}"]`);
 
         if (targetSection) {
+            // Плавная прокрутка
             targetSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // 1. Сбрасываем заголовки у всех секций (если ранее меняли)
+            document.querySelectorAll('.mode-section h2').forEach(h2 => {
+                if (h2.dataset.orig) h2.innerText = h2.dataset.orig;
+            });
+
+            // 2. Меняем заголовок целевой секции на название бизнес-кнопки
+            const title = targetSection.querySelector('h2');
+            if (!title.dataset.orig) title.dataset.orig = title.innerText; // Запоминаем оригинал
+            title.innerText = `💼 ${e.target.innerText} (Шаблон)`;
+
+            // 3. Красиво подсвечиваем саму карточку (рамкой), чтобы привлечь внимание
+            targetSection.style.transition = 'box-shadow 0.3s ease';
+            targetSection.style.boxShadow = '0 0 0 3px #2787F5';
+            setTimeout(() => { targetSection.style.boxShadow = ''; }, 2000);
+
+            // 4. Вставляем текст в поле ввода
             const input = targetSection.querySelector('.prompt-input');
             if (input) {
                 input.value = promptText;
-                input.style.borderColor = '#4CAF50';
-                setTimeout(() => input.style.borderColor = '#dce1e6', 1000);
+                input.style.borderColor = '#2787F5';
+                setTimeout(() => input.style.borderColor = '#dce1e6', 1500);
             }
         }
     });
