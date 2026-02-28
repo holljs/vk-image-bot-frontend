@@ -3,6 +3,7 @@ let USER_ID = null;
 const filesByMode = {};
 
 // --- 1. БЕЗОПАСНАЯ ИНИЦИАЛИЗАЦИЯ И СКРЫТИЕ КНОПОК ---
+// Скрипт ЖДЕТ полной загрузки страницы и локального browser.js
 document.addEventListener('DOMContentLoaded', () => {
     if (typeof vkBridge !== 'undefined') {
         vkBridge.send('VKWebAppInit')
@@ -20,6 +21,7 @@ function hidePaymentsOnMobile() {
     const urlParams = new URLSearchParams(window.location.search);
     const platform = urlParams.get('vk_platform');
     
+    // Скрываем только в нативных приложениях. На ПК и мобильном вебе (m.vk.com) оплата останется!
     const isNativeApp = platform === 'mobile_android' || platform === 'mobile_iphone' || platform === 'mobile_ipad';
     if (isNativeApp) {
         document.querySelectorAll('.buy-btn').forEach(btn => btn.style.display = 'none');
@@ -52,7 +54,6 @@ function updateBalance() {
     .catch(() => { if (balanceEl) balanceEl.textContent = "Ошибка"; });
 }
 document.getElementById('refreshBalance')?.addEventListener('click', updateBalance);
-
 
 // --- 3. ИНТЕРФЕЙС И КАСТОМНЫЕ ОКНА ---
 function showCustomAlert(message, title = "Уведомление") {
@@ -95,7 +96,6 @@ document.querySelectorAll('.close-modal').forEach(btn => {
         document.body.classList.remove('modal-open');
     });
 });
-
 
 // --- 4. РАБОТА С ФАЙЛАМИ, ВАЛИДАЦИЯ ФОРМАТА И ДЛИТЕЛЬНОСТИ ---
 const fileToBase64 = file => new Promise((resolve, reject) => {
@@ -144,7 +144,7 @@ document.querySelectorAll('.universal-upload-button').forEach(btn => {
                 
                 if (!filesByMode[mode]) filesByMode[mode] = { photos: [], videos: [], audios: [] };
                 
-                 const accept = input.getAttribute('accept');
+                const accept = input.getAttribute('accept');
                 for (let file of files) {
                     // 1. Строгая валидация формата (только растр для фото)
                     if (typeKey === 'photos') {
@@ -172,19 +172,18 @@ document.querySelectorAll('.universal-upload-button').forEach(btn => {
                         }
                     }
 
-                     const max = parseInt(section.dataset.maxPhotos) || 1;
+                    const max = parseInt(section.dataset.maxPhotos) || 1;
                     
-                    // БАГ №9: Замена файла вместо ошибки лимита
+                    // Замена файла вместо ошибки лимита
                     if (max === 1) {
-                        // Если режим требует 1 файл (Арт-Образ, Живое Фото), просто заменяем старый на новый
                         filesByMode[mode][typeKey] = [file];
                     } else {
-                        // Если режим требует несколько файлов (Микс)
                         if (filesByMode[mode][typeKey].length < max) {
                             filesByMode[mode][typeKey].push(file);
                         } else {
                             showCustomAlert(`Лимит файлов (${max}). Сначала удалите старое фото (нажмите на крестик).`, "Лимит");
                         }
+                    }
                 }
                 updateUI(section);
                 input.value = '';
@@ -278,33 +277,26 @@ async function pollTaskStatus(taskId) {
                 headers: { 'X-VK-Sign': getAuthHeader() }
             });
             
-            // Если сервер вообще не ответил 200 OK
             if (!response.ok) {
                 console.warn(`Поллинг: Сервер ответил статусом ${response.status}`);
-                return; // Не обрываем цикл, может это временный сбой сети, пробуем еще раз
+                return; 
             }
 
             const data = await response.json();
-            console.log("Статус задачи:", data); // Выводим в консоль для отладки!
+            console.log("Статус задачи:", data); 
 
             if (data.success === true && data.result_url) {
-                // ИДЕАЛЬНЫЙ СЦЕНАРИЙ: Всё готово
                 clearInterval(pollInterval);
                 showResult(data);
                 hideLoader();
                 updateBalance();
             } else if (data.success === false) {
-                // ОШИБКА ГЕНЕРАЦИИ НА СЕРВЕРЕ (Replicate упал)
                 clearInterval(pollInterval);
                 hideLoader();
                 showCustomAlert(data.error || "Произошла ошибка при генерации.", "Ошибка нейросети");
             }
-            // Если status === "pending", скрипт просто молча ждет следующего тика интервала
-            
         } catch (e) {
             console.error("Ошибка при опросе статуса:", e);
-            // НЕ обрываем цикл при разовой ошибке сети (например, скачок интернета на телефоне)
-            // Но если ошибок будет слишком много, цикл прервется по maxAttempts.
         }
     }, 3500);
 }
@@ -314,6 +306,7 @@ function showResult(result) {
     const resultImage = document.getElementById('resultImage');
     const resultVideo = document.getElementById('resultVideo');
     const resultAudio = document.getElementById('resultAudio');
+
     if (!resultWrapper) return;
 
     resultWrapper.classList.remove('hidden');
@@ -322,6 +315,7 @@ function showResult(result) {
     resultAudio?.classList.add('hidden');
 
     const url = result.result_url || result.response;
+
     if (result.model === 'chat') { showCustomAlert(url, "Ответ помощника"); resultWrapper.classList.add('hidden'); return; }
 
     const isVideo = url.includes('.mp4') || url.includes('.mov');
@@ -334,6 +328,7 @@ function showResult(result) {
     } else {
         resultImage.src = url; resultImage.classList.remove('hidden');
     }
+
     resultWrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -346,6 +341,7 @@ document.querySelectorAll('.process-button').forEach(btn => {
 
         const promptInput = section.querySelector('.prompt-input');
         let prompt = promptInput ? promptInput.value.trim() : '';
+
         let stylePrompt = null;
         let musicLyrics = null;
 
@@ -428,9 +424,7 @@ document.querySelectorAll('.process-button').forEach(btn => {
     });
 });
 
-
 // --- 6. ДОП. ФУНКЦИИ ---
-
 document.querySelectorAll('.business-shortcut').forEach(btn => {
     btn.addEventListener('click', (e) => {
         const targetMode = e.target.dataset.target;
@@ -438,25 +432,20 @@ document.querySelectorAll('.business-shortcut').forEach(btn => {
         const targetSection = document.querySelector(`.mode-section[data-mode="${targetMode}"]`);
 
         if (targetSection) {
-            // Плавная прокрутка
             targetSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-            // 1. Сбрасываем заголовки у всех секций (если ранее меняли)
             document.querySelectorAll('.mode-section h2').forEach(h2 => {
                 if (h2.dataset.orig) h2.innerText = h2.dataset.orig;
             });
 
-            // 2. Меняем заголовок целевой секции на название бизнес-кнопки
             const title = targetSection.querySelector('h2');
-            if (!title.dataset.orig) title.dataset.orig = title.innerText; // Запоминаем оригинал
+            if (!title.dataset.orig) title.dataset.orig = title.innerText;
             title.innerText = `💼 ${e.target.innerText} (Шаблон)`;
 
-            // 3. Красиво подсвечиваем саму карточку (рамкой), чтобы привлечь внимание
             targetSection.style.transition = 'box-shadow 0.3s ease';
             targetSection.style.boxShadow = '0 0 0 3px #2787F5';
             setTimeout(() => { targetSection.style.boxShadow = ''; }, 2000);
 
-            // 4. Вставляем текст в поле ввода
             const input = targetSection.querySelector('.prompt-input');
             if (input) {
                 input.value = promptText;
@@ -467,7 +456,6 @@ document.querySelectorAll('.business-shortcut').forEach(btn => {
     });
 });
 
-// Открытие ссылки на вашу группу ВК
 document.getElementById('gallery-link')?.addEventListener('click', () => {
     vkBridge.send("VKWebAppOpenApp", { 
         "app_id": 51884181, 
@@ -477,7 +465,6 @@ document.getElementById('gallery-link')?.addEventListener('click', () => {
     });
 });
 
-// Правильное скачивание (в новой вкладке)
 document.getElementById('downloadButton')?.addEventListener('click', () => {
     const activeMedia = document.querySelector('#result-wrapper img:not(.hidden), #result-wrapper video:not(.hidden), #result-wrapper audio:not(.hidden)');
     const url = activeMedia?.src;
@@ -490,7 +477,6 @@ document.getElementById('downloadButton')?.addEventListener('click', () => {
     }
 });
 
-// Оплата ЮKassa
 document.querySelectorAll('.buy-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
         if (!USER_ID) return;
