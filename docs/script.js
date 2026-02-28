@@ -266,16 +266,24 @@ document.querySelectorAll('.process-button').forEach(btn => {
             return showCustomAlert("Пожалуйста, введите текстовое описание.", "Пустой запрос");
         }
 
-        // --- ПРОВЕРКИ ДЛЯ REPLICATE ---
+       // --- ПРОВЕРКИ ДЛЯ REPLICATE ---
         if (mode === 'music') {
             const lyricsLength = musicLyrics ? musicLyrics.length : 0;
             const styleLength = stylePrompt ? stylePrompt.length : 0;
             
+            // Текст песни должен быть от 10 до 600 символов
             if (lyricsLength < 10 || lyricsLength > 600) {
                 return showCustomAlert("Текст песни должен быть от 10 до 600 символов. У вас: " + lyricsLength, "Ошибка текста");
             }
-            if (styleLength < 10 || styleLength > 300) {
-                return showCustomAlert("Стиль музыки должен быть от 10 до 300 символов. У вас: " + styleLength, "Ошибка стиля");
+            
+            // Если пользователь выбрал "Свой стиль" (а не нажал на готовые кнопки)
+            if (btn.dataset.style === 'custom') {
+                if (styleLength < 10) {
+                    return showCustomAlert("Пожалуйста, опишите свой стиль подробнее (не менее 10 символов).", "Ошибка стиля");
+                }
+                if (styleLength > 300) {
+                    return showCustomAlert("Стиль музыки не должен превышать 300 символов.", "Ошибка стиля");
+                }
             }
         }
 
