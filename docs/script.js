@@ -71,13 +71,13 @@ document.getElementById('helpButton')?.addEventListener('click', () => {
     document.body.classList.add('modal-open');
 });
 
-// Находим ВСЕ элементы с классом .close-modal и вешаем на них закрытие
 document.querySelectorAll('.close-modal').forEach(btn => {
     btn.addEventListener('click', () => {
         document.getElementById('helpModal')?.classList.add('hidden');
         document.body.classList.remove('modal-open');
     });
 });
+
 
 // --- 4. РАБОТА С ФАЙЛАМИ И ВАЛИДАЦИЯ ---
 const fileToBase64 = file => new Promise((resolve, reject) => {
@@ -86,6 +86,31 @@ const fileToBase64 = file => new Promise((resolve, reject) => {
     reader.onload = () => resolve(reader.result);
     reader.onerror = error => reject(error);
 });
+
+// НОВАЯ ФУНКЦИЯ: Проверка длительности аудио/видео
+const checkMediaDuration = (file) => new Promise((resolve) => {
+    const isVideo = file.type.startsWith('video/');
+    const isAudio = file.type.startsWith('audio/');
+    
+    if (!isVideo && !isAudio) {
+        resolve(0); // Это фото, пропускаем проверку длины
+        return;
+    }
+
+    const mediaElement = document.createElement(isVideo ? 'video' : 'audio');
+    const objectUrl = URL.createObjectURL(file);
+
+    mediaElement.onloadedmetadata = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve(mediaElement.duration);
+    };
+    mediaElement.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve(0); // В случае ошибки чтения пропускаем (защита от багов браузера)
+    };
+    mediaElement.src = objectUrl;
+});
+
 
 document.querySelectorAll('.universal-upload-button').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -107,9 +132,19 @@ document.querySelectorAll('.universal-upload-button').forEach(btn => {
                 
                 const accept = input.getAttribute('accept');
                 for (let file of files) {
+                    // Валидация формата
                     if (accept && accept !== '*/*' && !file.type.startsWith(accept.split('/')[0])) {
                         showCustomAlert(`Файл ${file.name} не поддерживается. Разрешены только ${accept}.`, "Неверный формат");
                         continue;
+                    }
+
+                    // НОВАЯ ВАЛИДАЦИЯ: Проверка длины видео и аудио (15 секунд + 1 сек буфер)
+                    if (typeKey === 'videos' || typeKey === 'audios') {
+                        const duration = await checkMediaDuration(file);
+                        if (duration > 16) {
+                            showCustomAlert(`Файл слишком длинный! Загрузите медиа не дольше 15 секунд. (У вас: ${Math.round(duration)} сек)`, "Превышен лимит времени");
+                            continue; // Пропускаем этот файл, не добавляем
+                        }
                     }
 
                     const max = parseInt(section.dataset.maxPhotos) || 1;
@@ -127,6 +162,11 @@ document.querySelectorAll('.universal-upload-button').forEach(btn => {
     });
 });
 
+function removeFile(mode, type, index) {
+    filesByMode[mode][type].splice(index, 1);
+    updateUI(document.querySelector(`.mode-section[data-mode="${mode}"]`));
+}
+
 function updateUI(section) {
     const mode = section.dataset.mode;
     const files = filesByMode[mode] || { photos: [], videos: [], audios: [] };
@@ -135,49 +175,43 @@ function updateUI(section) {
     const previewDiv = section.querySelector('.image-previews');
     if (previewDiv) {
         previewDiv.innerHTML = '';
-        files.photos.forEach(f => {
-            const el = document.createElement('img');
-            el.src = URL.createObjectURL(f);
-            el.className = 'preview-image';
-            previewDiv.appendChild(el);
-        });
-        files.videos.forEach(f => {
-            const el = document.createElement('video');
-            el.src = URL.createObjectURL(f);
-            el.className = 'preview-image';
-            previewDiv.appendChild(el);
-        });
-        files.audios.forEach(f => {
-            const span = document.createElement('div');
-            span.textContent = "🎵 Аудио готово"; 
-            previewDiv.appendChild(span);
+        ['photos', 'videos', 'audios'].forEach(type => {
+            files[type].forEach((f, i) => {
+                const container = document.createElement('div');
+                container.className = 'preview-container';
+                if (type === 'photos' || type === 'videos') {
+                    const el = document.createElement(type === 'photos' ? 'img' : 'video');
+                    el.src = URL.createObjectURL(f);
+                    el.className = 'preview-image';
+                    container.appendChild(el);
+                } else {
+                    const span = document.createElement('div'); span.textContent = "🎵 Аудио готово"; container.appendChild(span);
+                }
+                const del = document.createElement('div');
+                del.className = 'remove-btn'; del.innerHTML = '×';
+                del.onclick = () => removeFile(mode, type, i);
+                container.appendChild(del);
+                previewDiv.appendChild(container);
+            });
         });
     }
 
     const uploadBtn = section.querySelector('.universal-upload-button:not([data-type])') || section.querySelector('.universal-upload-button[data-type="photo"]');
     if (uploadBtn) {
-        if (max > 1) {
-            uploadBtn.textContent = `Добавить фото (${files.photos.length}/${max})`;
-        } else {
-            uploadBtn.textContent = files.photos.length > 0 ? "Выбрать другое" : "1. Выбрать фото";
-        }
+        if (max > 1) uploadBtn.textContent = `Добавить фото (${files.photos.length}/${max})`;
+        else uploadBtn.textContent = files.photos.length > 0 ? "Выбрать другое" : "1. Выбрать фото";
     }
     
     const videoBtn = section.querySelector('.universal-upload-button[data-type="video"]');
-    if (videoBtn) videoBtn.textContent = files.videos.length > 0 ? "Видео выбрано" : "2. Выбрать видео";
+    if (videoBtn) videoBtn.textContent = files.videos.length > 0 ? "Видео выбрано ✅" : "2. Видео-шаблон (до 15 сек)";
+    
     const audioBtn = section.querySelector('.universal-upload-button[data-type="audio"]');
-    if (audioBtn) audioBtn.textContent = files.audios.length > 0 ? "Аудио выбрано" : "2. Выбрать аудио";
+    if (audioBtn) audioBtn.textContent = files.audios.length > 0 ? "Аудио выбрано ✅" : "2. Голосовое (до 15 сек)";
 
     const processBtn = section.querySelector('.process-button');
     if (processBtn) {
-        let ready = false;
-        if (['t2i', 't2v', 'chat', 'music'].includes(mode)) ready = true;
-        else if (mode === 'vip_clip' && files.photos.length > 0 && files.videos.length > 0) ready = true;
-        else if (mode === 'talking_photo' && files.photos.length > 0 && files.audios.length > 0) ready = true;
-        else if (files.photos.length > 0) ready = true;
-        
-        if (ready) processBtn.classList.remove('hidden');
-        else processBtn.classList.add('hidden');
+        let ready = ['t2i', 't2v', 'chat', 'music'].includes(mode) || files.photos.length > 0;
+        processBtn.classList.toggle('hidden', !ready);
     }
 }
 
@@ -213,6 +247,7 @@ function showResult(result) {
     const resultImage = document.getElementById('resultImage');
     const resultVideo = document.getElementById('resultVideo');
     const resultAudio = document.getElementById('resultAudio');
+
     if (!resultWrapper) return;
 
     resultWrapper.classList.remove('hidden');
@@ -221,6 +256,7 @@ function showResult(result) {
     resultAudio?.classList.add('hidden');
 
     const url = result.result_url || result.response;
+
     if (result.model === 'chat') { showCustomAlert(url, "Ответ помощника"); resultWrapper.classList.add('hidden'); return; }
 
     const isVideo = url.includes('.mp4') || url.includes('.mov');
@@ -233,6 +269,7 @@ function showResult(result) {
     } else {
         resultImage.src = url; resultImage.classList.remove('hidden');
     }
+
     resultWrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -261,29 +298,20 @@ document.querySelectorAll('.process-button').forEach(btn => {
             }
         }
 
-        // БАЗОВАЯ ПРОВЕРКА ПРОМПТА
         if (!prompt && !['i2v', 'music', 'vip_clip', 'talking_photo'].includes(mode)) {
             return showCustomAlert("Пожалуйста, введите текстовое описание.", "Пустой запрос");
         }
 
-       // --- ПРОВЕРКИ ДЛЯ REPLICATE ---
         if (mode === 'music') {
             const lyricsLength = musicLyrics ? musicLyrics.length : 0;
             const styleLength = stylePrompt ? stylePrompt.length : 0;
             
-            // Текст песни должен быть от 10 до 600 символов
             if (lyricsLength < 10 || lyricsLength > 600) {
                 return showCustomAlert("Текст песни должен быть от 10 до 600 символов. У вас: " + lyricsLength, "Ошибка текста");
             }
-            
-            // Если пользователь выбрал "Свой стиль" (а не нажал на готовые кнопки)
             if (btn.dataset.style === 'custom') {
-                if (styleLength < 10) {
-                    return showCustomAlert("Пожалуйста, опишите свой стиль подробнее (не менее 10 символов).", "Ошибка стиля");
-                }
-                if (styleLength > 300) {
-                    return showCustomAlert("Стиль музыки не должен превышать 300 символов.", "Ошибка стиля");
-                }
+                if (styleLength < 10) return showCustomAlert("Пожалуйста, опишите свой стиль подробнее (не менее 10 символов).", "Ошибка стиля");
+                if (styleLength > 300) return showCustomAlert("Стиль музыки не должен превышать 300 символов.", "Ошибка стиля");
             }
         }
 
@@ -325,6 +353,7 @@ document.querySelectorAll('.process-button').forEach(btn => {
             } else {
                 throw new Error(result.detail || "Ошибка сервера");
             }
+
         } catch (e) {
             hideLoader();
             showCustomAlert(e.message, "Ошибка");
@@ -335,7 +364,6 @@ document.querySelectorAll('.process-button').forEach(btn => {
 });
 
 // --- 6. ДОП. ФУНКЦИИ ---
-
 document.querySelectorAll('.business-shortcut').forEach(btn => {
     btn.addEventListener('click', (e) => {
         const targetMode = e.target.dataset.target;
@@ -354,7 +382,6 @@ document.querySelectorAll('.business-shortcut').forEach(btn => {
     });
 });
 
-// СКАЧИВАНИЕ (исправленное)
 document.getElementById('downloadButton')?.addEventListener('click', () => {
     const activeMedia = document.querySelector('#result-wrapper img:not(.hidden), #result-wrapper video:not(.hidden), #result-wrapper audio:not(.hidden)');
     const url = activeMedia?.src;
@@ -363,32 +390,24 @@ document.getElementById('downloadButton')?.addEventListener('click', () => {
     if (vkBridge.isWebView() && !url.includes('.mp4')) {
         vkBridge.send("VKWebAppShowImages", { images: [url] });
     } else {
-        // Открываем в новой вкладке
         window.open(url, '_blank');
     }
 });
 
-// --- ОТКРЫТИЕ ГРУППЫ С ПРОМПТАМИ ИЗ ОКНА СПРАВКИ ---
 document.getElementById('gallery-link')?.addEventListener('click', () => {
-    // ВКонтакте рекомендует открывать внутренние ссылки через этот метод
-    // Так группа откроется "поверх" вашего приложения, и пользователь сможет вернуться назад
     vkBridge.send("VKWebAppOpenApp", { 
         "app_id": 51884181, 
-        "location": "https://vk.com/hollie_ai_bot" // <--- Ваша правильная ссылка!
+        "location": "https://vk.com/hollie_ai_bot"
     }).catch(() => {
-        // Запасной вариант для десктопа: открываем в новой вкладке
         window.open("https://vk.com/hollie_ai_bot", "_blank");
     });
 });
 
-// ОПЛАТА (ЮKASSA)
 document.querySelectorAll('.buy-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
         if (!USER_ID) return;
-
         const amount = parseInt(btn.dataset.amount);
         const credits = parseInt(btn.dataset.credits);
-
         showLoader();
 
         try {
@@ -399,7 +418,6 @@ document.querySelectorAll('.buy-btn').forEach(btn => {
             });
 
             const result = await response.json();
-
             if (result.success) {
                 window.open(result.payment_url, '_blank');
             } else {
