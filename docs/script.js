@@ -2,20 +2,29 @@ const BRAIN_API_URL = 'https://neuro-master.online/api';
 let USER_ID = null;
 const filesByMode = {};
 
-// --- 1. ИНИЦИАЛИЗАЦИЯ И СКРЫТИЕ КНОПОК ОПЛАТЫ ---
-vkBridge.send('VKWebAppInit');
+// --- 1. БЕЗОПАСНАЯ ИНИЦИАЛИЗАЦИЯ И СКРЫТИЕ КНОПОК ---
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof vkBridge !== 'undefined') {
+        vkBridge.send('VKWebAppInit')
+            .then(() => {
+                initUser();
+            })
+            .catch(e => console.error("Ошибка Init:", e));
+    } else {
+        console.error("VK Bridge не загружен!");
+    }
+    hidePaymentsOnMobile();
+});
 
 function hidePaymentsOnMobile() {
     const urlParams = new URLSearchParams(window.location.search);
     const platform = urlParams.get('vk_platform');
     
-    // Скрываем только в нативных приложениях. На ПК и мобильном вебе (m.vk.com) оплата останется!
     const isNativeApp = platform === 'mobile_android' || platform === 'mobile_iphone' || platform === 'mobile_ipad';
     if (isNativeApp) {
         document.querySelectorAll('.buy-btn').forEach(btn => btn.style.display = 'none');
     }
 }
-hidePaymentsOnMobile();
 
 async function initUser() {
     try {
@@ -26,8 +35,6 @@ async function initUser() {
         }
     } catch (e) { console.error("Ошибка получения профиля:", e); }
 }
-initUser();
-
 
 // --- 2. БАЛАНС ---
 function getAuthHeader() { return window.location.search.slice(1); }
