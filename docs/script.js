@@ -232,30 +232,54 @@ function updateUI(section) {
     }
 }
 
-
 // --- 5. ГЕНЕРАЦИЯ И ОПРОС ---
-async function pollTaskStatus(taskId, section) {
+async function pollTaskStatus(taskId) {
+    let attempts = 0;
+    const maxAttempts = 100; // Около 6 минут ожидания (100 * 3.5 сек)
+
     const pollInterval = setInterval(async () => {
+        attempts++;
+        
+        // Если ждем слишком долго (больше 6 минут) — принудительно обрываем
+        if (attempts > maxAttempts) {
+            clearInterval(pollInterval);
+            hideLoader();
+            showCustomAlert("Превышено время ожидания ответа от нейросети. Проверьте результат позже.", "Таймаут");
+            return;
+        }
+
         try {
             const response = await fetch(`${BRAIN_API_URL}/task_status/${taskId}?user_id=${USER_ID}`, {
                 headers: { 'X-VK-Sign': getAuthHeader() }
             });
+            
+            // Если сервер вообще не ответил 200 OK
+            if (!response.ok) {
+                console.warn(`Поллинг: Сервер ответил статусом ${response.status}`);
+                return; // Не обрываем цикл, может это временный сбой сети, пробуем еще раз
+            }
+
             const data = await response.json();
+            console.log("Статус задачи:", data); // Выводим в консоль для отладки!
 
             if (data.success === true && data.result_url) {
+                // ИДЕАЛЬНЫЙ СЦЕНАРИЙ: Всё готово
                 clearInterval(pollInterval);
                 showResult(data);
                 hideLoader();
                 updateBalance();
             } else if (data.success === false) {
+                // ОШИБКА ГЕНЕРАЦИИ НА СЕРВЕРЕ (Replicate упал)
                 clearInterval(pollInterval);
                 hideLoader();
-                showCustomAlert(data.error || "Произошла ошибка при генерации.", "Ошибка");
+                showCustomAlert(data.error || "Произошла ошибка при генерации.", "Ошибка нейросети");
             }
+            // Если status === "pending", скрипт просто молча ждет следующего тика интервала
+            
         } catch (e) {
-            clearInterval(pollInterval);
-            hideLoader();
-            showCustomAlert("Связь с сервером потеряна.", "Ошибка");
+            console.error("Ошибка при опросе статуса:", e);
+            // НЕ обрываем цикл при разовой ошибке сети (например, скачок интернета на телефоне)
+            // Но если ошибок будет слишком много, цикл прервется по maxAttempts.
         }
     }, 3500);
 }
