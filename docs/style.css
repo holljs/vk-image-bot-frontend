@@ -7,30 +7,23 @@ body {
     padding-bottom: 50px;
 }
 
-/* ФИКС СТРОГО ОТ ТЕСТИРОВЩИКОВ: Блокировка скролла при открытых окнах */
-body.modal-open {
-    overflow: hidden;
-}
+body.modal-open { overflow: hidden; }
 
-#app {
-    max-width: 600px;
-    margin: 0 auto;
-}
+#app { max-width: 600px; margin: 0 auto; }
 
-h1, h2 {
-    color: #2c2d2e;
-    text-align: center;
-}
-
+h1, h2 { color: #2c2d2e; text-align: center; }
 h2 { margin-top: 0; font-size: 18px; }
 p { color: #6d6d78; text-align: center; font-size: 14px; margin-bottom: 10px; }
 
-hr {
-    border: none;
-    height: 1px;
-    background-color: #dce1e6;
-    margin: 20px 0;
+/* Описания разделов (Баг №20) */
+.section-desc {
+    font-size: 13px;
+    color: #818c99;
+    margin-top: -8px;
+    margin-bottom: 15px;
 }
+
+hr { border: none; height: 1px; background-color: #dce1e6; margin: 20px 0; }
 
 .mode-section {
     background: #fff;
@@ -41,29 +34,27 @@ hr {
     text-align: center;
 }
 
-.profile-section {
-    border: 2px solid #4a76a8;
-}
+.profile-section { border: 2px solid #4a76a8; }
 
-/* ФИКС: resize: vertical чтобы не ломали верстку вширь */
 .prompt-input {
     width: 100%;
     padding: 12px;
-    font-size: 16px;
+    font-size: 14px;
     border: 1px solid #dce1e6;
     border-radius: 8px;
     margin-bottom: 12px;
     box-sizing: border-box;
     outline: none;
-    resize: vertical; 
+    resize: vertical; /* Баги №6, 11 */
+    background: #f2f3f5;
 }
-.prompt-input:focus { border-color: #4a76a8; }
 
-/* ФИКС: Троеточие для длинных плейсхолдеров */
+/* Баг №27: Выравнивание плейсхолдеров */
 .prompt-input::placeholder {
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
+    vertical-align: top;
 }
 
 button {
@@ -71,22 +62,11 @@ button {
     border: none;
     padding: 12px 24px;
     border-radius: 8px;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 500;
     cursor: pointer;
-    transition: opacity 0.2s ease;
-    margin-bottom: 8px;
     background-color: #4a76a8; 
     color: white;
-}
-button:active { opacity: 0.8; }
-button:disabled { background-color: #aeb7c2; cursor: not-allowed; }
-
-.step-buttons {
-    display: flex;
-    flex-direction: column; 
-    gap: 8px;
-    margin-bottom: 10px;
 }
 
 .image-previews {
@@ -96,63 +76,49 @@ button:disabled { background-color: #aeb7c2; cursor: not-allowed; }
     gap: 8px;
     margin: 10px 0;
 }
+
+.preview-container { position: relative; }
 .preview-image {
-    width: 80px;
-    height: 80px;
+    width: 70px;
+    height: 70px;
     object-fit: cover;
     border-radius: 8px;
-    border: 2px solid #e1e3e6;
+    border: 1px solid #e1e3e6;
+}
+
+/* Баг №15: Кнопка удаления на фото */
+.remove-btn {
+    position: absolute; top: -5px; right: -5px;
+    background: #ef5350; color: white;
+    width: 20px; height: 20px; border-radius: 50%;
+    font-size: 12px; line-height: 20px; cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.modal {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6); z-index: 10000;
+    display: flex; justify-content: center; align-items: center;
+}
+
+.modal-content {
+    background: #fff; padding: 25px;
+    width: 85%; max-width: 380px; border-radius: 16px; position: relative;
 }
 
 .loader-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0, 0, 0, 0.85);
     display: flex; justify-content: center; align-items: center;
-    z-index: 9999;
-    flex-direction: column;
+    z-index: 9999; flex-direction: column; color: white;
 }
-.loader-content { text-align: center; color: white; }
+
 .spinner {
     border: 4px solid rgba(255, 255, 255, 0.3);
     width: 40px; height: 40px; border-radius: 50%;
-    border-left-color: #ffffff;
-    margin: 0 auto 15px;
-    animation: spin 1s linear infinite;
+    border-left-color: #ffffff; animation: spin 1s linear infinite;
+    margin-bottom: 15px;
 }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-#result-wrapper {
-    background: #fff;
-    padding: 20px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-}
-.result-container img, .result-container video {
-    max-width: 100%;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-.result-buttons {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    margin-top: 15px;
-}
-
 .hidden { display: none !important; }
-
-/* Модальное окно */
-.modal {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.6); z-index: 10000;
-}
-.modal-content {
-    background: #fff; margin: 15% auto; padding: 20px;
-    width: 80%; max-width: 400px; border-radius: 12px; position: relative;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-}
-.close-modal {
-    position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: #999;
-}
-.close-modal:hover { color: #333; }
