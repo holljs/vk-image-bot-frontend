@@ -79,13 +79,6 @@ document.querySelectorAll('.close-modal').forEach(btn => {
     });
 });
 
-// БАГ №5, №6: ПРАВИЛЬНОЕ ПРИГЛАШЕНИЕ
-document.getElementById('invite-friend-btn')?.addEventListener('click', () => {
-    // Используем чистую ссылку без #USER_ID, чтобы ВК смог создать красивую карточку (сниппет)
-    vkBridge.send("VKWebAppShare", { "link": "https://vk.com/app51884181" })
-        .catch(err => console.error("Ошибка приглашения:", err));
-});
-
 // --- 4. РАБОТА С ФАЙЛАМИ И ВАЛИДАЦИЯ ---
 const fileToBase64 = file => new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -365,12 +358,6 @@ document.getElementById('downloadButton')?.addEventListener('click', () => {
         // Открываем в новой вкладке
         window.open(url, '_blank');
     }
-});
-
-// ПОДЕЛИТЬСЯ: Делимся чистой ссылкой на приложение
-document.getElementById('shareButton')?.addEventListener('click', () => {
-    vkBridge.send("VKWebAppShare", { "link": "https://vk.com/app51884181" })
-        .catch(e => console.error("Ошибка шаринга:", e));
 });
 
 // ОПЛАТА (ЮKASSA)
