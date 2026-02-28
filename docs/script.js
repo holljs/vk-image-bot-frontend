@@ -79,9 +79,10 @@ document.querySelectorAll('.close-modal').forEach(btn => {
     });
 });
 
-// БАГ №5, №6: ПРАВИЛЬНОЕ ПРИГЛАШЕНИЕ (Используем спец. окно ВК)
+// БАГ №5, №6: ПРАВИЛЬНОЕ ПРИГЛАШЕНИЕ
 document.getElementById('invite-friend-btn')?.addEventListener('click', () => {
-    vkBridge.send("VKWebAppShowInviteBox", {})
+    // Используем чистую ссылку без #USER_ID, чтобы ВК смог создать красивую карточку (сниппет)
+    vkBridge.send("VKWebAppShare", { "link": "https://vk.com/app51884181" })
         .catch(err => console.error("Ошибка приглашения:", err));
 });
 
@@ -366,11 +367,10 @@ document.getElementById('downloadButton')?.addEventListener('click', () => {
     }
 });
 
-// ПОДЕЛИТЬСЯ: Публикация на стену (Железобетонный вариант с текстом)
+// ПОДЕЛИТЬСЯ: Делимся чистой ссылкой на приложение
 document.getElementById('shareButton')?.addEventListener('click', () => {
-    vkBridge.send("VKWebAppShowWallPostBox", { 
-        "message": "Я создаю крутые арты и видео в приложении Нейро-Мастер! ✨\n\nПрисоединяйся: https://vk.com/app51884181" 
-    }).catch(e => console.error("Ошибка публикации:", e));
+    vkBridge.send("VKWebAppShare", { "link": "https://vk.com/app51884181" })
+        .catch(e => console.error("Ошибка шаринга:", e));
 });
 
 // ОПЛАТА (ЮKASSA)
