@@ -71,14 +71,18 @@ document.getElementById('helpButton')?.addEventListener('click', () => {
     document.body.classList.add('modal-open');
 });
 
-document.querySelector('.close-modal')?.addEventListener('click', () => {
-    document.getElementById('helpModal')?.classList.add('hidden');
-    document.body.classList.remove('modal-open');
+// Находим ВСЕ элементы с классом .close-modal и вешаем на них закрытие
+document.querySelectorAll('.close-modal').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.getElementById('helpModal')?.classList.add('hidden');
+        document.body.classList.remove('modal-open');
+    });
 });
 
+// БАГ №5, №6: ПРАВИЛЬНОЕ ПРИГЛАШЕНИЕ (Используем спец. окно ВК)
 document.getElementById('invite-friend-btn')?.addEventListener('click', () => {
-    if (!USER_ID) return;
-    vkBridge.send("VKWebAppShare", { "link": `https://vk.com/app51884181#${USER_ID}` });
+    vkBridge.send("VKWebAppShowInviteBox", {})
+        .catch(err => console.error("Ошибка приглашения:", err));
 });
 
 // --- 4. РАБОТА С ФАЙЛАМИ И ВАЛИДАЦИЯ ---
@@ -362,10 +366,11 @@ document.getElementById('downloadButton')?.addEventListener('click', () => {
     }
 });
 
-// ПОДЕЛИТЬСЯ (исправленное)
+// ПОДЕЛИТЬСЯ: Публикация на стену (Железобетонный вариант с текстом)
 document.getElementById('shareButton')?.addEventListener('click', () => {
-    vkBridge.send("VKWebAppShare", { "link": "https://vk.com/app51884181" })
-        .catch(e => console.error("Ошибка шаринга:", e));
+    vkBridge.send("VKWebAppShowWallPostBox", { 
+        "message": "Я создаю крутые арты и видео в приложении Нейро-Мастер! ✨\n\nПрисоединяйся: https://vk.com/app51884181" 
+    }).catch(e => console.error("Ошибка публикации:", e));
 });
 
 // ОПЛАТА (ЮKASSA)
