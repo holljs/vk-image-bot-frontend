@@ -478,8 +478,14 @@ document.getElementById('downloadButton')?.addEventListener('click', () => {
     const filename = `neuro_master_${Date.now()}${isVideo ? '.mp4' : (isAudio ? '.mp3' : '.jpg')}`;
 
     if (vkBridge.isWebView() && !isVideo && !isAudio) {
-        vkBridge.send("VKWebAppShowImages", { images: [url] });
+        // ИСПРАВЛЕНИЕ ДЛЯ МОБИЛОК: Теперь кнопка вызывает системное диалоговое окно скачивания, а не просмотра!
+        vkBridge.send("VKWebAppDownloadFile", { "url": url, "filename": filename })
+            .catch(() => {
+                // План Б, если метод скачивания не поддерживается клиентом
+                window.open(url, '_blank');
+            });
     } else {
+        // Жесткое скачивание для ПК браузеров
         fetch(url)
             .then(response => response.blob())
             .then(blob => {
