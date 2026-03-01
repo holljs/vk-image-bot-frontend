@@ -3,16 +3,9 @@ let USER_ID = null;
 const filesByMode = {};
 
 // --- 1. ИНИЦИАЛИЗАЦИЯ И СКРЫТИЕ КНОПОК ОПЛАТЫ ---
-document.addEventListener('DOMContentLoaded', () => {
-    if (typeof vkBridge !== 'undefined') {
-        vkBridge.send('VKWebAppInit')
-            .then(() => {
-                initUser();
-            })
-            .catch(e => console.error("Ошибка VKWebAppInit:", e));
-    }
-    hidePaymentsOnMobile();
-});
+vkBridge.send('VKWebAppInit');
+hidePaymentsOnMobile();
+initUser();
 
 function hidePaymentsOnMobile() {
     const urlParams = new URLSearchParams(window.location.search);
