@@ -17,6 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
 function hidePaymentsOnMobile() {
     const urlParams = new URLSearchParams(window.location.search);
     const platform = urlParams.get('vk_platform');
+    
+    // Скрываем только в нативных приложениях. На ПК и мобильном вебе (m.vk.com) оплата останется!
     const isNativeApp = platform === 'mobile_android' || platform === 'mobile_iphone' || platform === 'mobile_ipad';
     if (isNativeApp) {
         document.querySelectorAll('.buy-btn').forEach(btn => btn.style.display = 'none');
@@ -62,7 +64,6 @@ function updateBalance() {
 }
 document.getElementById('refreshBalance')?.addEventListener('click', updateBalance);
 
-
 // --- 3. ИНТЕРФЕЙС И КАСТОМНЫЕ ОКНА ---
 function showCustomAlert(message, title = "Уведомление") {
     const modal = document.getElementById('customAlertModal');
@@ -104,7 +105,6 @@ document.querySelectorAll('.close-modal').forEach(btn => {
     });
 });
 
-
 // --- 4. РАБОТА С ФАЙЛАМИ И ВАЛИДАЦИЯ ---
 const fileToBase64 = file => new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -120,8 +120,10 @@ const checkMediaDuration = (file) => new Promise((resolve) => {
         resolve(0); 
         return;
     }
+
     const mediaElement = document.createElement(isVideo ? 'video' : 'audio');
     const objectUrl = URL.createObjectURL(file);
+
     mediaElement.onloadedmetadata = () => {
         URL.revokeObjectURL(objectUrl);
         resolve(mediaElement.duration);
@@ -149,6 +151,7 @@ document.querySelectorAll('.universal-upload-button').forEach(btn => {
                 
                 const accept = input.getAttribute('accept');
                 for (let file of files) {
+                    // Валидация SVG
                     if (typeKey === 'photos') {
                         if (file.type.includes('svg') || file.name.toLowerCase().endsWith('.svg')) {
                             showCustomAlert(`Векторный формат SVG не поддерживается. Пожалуйста, загрузите фото в формате JPG или PNG.`, "Неверный формат");
@@ -163,6 +166,7 @@ document.querySelectorAll('.universal-upload-button').forEach(btn => {
                         continue;
                     }
 
+                    // Валидация длины медиа
                     if (typeKey === 'videos' || typeKey === 'audios') {
                         const duration = await checkMediaDuration(file);
                         if (duration > 16) { 
@@ -242,7 +246,6 @@ function updateUI(section) {
     const audioBtn = section.querySelector('.universal-upload-button[data-type="audio"]');
     if (audioBtn) audioBtn.textContent = files.audios.length > 0 ? "2. Изменить аудио ✅" : "2. Голосовое (до 15 сек)";
 
-    // 🔴 ВОТ ТОТ САМЫЙ БЛОК, КОТОРЫЙ ВКЛЮЧАЕТ КНОПКУ "ЗАПУСТИТЬ"
     const processBtn = section.querySelector('.process-button');
     if (processBtn) {
         let ready = false;
@@ -255,7 +258,6 @@ function updateUI(section) {
         else processBtn.classList.add('hidden');
     }
 }
-
 
 // --- 5. ГЕНЕРАЦИЯ И ОПРОС ---
 async function pollTaskStatus(taskId) {
@@ -303,6 +305,7 @@ function showResult(result) {
     const resultImage = document.getElementById('resultImage');
     const resultVideo = document.getElementById('resultVideo');
     const resultAudio = document.getElementById('resultAudio');
+
     if (!resultWrapper) return;
 
     resultWrapper.classList.remove('hidden');
@@ -311,6 +314,7 @@ function showResult(result) {
     resultAudio?.classList.add('hidden');
 
     const url = result.result_url || result.response;
+
     if (result.model === 'chat') {
         showCustomAlert(url, "Ответ Нейро-Помощника");
         resultWrapper.classList.add('hidden'); 
@@ -319,6 +323,12 @@ function showResult(result) {
 
     const isVideo = url.includes('.mp4') || url.includes('.mov');
     const isAudio = url.includes('.mp3') || url.includes('.wav');
+
+    // Переименование кнопки (Баг 5)
+    const downloadBtn = document.getElementById('downloadButton');
+    if (downloadBtn) {
+        downloadBtn.textContent = isAudio ? "Скачать песню" : "Скачать на устройство";
+    }
 
     if (isVideo) {
         resultVideo.src = url;
@@ -329,7 +339,18 @@ function showResult(result) {
     } else {
         resultImage.src = url;
         resultImage.classList.remove('hidden');
+        
+        // Кликабельность картинки (Просмотр)
+        resultImage.style.cursor = 'pointer'; 
+        resultImage.onclick = () => {
+            if (vkBridge.isWebView()) {
+                vkBridge.send("VKWebAppShowImages", { images: [url] });
+            } else {
+                window.open(url, '_blank');
+            }
+        };
     }
+
     resultWrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -343,7 +364,6 @@ document.querySelectorAll('.process-button').forEach(btn => {
 
         const promptInput = section.querySelector('.prompt-input');
         let prompt = promptInput ? promptInput.value.trim() : '';
-
         let stylePrompt = null;
         let musicLyrics = null;
 
@@ -376,11 +396,8 @@ document.querySelectorAll('.process-button').forEach(btn => {
             }
         }
 
-        // КОПИРУЕМ ТЕКУЩИЕ ФАЙЛЫ ДЛЯ ОТПРАВКИ
         const currentFilesForRequest = filesByMode[mode] || { photos: [], videos: [], audios: [] };
         
-        // --- ГЛОБАЛЬНАЯ ОЧИСТКА ---
-        // Жестко зачищаем память от файлов и текста СРАЗУ ПОСЛЕ нажатия кнопки
         filesByMode[mode] = { photos: [], videos: [], audios: [] };
         if (promptInput) promptInput.value = '';
         if (mode === 'music') {
@@ -388,7 +405,6 @@ document.querySelectorAll('.process-button').forEach(btn => {
             if(customInp) customInp.value = '';
         }
         updateUI(section); 
-        // -------------------------
 
         showLoader();
         btn.disabled = true; 
@@ -405,7 +421,6 @@ document.querySelectorAll('.process-button').forEach(btn => {
                 lyrics: musicLyrics
             };
 
-            // Преобразуем скопированные файлы в Base64
             if (currentFilesForRequest.photos.length > 0) {
                 for (let f of currentFilesForRequest.photos) requestBody.image_urls.push(await fileToBase64(f));
             }
@@ -445,7 +460,6 @@ document.querySelectorAll('.process-button').forEach(btn => {
     });
 });
 
-
 // --- 6. ДОП. ФУНКЦИИ ---
 document.querySelectorAll('.business-shortcut').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -456,7 +470,6 @@ document.querySelectorAll('.business-shortcut').forEach(btn => {
         if (targetSection) {
             targetSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
             
-            // Очищаем старые файлы при выборе нового бизнес-шаблона
             filesByMode[targetMode] = { photos: [], videos: [], audios: [] };
             updateUI(targetSection); 
 
@@ -487,17 +500,34 @@ document.getElementById('gallery-link')?.addEventListener('click', () => {
         .catch(() => { window.open("https://vk.com/hollie_ai_bot", "_blank"); });
 });
 
+// ПРАВИЛЬНОЕ ПРИНУДИТЕЛЬНОЕ СКАЧИВАНИЕ (Баг 6)
 document.getElementById('downloadButton')?.addEventListener('click', () => {
     const activeMedia = document.querySelector('#result-wrapper img:not(.hidden), #result-wrapper video:not(.hidden), #result-wrapper audio:not(.hidden)');
     const url = activeMedia?.src;
     if (!url) return;
 
-    if (vkBridge.isWebView() && (url.includes('.mp4') || url.includes('.mov') || url.includes('.mp3') || url.includes('.wav'))) {
-        window.open(url, '_blank');
-    } else if (vkBridge.isWebView() && !url.includes('.mp4') && !url.includes('.mov')) {
+    const isVideo = url.includes('.mp4') || url.includes('.mov');
+    const isAudio = url.includes('.mp3') || url.includes('.wav');
+    const filename = `neuro_master_${Date.now()}${isVideo ? '.mp4' : (isAudio ? '.mp3' : '.jpg')}`;
+
+    if (vkBridge.isWebView() && !isVideo && !isAudio) {
         vkBridge.send("VKWebAppShowImages", { images: [url] });
     } else {
-        window.open(url, '_blank');
+        fetch(url)
+            .then(response => response.blob())
+            .then(blob => {
+                const blobUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(blobUrl);
+            })
+            .catch(() => {
+                window.open(url, '_blank');
+            });
     }
 });
 
@@ -517,6 +547,7 @@ document.querySelectorAll('.buy-btn').forEach(btn => {
             });
 
             const result = await response.json();
+
             if (result.success) {
                 window.open(result.payment_url, '_blank');
             } else {
@@ -529,3 +560,4 @@ document.querySelectorAll('.buy-btn').forEach(btn => {
         }
     });
 });
+```При подготовке ответа на вопрос возникла ошибка. Повторите попытку позже.
