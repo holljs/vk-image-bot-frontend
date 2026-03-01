@@ -3,8 +3,10 @@ let USER_ID = null;
 const filesByMode = {};
 
 // --- 1. ИНИЦИАЛИЗАЦИЯ И СКРЫТИЕ КНОПОК ОПЛАТЫ ---
-
+// Железобетонная инициализация (как было изначально)
 vkBridge.send('VKWebAppInit');
+hidePaymentsOnMobile();
+initUser();
 
 function hidePaymentsOnMobile() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -16,7 +18,6 @@ function hidePaymentsOnMobile() {
         document.querySelectorAll('.buy-btn').forEach(btn => btn.style.display = 'none');
     }
 }
-hidePaymentsOnMobile();
 
 async function initUser() {
     try {
@@ -25,11 +26,8 @@ async function initUser() {
             USER_ID = data.id;
             updateBalance();
         }
-    } catch (e) {
-        console.error("Ошибка получения профиля:", e);
-    }
+    } catch (e) { console.error("Ошибка получения профиля:", e); }
 }
-initUser();
 
 
 // --- 2. БАЛАНС ---
