@@ -3,9 +3,8 @@ let USER_ID = null;
 const filesByMode = {};
 
 // --- 1. ИНИЦИАЛИЗАЦИЯ И СКРЫТИЕ КНОПОК ОПЛАТЫ ---
+
 vkBridge.send('VKWebAppInit');
-hidePaymentsOnMobile();
-initUser();
 
 function hidePaymentsOnMobile() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -17,6 +16,7 @@ function hidePaymentsOnMobile() {
         document.querySelectorAll('.buy-btn').forEach(btn => btn.style.display = 'none');
     }
 }
+hidePaymentsOnMobile();
 
 async function initUser() {
     try {
@@ -29,6 +29,8 @@ async function initUser() {
         console.error("Ошибка получения профиля:", e);
     }
 }
+initUser();
+
 
 // --- 2. БАЛАНС ---
 function getAuthHeader() {
@@ -41,27 +43,29 @@ function updateBalance() {
     if (balanceEl) balanceEl.textContent = "Обновление...";
 
     fetch(`${BRAIN_API_URL}/user/${USER_ID}`, {
-            headers: { 'X-VK-Sign': getAuthHeader() }
-        })
-        .then(r => {
-            if (!r.ok) throw new Error("Не удалось загрузить баланс");
-            return r.json();
-        })
-        .then(info => {
-            if (balanceEl) balanceEl.textContent = `Баланс: ${info.balance} кр.`;
-        })
-        .catch((e) => {
-            console.error("Ошибка обновления баланса:", e);
-            if (balanceEl) balanceEl.textContent = "Ошибка";
-        });
+        headers: { 'X-VK-Sign': getAuthHeader() }
+    })
+    .then(r => {
+        if (!r.ok) throw new Error("Не удалось загрузить баланс");
+        return r.json();
+    })
+    .then(info => {
+        if (balanceEl) balanceEl.textContent = `Баланс: ${info.balance} кр.`;
+    })
+    .catch((e) => {
+        console.error("Ошибка обновления баланса:", e);
+        if (balanceEl) balanceEl.textContent = "Ошибка";
+    });
 }
 document.getElementById('refreshBalance')?.addEventListener('click', updateBalance);
+
 
 // --- 3. ИНТЕРФЕЙС И КАСТОМНЫЕ ОКНА ---
 function showCustomAlert(message, title = "Уведомление") {
     const modal = document.getElementById('customAlertModal');
     const messageEl = document.getElementById('customAlertMessage');
     const titleEl = document.getElementById('customAlertTitle');
+    
     if (modal && messageEl) {
         if (titleEl) titleEl.textContent = title;
         messageEl.textContent = message;
@@ -75,13 +79,13 @@ document.getElementById('closeCustomAlert')?.addEventListener('click', () => {
     document.body.classList.remove('modal-open');
 });
 
-function showLoader() {
-    document.getElementById('loader')?.classList.remove('hidden');
+function showLoader() { 
+    document.getElementById('loader')?.classList.remove('hidden'); 
     document.body.classList.add('modal-open'); 
 }
 
-function hideLoader() {
-    document.getElementById('loader')?.classList.add('hidden');
+function hideLoader() { 
+    document.getElementById('loader')?.classList.add('hidden'); 
     document.body.classList.remove('modal-open'); 
 }
 
@@ -98,7 +102,8 @@ document.querySelectorAll('.close-modal').forEach(btn => {
     });
 });
 
-// --- 4. РАБОТА С ФАЙЛАМИ И ВАЛИДАЦИЯ ---
+
+// --- 4. РАБОТА С ФАЙЛАМИ, ВАЛИДАЦИЯ ФОРМАТА И ДЛИТЕЛЬНОСТИ ---
 const fileToBase64 = file => new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -106,13 +111,12 @@ const fileToBase64 = file => new Promise((resolve, reject) => {
     reader.onerror = error => reject(error);
 });
 
+// Проверка длины видео и аудио
 const checkMediaDuration = (file) => new Promise((resolve) => {
     const isVideo = file.type.startsWith('video/');
     const isAudio = file.type.startsWith('audio/');
-    if (!isVideo && !isAudio) {
-        resolve(0); 
-        return;
-    }
+    
+    if (!isVideo && !isAudio) { resolve(0); return; }
 
     const mediaElement = document.createElement(isVideo ? 'video' : 'audio');
     const objectUrl = URL.createObjectURL(file);
@@ -132,7 +136,11 @@ document.querySelectorAll('.universal-upload-button').forEach(btn => {
     btn.addEventListener('click', (e) => {
         const section = e.target.closest('.mode-section');
         const type = e.target.dataset.type || 'photo';
-        let input = section.querySelector(type === 'video' ? '.video-upload-input' : (type === 'audio' ? '.audio-upload-input' : '.file-upload-input'));
+        
+        let input;
+        if (type === 'video') input = section.querySelector('.video-upload-input');
+        else if (type === 'audio') input = section.querySelector('.audio-upload-input');
+        else input = section.querySelector('.file-upload-input');
         
         if (input) {
             input.onchange = async (event) => {
@@ -144,7 +152,7 @@ document.querySelectorAll('.universal-upload-button').forEach(btn => {
                 
                 const accept = input.getAttribute('accept');
                 for (let file of files) {
-                    // Валидация SVG
+                    // 1. Строгая валидация формата (только растр для фото)
                     if (typeKey === 'photos') {
                         if (file.type.includes('svg') || file.name.toLowerCase().endsWith('.svg')) {
                             showCustomAlert(`Векторный формат SVG не поддерживается. Пожалуйста, загрузите фото в формате JPG или PNG.`, "Неверный формат");
@@ -159,16 +167,18 @@ document.querySelectorAll('.universal-upload-button').forEach(btn => {
                         continue;
                     }
 
-                    // Валидация длины медиа
+                    // Валидация длины медиа (не более 16 секунд)
                     if (typeKey === 'videos' || typeKey === 'audios') {
                         const duration = await checkMediaDuration(file);
-                        if (duration > 16) { 
+                        if (duration > 16) {
                             showCustomAlert(`Файл слишком длинный! Загрузите медиа не дольше 15 секунд. (У вас: ${Math.round(duration)} сек)`, "Превышен лимит времени");
                             continue;
                         }
                     }
 
                     const max = parseInt(section.dataset.maxPhotos) || 1;
+                    
+                    // БАГ №9: Замена файла вместо ошибки лимита
                     if (max === 1) {
                         filesByMode[mode][typeKey] = [file];
                     } else {
@@ -180,13 +190,14 @@ document.querySelectorAll('.universal-upload-button').forEach(btn => {
                     }
                 }
                 updateUI(section);
-                input.value = ''; 
+                input.value = '';
             };
             input.click();
         }
     });
 });
 
+// Удаление загруженного файла (крестик)
 function removeFile(mode, type, index) {
     filesByMode[mode][type].splice(index, 1);
     updateUI(document.querySelector(`.mode-section[data-mode="${mode}"]`));
@@ -199,7 +210,7 @@ function updateUI(section) {
     
     const previewDiv = section.querySelector('.image-previews');
     if (previewDiv) {
-        previewDiv.innerHTML = ''; 
+        previewDiv.innerHTML = '';
         ['photos', 'videos', 'audios'].forEach(type => {
             files[type].forEach((f, i) => {
                 const container = document.createElement('div');
@@ -210,12 +221,12 @@ function updateUI(section) {
                     el.className = 'preview-image';
                     container.appendChild(el);
                 } else {
-                    const span = document.createElement('div');
-                    span.textContent = "🎵 Аудио";
+                    const span = document.createElement('div'); 
+                    span.textContent = "🎵 Аудио"; 
                     container.appendChild(span);
                 }
                 const del = document.createElement('div');
-                del.className = 'remove-btn';
+                del.className = 'remove-btn'; 
                 del.innerHTML = '×';
                 del.onclick = () => removeFile(mode, type, i);
                 container.appendChild(del);
@@ -235,7 +246,7 @@ function updateUI(section) {
     
     const videoBtn = section.querySelector('.universal-upload-button[data-type="video"]');
     if (videoBtn) videoBtn.textContent = files.videos.length > 0 ? "2. Изменить видео ✅" : "2. Видео-шаблон (до 15 сек)";
-    
+
     const audioBtn = section.querySelector('.universal-upload-button[data-type="audio"]');
     if (audioBtn) audioBtn.textContent = files.audios.length > 0 ? "2. Изменить аудио ✅" : "2. Голосовое (до 15 сек)";
 
@@ -252,16 +263,20 @@ function updateUI(section) {
     }
 }
 
+
 // --- 5. ГЕНЕРАЦИЯ И ОПРОС ---
 async function pollTaskStatus(taskId) {
     let attempts = 0;
-    const maxAttempts = 100; 
+    const maxAttempts = 100; // Около 6 минут ожидания (100 * 3.5 сек)
+
     const pollInterval = setInterval(async () => {
         attempts++;
+        
+        // Если ждем слишком долго (больше 6 минут) — принудительно обрываем
         if (attempts > maxAttempts) {
             clearInterval(pollInterval);
             hideLoader();
-            showCustomAlert("Превышено время ожидания ответа от сервера. Пожалуйста, попробуйте повторить запрос чуть позже.", "Долгая загрузка");
+            showCustomAlert("Превышено время ожидания ответа от нейросети. Проверьте результат позже.", "Таймаут");
             return;
         }
 
@@ -270,27 +285,32 @@ async function pollTaskStatus(taskId) {
                 headers: { 'X-VK-Sign': getAuthHeader() }
             });
             
-            if (!response.ok && response.status !== 404) {
-                 console.error(`Ошибка при опросе статуса ${taskId}: ${response.status}`);
-                 return; 
+            // Если сервер вообще не ответил 200 OK
+            if (!response.ok) {
+                console.warn(`Поллинг: Сервер ответил статусом ${response.status}`);
+                return; // Не обрываем цикл, может это временный сбой сети, пробуем еще раз
             }
 
             const data = await response.json();
+            console.log("Статус задачи:", data); // Выводим в консоль для отладки!
+
             if (data.success === true && data.result_url) {
+                // ИДЕАЛЬНЫЙ СЦЕНАРИЙ: Всё готово
                 clearInterval(pollInterval);
                 showResult(data);
                 hideLoader();
                 updateBalance();
-            } else if (data.success === false && data.status !== "pending") {
+            } else if (data.success === false) {
+                // ОШИБКА ГЕНЕРАЦИИ НА СЕРВЕРЕ (Replicate упал)
                 clearInterval(pollInterval);
                 hideLoader();
                 showCustomAlert(data.error || "Произошла ошибка при генерации.", "Ошибка нейросети");
-                updateBalance(); 
             }
+            
         } catch (e) {
             console.error("Ошибка при опросе статуса:", e);
         }
-    }, 3500); 
+    }, 3500);
 }
 
 function showResult(result) {
@@ -308,16 +328,16 @@ function showResult(result) {
 
     const url = result.result_url || result.response;
 
-    if (result.model === 'chat') {
-        showCustomAlert(url, "Ответ Нейро-Помощника");
+    if (result.model === 'chat') { 
+        showCustomAlert(url, "Ответ помощника"); 
         resultWrapper.classList.add('hidden'); 
-        return;
+        return; 
     }
 
     const isVideo = url.includes('.mp4') || url.includes('.mov');
     const isAudio = url.includes('.mp3') || url.includes('.wav');
 
-    // Переименование кнопки (Баг 5)
+    // Меняем текст кнопки в зависимости от контента (Баг 5)
     const downloadBtn = document.getElementById('downloadButton');
     if (downloadBtn) {
         downloadBtn.textContent = isAudio ? "Скачать песню" : "Скачать на устройство";
@@ -333,7 +353,7 @@ function showResult(result) {
         resultImage.src = url;
         resultImage.classList.remove('hidden');
         
-        // Кликабельность картинки (Просмотр)
+        // Делаем саму картинку кликабельной для просмотра (Зум/Открытие)
         resultImage.style.cursor = 'pointer'; 
         resultImage.onclick = () => {
             if (vkBridge.isWebView()) {
@@ -347,6 +367,7 @@ function showResult(result) {
     resultWrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+
 // --- ОБРАБОТЧИК КНОПКИ "СТАРТ" ---
 document.querySelectorAll('.process-button').forEach(btn => {
     btn.addEventListener('click', async (event) => {
@@ -357,6 +378,7 @@ document.querySelectorAll('.process-button').forEach(btn => {
 
         const promptInput = section.querySelector('.prompt-input');
         let prompt = promptInput ? promptInput.value.trim() : '';
+
         let stylePrompt = null;
         let musicLyrics = null;
 
@@ -372,10 +394,12 @@ document.querySelectorAll('.process-button').forEach(btn => {
             }
         }
 
+        // БАЗОВАЯ ПРОВЕРКА ПРОМПТА
         if (!prompt && !['i2v', 'music', 'vip_clip', 'talking_photo'].includes(mode)) {
             return showCustomAlert("Пожалуйста, введите текстовое описание.", "Пустой запрос");
         }
 
+        // ПРОВЕРКА МУЗЫКИ (Длина текста и стиля)
         if (mode === 'music') {
             const lyricsLength = musicLyrics ? musicLyrics.length : 0;
             const styleLength = stylePrompt ? stylePrompt.length : 0;
@@ -389,8 +413,11 @@ document.querySelectorAll('.process-button').forEach(btn => {
             }
         }
 
+        // КОПИРУЕМ ТЕКУЩИЕ ФАЙЛЫ ДЛЯ ОТПРАВКИ
         const currentFilesForRequest = filesByMode[mode] || { photos: [], videos: [], audios: [] };
         
+        // --- ГЛОБАЛЬНАЯ ОЧИСТКА ---
+        // Жестко зачищаем память от файлов и текста СРАЗУ ПОСЛЕ нажатия кнопки
         filesByMode[mode] = { photos: [], videos: [], audios: [] };
         if (promptInput) promptInput.value = '';
         if (mode === 'music') {
@@ -398,6 +425,7 @@ document.querySelectorAll('.process-button').forEach(btn => {
             if(customInp) customInp.value = '';
         }
         updateUI(section); 
+        // -------------------------
 
         showLoader();
         btn.disabled = true; 
@@ -414,6 +442,7 @@ document.querySelectorAll('.process-button').forEach(btn => {
                 lyrics: musicLyrics
             };
 
+            // Преобразуем скопированные файлы в Base64
             if (currentFilesForRequest.photos.length > 0) {
                 for (let f of currentFilesForRequest.photos) requestBody.image_urls.push(await fileToBase64(f));
             }
@@ -432,7 +461,7 @@ document.querySelectorAll('.process-button').forEach(btn => {
             });
 
             const result = await response.json();
-
+            
             if (response.ok) {
                 if (mode === 'chat') {
                     hideLoader();
@@ -453,6 +482,7 @@ document.querySelectorAll('.process-button').forEach(btn => {
     });
 });
 
+
 // --- 6. ДОП. ФУНКЦИИ ---
 document.querySelectorAll('.business-shortcut').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -463,6 +493,7 @@ document.querySelectorAll('.business-shortcut').forEach(btn => {
         if (targetSection) {
             targetSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
             
+            // Очищаем старые файлы при выборе нового бизнес-шаблона
             filesByMode[targetMode] = { photos: [], videos: [], audios: [] };
             updateUI(targetSection); 
 
@@ -493,7 +524,7 @@ document.getElementById('gallery-link')?.addEventListener('click', () => {
         .catch(() => { window.open("https://vk.com/hollie_ai_bot", "_blank"); });
 });
 
-// ПРАВИЛЬНОЕ ПРИНУДИТЕЛЬНОЕ СКАЧИВАНИЕ (Баг 6)
+// ПРИНУДИТЕЛЬНОЕ СКАЧИВАНИЕ И ПРОСМОТР (Баг 6)
 document.getElementById('downloadButton')?.addEventListener('click', () => {
     const activeMedia = document.querySelector('#result-wrapper img:not(.hidden), #result-wrapper video:not(.hidden), #result-wrapper audio:not(.hidden)');
     const url = activeMedia?.src;
@@ -504,8 +535,10 @@ document.getElementById('downloadButton')?.addEventListener('click', () => {
     const filename = `neuro_master_${Date.now()}${isVideo ? '.mp4' : (isAudio ? '.mp3' : '.jpg')}`;
 
     if (vkBridge.isWebView() && !isVideo && !isAudio) {
+        // В мобильном клиенте картинки открываются в галерее (хотя мы уже сделали кликабельность самого фото)
         vkBridge.send("VKWebAppShowImages", { images: [url] });
     } else {
+        // Принудительное скачивание для остальных
         fetch(url)
             .then(response => response.blob())
             .then(blob => {
@@ -519,11 +552,13 @@ document.getElementById('downloadButton')?.addEventListener('click', () => {
                 window.URL.revokeObjectURL(blobUrl);
             })
             .catch(() => {
+                // Если браузер заблокировал fetch, открываем в новой вкладке
                 window.open(url, '_blank');
             });
     }
 });
 
+// Оплата ЮKassa
 document.querySelectorAll('.buy-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
         if (!USER_ID) return showCustomAlert("Пожалуйста, авторизуйтесь.", "Ошибка");
@@ -553,4 +588,3 @@ document.querySelectorAll('.buy-btn').forEach(btn => {
         }
     });
 });
-```При подготовке ответа на вопрос возникла ошибка. Повторите попытку позже.
