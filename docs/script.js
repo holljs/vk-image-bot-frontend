@@ -230,17 +230,17 @@ function updateUI(section) {
     const uploadBtn = section.querySelector('.universal-upload-button:not([data-type])') || section.querySelector('.universal-upload-button[data-type="photo"]');
     if (uploadBtn) {
         if (max > 1) {
-            uploadBtn.textContent = files.photos.length > 0 ? `Добавить фото (${files.photos.length}/${max})` : `1. Выбрать фото`;
+            uploadBtn.textContent = files.photos.length > 0 ? `1. Добавить еще (${files.photos.length}/${max})` : `1. Выбрать фото`;
         } else {
-            uploadBtn.textContent = files.photos.length > 0 ? "Изменить фото" : "1. Выбрать фото";
+            uploadBtn.textContent = files.photos.length > 0 ? "1. Изменить фото" : "1. Выбрать фото";
         }
     }
     
     const videoBtn = section.querySelector('.universal-upload-button[data-type="video"]');
-    if (videoBtn) videoBtn.textContent = files.videos.length > 0 ? "Изменить видео" : "2. Видео-шаблон (до 15 сек)";
+    if (videoBtn) videoBtn.textContent = files.videos.length > 0 ? "2. Изменить видео ✅" : "2. Видео-шаблон (до 15 сек)";
     
     const audioBtn = section.querySelector('.universal-upload-button[data-type="audio"]');
-    if (audioBtn) audioBtn.textContent = files.audios.length > 0 ? "Изменить аудио" : "2. Голосовое (до 15 сек)";
+    if (audioBtn) audioBtn.textContent = files.audios.length > 0 ? "2. Изменить аудио ✅" : "2. Голосовое (до 15 сек)";
 
     // 🔴 ВОТ ТОТ САМЫЙ БЛОК, КОТОРЫЙ ВКЛЮЧАЕТ КНОПКУ "ЗАПУСТИТЬ"
     const processBtn = section.querySelector('.process-button');
