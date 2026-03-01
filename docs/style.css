@@ -11,7 +11,18 @@ body.modal-open { overflow: hidden; }
 
 #app { max-width: 600px; margin: 0 auto; }
 
+/* Баг №4: Выравнивание шапки */
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-right: 45px; /* Защита от системных кнопок iOS/Android */
+}
+
 h1, h2 { color: #2c2d2e; text-align: center; }
+.app-header h1 { font-size: 22px; margin: 0; text-align: left; }
+
 h2 { margin-top: 0; font-size: 18px; }
 p { color: #6d6d78; text-align: center; font-size: 14px; margin-bottom: 10px; }
 
@@ -35,7 +46,6 @@ hr { border: none; height: 1px; background-color: #dce1e6; margin: 20px 0; }
 
 .profile-section { border: 2px solid #4a76a8; }
 
-/* Баги №4, №6, №11, №15: Исправлены инпуты */
 .prompt-input {
     width: 100%;
     min-height: 50px;
@@ -52,7 +62,6 @@ hr { border: none; height: 1px; background-color: #dce1e6; margin: 20px 0; }
     line-height: 1.4;
 }
 
-/* Баг №27: Выравнивание плейсхолдеров сверху */
 .prompt-input::placeholder {
     color: #818C99;
     white-space: normal;
@@ -62,7 +71,6 @@ textarea.prompt-input::placeholder {
     vertical-align: top;
 }
 
-/* Баг №13: Отступы между кнопками */
 button {
     width: 100%;
     border: none;
@@ -73,9 +81,9 @@ button {
     cursor: pointer;
     background-color: #4a76a8; 
     color: white;
-    margin-bottom: 8px; /* Добавлен отступ снизу */
+    margin-bottom: 8px; 
 }
-button:last-child { margin-bottom: 0; } /* У последней кнопки убираем отступ */
+button:last-child { margin-bottom: 0; }
 
 .business-buttons button, .music-styles button {
     margin-bottom: 8px;
@@ -98,29 +106,28 @@ button:last-child { margin-bottom: 0; } /* У последней кнопки у
     border: 1px solid #e1e3e6;
 }
 
+/* Баг №6: Исправлен крестик (отступ 15px, чтобы не перекрывал текст) */
 .remove-btn {
-    position: absolute; top: -5px; right: -5px;
+    position: absolute; top: -5px; right: -15px;
     background: #ef5350; color: white;
-    width: 20px; height: 20px; border-radius: 50%;
-    font-size: 12px; line-height: 20px; cursor: pointer;
+    width: 22px; height: 22px; border-radius: 50%;
+    font-size: 14px; line-height: 22px; cursor: pointer;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-/* Баг №6: Центрирование модалок */
 .modal {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0.6); z-index: 10000;
-    display: flex; justify-content: center; align-items: center; /* Центрирует окно */
+    display: flex; justify-content: center; align-items: center; 
 }
 
 .modal-content {
     background: #fff; padding: 25px;
     width: 85%; max-width: 380px; border-radius: 16px; position: relative;
-    max-height: 90vh; /* Чтобы не уезжало за экран */
+    max-height: 90vh; 
     overflow-y: auto;
 }
 
-/* Баг №5: Нормальный крестик закрытия */
 .close-modal-icon {
     position: absolute;
     top: 15px;
@@ -142,7 +149,6 @@ button:last-child { margin-bottom: 0; } /* У последней кнопки у
     justify-content: center;
 }
 
-/* Баг №8: Центрирование лоадера */
 .loader-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0, 0, 0, 0.85);
@@ -161,7 +167,6 @@ button:last-child { margin-bottom: 0; } /* У последней кнопки у
 
 .hidden { display: none !important; }
 
-/* БЛОК РЕЗУЛЬТАТОВ */
 #result-wrapper {
     margin-top: 20px;
     background: var(--white, #fff);
