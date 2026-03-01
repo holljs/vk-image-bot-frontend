@@ -275,7 +275,7 @@ async function pollTaskStatus(taskId) {
         if (attempts > maxAttempts) {
             clearInterval(pollInterval);
             hideLoader();
-            showCustomAlert("Превышено время ожидания ответа от нейросети. Результат придет в личные сообщения ВК, как только будет готов.", "Таймаут");
+            showCustomAlert("Превышено время ожидания ответа от сервера. Пожалуйста, попробуйте повторить запрос чуть позже.", "Долгая загрузка");
             return;
         }
 
@@ -446,7 +446,7 @@ document.querySelectorAll('.process-button').forEach(btn => {
                     if (promptInput) promptInput.value = '';
                 } else if (result.task_id) {
                     // Генерация принята, начинаем опрос статуса
-                    showCustomAlert("Ваш запрос принят в работу! Результат придет в личные сообщения ВК, как только будет готов.","Запрос принят!"); // --- ИЗМЕНЕНО: Более информативное сообщение
+                   showCustomAlert("Ваш запрос принят в работу! Пожалуйста, не закрывайте это приложение до появления результата (может занять 1-3 минуты).", "Магия началась!");
                     pollTaskStatus(result.task_id);
                     if (promptInput) promptInput.value = '';
                     // --- ИЗМЕНЕНО: Удалена очистка filesByMode[mode] здесь, так как она уже сделана в начале ---
