@@ -58,6 +58,7 @@ hr { border: none; height: 1px; background-color: #dce1e6; margin: 20px 0; }
 .prompt-input {
     width: 100%;
     min-height: 50px;
+    max-height: 250px; /* <--- НОВАЯ СТРОЧКА (Лимит высоты) */
     padding: 12px;
     font-size: 14px;
     border: 1px solid #dce1e6;
