@@ -250,16 +250,24 @@ function updateUI(section) {
 // --- 5. ГЕНЕРАЦИЯ И ОПРОС ---
 async function pollTaskStatus(taskId) {
     let attempts = 0;
-    const maxAttempts = 100; // Около 6 минут ожидания (100 * 3.5 сек)
+    // УВЕЛИЧИЛИ ЛИМИТ ОЖИДАНИЯ: 150 попыток по 3.5 сек = почти 9 МИНУТ.
+    // "Говорящее фото" генерится очень долго, даем ему время!
+    const maxAttempts = 150; 
+    let isTaskFinished = false; // Флаг, чтобы не показывать алерт, если задача уже выполнена
 
     const pollInterval = setInterval(async () => {
+        if (isTaskFinished) {
+            clearInterval(pollInterval);
+            return;
+        }
+
         attempts++;
-        
-        // Если ждем слишком долго (больше 6 минут) — принудительно обрываем
         if (attempts > maxAttempts) {
             clearInterval(pollInterval);
-            hideLoader();
-            showCustomAlert("Превышено время ожидания ответа от нейросети. Проверьте результат позже.", "Таймаут");
+            if (!isTaskFinished) {
+                hideLoader();
+                showCustomAlert("Нейросеть генерирует медиа дольше обычного. Пожалуйста, попробуйте повторить запрос чуть позже. Ваши кредиты не списаны (или будут возвращены в течение 5 минут).", "Долгая загрузка");
+            }
             return;
         }
 
@@ -268,24 +276,33 @@ async function pollTaskStatus(taskId) {
                 headers: { 'X-VK-Sign': getAuthHeader() }
             });
             
-            if (!response.ok) return; 
+            // Если Nginx кидает 504 Timeout или 502, мы НЕ обрываем цикл! 
+            // Фоновый воркер (Python) всё еще работает, мы просто ждем дальше.
+            if (!response.ok) {
+                 console.warn(`Поллинг: Сервер ответил статусом ${response.status}. Ждем дальше...`);
+                 return; 
+            }
 
             const data = await response.json();
+            console.log("Статус задачи:", data);
 
             if (data.success === true && data.result_url) {
+                isTaskFinished = true; // Фиксируем успех!
                 clearInterval(pollInterval);
                 showResult(data);
                 hideLoader();
                 updateBalance();
             } else if (data.success === false && data.status !== "pending") {
+                isTaskFinished = true; // Фиксируем завершение с ошибкой!
                 clearInterval(pollInterval);
                 hideLoader();
-                showCustomAlert(data.error || "Произошла ошибка при генерации.", "Ошибка нейросети");
+                showCustomAlert(data.error || "Произошла ошибка при генерации. Средства возвращены.", "Ошибка нейросети");
+                updateBalance(); 
             }
         } catch (e) {
-            console.error("Ошибка при опросе статуса:", e);
+            console.warn("Временный обрыв сети при опросе статуса. Продолжаем ждать...", e);
         }
-    }, 3500);
+    }, 3500); 
 }
 
 function showResult(result) {
