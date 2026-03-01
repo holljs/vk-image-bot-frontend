@@ -25,13 +25,11 @@ h1, h2 { color: #2c2d2e; text-align: center; }
 
 /* ИСПРАВЛЕНИЕ: Баг №3. Заголовок теперь гибкий, не прилипает к краям */
 .app-header h1 { 
-    font-size: 20px; /* Чуть уменьшили шрифт, чтобы точно влезал */
+    font-size: clamp(16px, 5vw, 22px); /* Динамический размер текста */
     margin: 0; 
     text-align: left;
-    white-space: nowrap; 
-    overflow: hidden;
-    text-overflow: ellipsis; 
-    max-width: 60%; /* Оставляем 40% ширины для системных кнопок ВК и баланса */
+    max-width: 55%; /* Оставляем больше места под кнопки ВК */
+    line-height: 1.2;
 }
 
 h2 { margin-top: 0; font-size: 18px; }
@@ -208,4 +206,26 @@ button:last-child { margin-bottom: 0; }
     display: block;
     margin-left: auto;
     margin-right: auto;
+}
+
+/* Отступ перед кнопкой скачивания (Баг №3) */
+.result-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 25px; /* Увеличен отступ, чтобы кнопка не прилипала к плееру */
+}
+
+/* Стили для кнопок внутри результатов */
+.action-btn {
+    flex: 1;
+    padding: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    background: #F2F3F5;
+    color: #000;
+}
+
+.download-button {
+    background-color: #333;
+    color: white;
 }
