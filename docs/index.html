@@ -9,7 +9,13 @@
 <body>
     <div id="app">
         <!-- ШАПКА -->
-        <h1>Нейро-художник</h1>
+        <header class="app-header" style="padding-right: 40px;">
+            <h1>✨ Нейро-художник</h1>
+            <div class="user-info">
+                <span id="user-balance-display" style="font-weight: bold; font-size: 18px; color: #4a76a8;">Баланс: ...</span>
+                <button id="refreshBalance" style="width: auto; padding: 5px 10px; margin: 0; background: #ebf2fa; color: #4a76a8;">🔄</button>
+            </div>
+        </header>
         
         <div id="loader" class="loader-overlay hidden">
             <div class="loader-content">
@@ -21,11 +27,6 @@
 
         <!-- ЛИЧНЫЙ КАБИНЕТ -->
         <div class="mode-section profile-section">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <span id="user-balance-display" style="font-weight: bold; font-size: 18px; color: #4a76a8;">Баланс: ...</span>
-                <button id="refreshBalance" style="width: auto; padding: 5px 10px; margin: 0; background: #ebf2fa; color: #4a76a8;">🔄</button>
-            </div>
-            
             <div class="step-buttons">
                 <button class="buy-btn" data-amount="150" data-credits="15" style="background-color: #4CAF50;">💎 15 кредитов (150₽)</button>
                 <button class="buy-btn" data-amount="700" data-credits="100" style="background-color: #E91E63;">💎💎 100 кредитов (700₽)</button>
@@ -39,7 +40,6 @@
         <!-- МОДАЛКА ПОМОЩИ -->
         <div id="helpModal" class="modal hidden">
             <div class="modal-content" style="max-height: 85vh; overflow-y: auto; padding: 25px 20px;">
-                <!-- Баг №5: Исправлен размер и отступы крестика -->
                 <button class="close-modal-icon close-modal">&times;</button>
                 <h2 style="margin-bottom: 15px; color: #4a76a8;">Справка и Цены</h2>
                 
@@ -80,7 +80,6 @@
             </div>
         </div>
 
-        <!-- Баг №7: Исправлена кнопка ОК в модалке алерта -->
         <div id="customAlertModal" class="modal hidden">
             <div class="modal-content">
                 <h2 id="customAlertTitle">Уведомление</h2>
@@ -95,7 +94,7 @@
             <h2>Результат:</h2>
             <div class="result-container">
                 <img id="resultImage" class="hidden" src="" alt="Result">
-                <video id="resultVideo" class="hidden" controls src=""></video>
+                <video id="resultVideo" class="hidden" controls preload="metadata" src=""></video>
                 <audio id="resultAudio" class="hidden" controls style="width: 100%; margin-top: 10px;"></audio>
             </div>
             <div class="result-buttons">
@@ -131,7 +130,6 @@
         
         <div class="mode-section" data-mode="vip_edit" data-max-photos="1">
             <h2>🎨 Арт-Образ</h2>
-            <!-- Баг №2: Изменено обращение на "вы" -->
             <p class="section-desc">Создайте креативный портрет, сохранив свое лицо</p>
             <div class="image-previews"></div>
             <input type="file" class="file-upload-input hidden" accept="image/*">
@@ -150,7 +148,6 @@
             <input type="file" class="file-upload-input hidden" accept="image/*" multiple>
             <button class="universal-upload-button">1. Добавить фото (0/3)</button>
             <p style="margin-top: 10px;">2. Опишите, как смешать:</p>
-            <!-- Баг №3: Русскоязычный плейсхолдер -->
             <textarea class="prompt-input" maxlength="1000" placeholder="Например: лицо с первого фото, фон со второго"></textarea>
             <button class="process-button hidden">3. Запустить</button>
         </div>
@@ -249,7 +246,7 @@
         </div>
 
     </div>
-   <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
-   <script src="script.js?v=86"></script>
+    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+    <script src="script.js?v=92"></script>
 </body>
 </html>
