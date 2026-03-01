@@ -4,7 +4,6 @@ let USER_ID = null;
 const filesByMode = {}; // Глобальный объект для хранения файлов по режимам
 
 // --- 1. ИНИЦИАЛИЗАЦИЯ И СКРЫТИЕ КНОПОК ОПЛАТЫ ---
-
 document.addEventListener('DOMContentLoaded', () => {
     if (typeof vkBridge !== 'undefined') {
         vkBridge.send('VKWebAppInit')
@@ -19,7 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
 function hidePaymentsOnMobile() {
     const urlParams = new URLSearchParams(window.location.search);
     const platform = urlParams.get('vk_platform');
-    // Скрываем только в нативных приложениях.
     const isNativeApp = platform === 'mobile_android' || platform === 'mobile_iphone' || platform === 'mobile_ipad';
     if (isNativeApp) {
         document.querySelectorAll('.buy-btn').forEach(btn => btn.style.display = 'none');
@@ -39,7 +37,6 @@ async function initUser() {
 }
 
 // --- 2. БАЛАНС ---
-
 function getAuthHeader() {
     return window.location.search.slice(1);
 }
@@ -68,7 +65,6 @@ function updateBalance() {
 document.getElementById('refreshBalance')?.addEventListener('click', updateBalance);
 
 // --- 3. ИНТЕРФЕЙС И КАСТОМНЫЕ ОКНА ---
-
 function showCustomAlert(message, title = "Уведомление") {
     const modal = document.getElementById('customAlertModal');
     const messageEl = document.getElementById('customAlertMessage');
@@ -88,12 +84,12 @@ document.getElementById('closeCustomAlert')?.addEventListener('click', () => {
 
 function showLoader() {
     document.getElementById('loader')?.classList.remove('hidden');
-    document.body.classList.add('modal-open'); // Для блокировки скролла
+    document.body.classList.add('modal-open'); 
 }
 
 function hideLoader() {
     document.getElementById('loader')?.classList.add('hidden');
-    document.body.classList.remove('modal-open'); // Для разблокировки скролла
+    document.body.classList.remove('modal-open'); 
 }
 
 // Окно Помощи
@@ -110,7 +106,6 @@ document.querySelectorAll('.close-modal').forEach(btn => {
 });
 
 // --- 4. РАБОТА С ФАЙЛАМИ И ВАЛИДАЦИЯ ---
-
 const fileToBase64 = file => new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -122,7 +117,7 @@ const checkMediaDuration = (file) => new Promise((resolve) => {
     const isVideo = file.type.startsWith('video/');
     const isAudio = file.type.startsWith('audio/');
     if (!isVideo && !isAudio) {
-        resolve(0); // Не медиафайл, длительность не важна
+        resolve(0); 
         return;
     }
     const mediaElement = document.createElement(isVideo ? 'video' : 'audio');
@@ -148,14 +143,10 @@ document.querySelectorAll('.universal-upload-button').forEach(btn => {
                 const mode = section.dataset.mode;
                 const files = Array.from(event.target.files);
                 const typeKey = type === 'video' ? 'videos' : (type === 'audio' ? 'audios' : 'photos');
-
                 if (!filesByMode[mode]) filesByMode[mode] = { photos: [], videos: [], audios: [] };
-
                 const accept = input.getAttribute('accept');
                 
                 for (let file of files) {
-                    // --- ИЗМЕНЕНО: Улучшенная валидация типа файлов ---
-                    // Проверка на SVG (не поддерживается Replicate)
                     if (typeKey === 'photos') {
                         if (file.type.includes('svg') || file.name.toLowerCase().endsWith('.svg')) {
                             showCustomAlert(`Векторный формат SVG не поддерживается. Пожалуйста, загрузите фото в формате JPG или PNG.`, "Неверный формат");
@@ -166,15 +157,13 @@ document.querySelectorAll('.universal-upload-button').forEach(btn => {
                             continue;
                         }
                     } else if (accept && accept !== '*/*' && !file.type.startsWith(accept.split('/')[0])) {
-                        // Общая проверка по accept-атрибуту
                         showCustomAlert(`Файл ${file.name} не поддерживается. Разрешены только ${accept}.`, "Неверный формат");
                         continue;
                     }
 
-                    // Проверка длительности для видео/аудио
                     if (typeKey === 'videos' || typeKey === 'audios') {
                         const duration = await checkMediaDuration(file);
-                        if (duration > 16) { // Лимит 15 секунд + 1 секунда запаса
+                        if (duration > 16) { 
                             showCustomAlert(`Файл слишком длинный! Загрузите медиа не дольше 15 секунд. (У вас: ${Math.round(duration)} сек)`, "Превышен лимит времени");
                             continue;
                         }
@@ -192,7 +181,7 @@ document.querySelectorAll('.universal-upload-button').forEach(btn => {
                     }
                 }
                 updateUI(section);
-                input.value = ''; // Сбросить input, чтобы можно было загрузить тот же файл еще раз
+                input.value = ''; 
             };
             input.click();
         }
@@ -208,10 +197,10 @@ function updateUI(section) {
     const mode = section.dataset.mode;
     const files = filesByMode[mode] || { photos: [], videos: [], audios: [] };
     const max = parseInt(section.dataset.maxPhotos) || 1;
-
     const previewDiv = section.querySelector('.image-previews');
+
     if (previewDiv) {
-        previewDiv.innerHTML = ''; // Очищаем текущие превью
+        previewDiv.innerHTML = ''; 
         ['photos', 'videos', 'audios'].forEach(type => {
             files[type].forEach((f, i) => {
                 const container = document.createElement('div');
@@ -233,7 +222,6 @@ function updateUI(section) {
                 del.innerHTML = '×';
                 del.onclick = () => removeFile(mode, type, i);
                 container.appendChild(del);
-
                 previewDiv.appendChild(container);
             });
         });
@@ -247,8 +235,10 @@ function updateUI(section) {
             uploadBtn.textContent = files.photos.length > 0 ? "Изменить фото" : "1. Выбрать фото";
         }
     }
+
     const videoBtn = section.querySelector('.universal-upload-button[data-type="video"]');
     if (videoBtn) videoBtn.textContent = files.videos.length > 0 ? "Изменить видео" : "2. Видео-шаблон (до 15 сек)";
+
     const audioBtn = section.querySelector('.universal-upload-button[data-type="audio"]');
     if (audioBtn) audioBtn.textContent = files.audios.length > 0 ? "Изменить аудио" : "2. Голосовое (до 15 сек)";
 
@@ -266,10 +256,9 @@ function updateUI(section) {
 }
 
 // --- 5. ГЕНЕРАЦИЯ И ОПРОС ---
-
 async function pollTaskStatus(taskId) {
     let attempts = 0;
-    const maxAttempts = 100; // 100 попыток * 3.5 сек = 350 секунд (почти 6 минут)
+    const maxAttempts = 100; 
     const pollInterval = setInterval(async () => {
         attempts++;
         if (attempts > maxAttempts) {
@@ -280,12 +269,10 @@ async function pollTaskStatus(taskId) {
         }
 
         try {
-            // --- ИЗМЕНЕНО: Передача user_id для верификации на бэкенде ---
             const response = await fetch(`${BRAIN_API_URL}/task_status/${taskId}?user_id=${USER_ID}`, {
                 headers: { 'X-VK-Sign': getAuthHeader() }
             });
 
-            // Если ответ не OK, или статус 404 (задача не найдена), продолжаем опрос
             if (!response.ok && response.status !== 404) {
                  console.error(`Ошибка при опросе статуса ${taskId}: ${response.status}`);
                  return; 
@@ -298,18 +285,15 @@ async function pollTaskStatus(taskId) {
                 hideLoader();
                 updateBalance();
             } else if (data.success === false && data.status !== "pending") {
-                // Если success: false и не "pending", значит, ошибка
                 clearInterval(pollInterval);
                 hideLoader();
                 showCustomAlert(data.error || "Произошла ошибка при генерации.", "Ошибка нейросети");
-                updateBalance(); // Обновить баланс, возможно, средства были возвращены
+                updateBalance(); 
             }
-            // Если data.status === "pending", просто ждем следующей итерации
         } catch (e) {
             console.error("Ошибка при опросе статуса:", e);
-            // Не останавливаем опрос, т.к. это может быть временная сетевая проблема
         }
-    }, 3500); // Опрашиваем каждые 3.5 секунды
+    }, 3500); 
 }
 
 function showResult(result) {
@@ -329,7 +313,7 @@ function showResult(result) {
 
     if (result.model === 'chat') {
         showCustomAlert(url, "Ответ Нейро-Помощника");
-        resultWrapper.classList.add('hidden'); // Скрыть обертку результата для чата
+        resultWrapper.classList.add('hidden'); 
         return;
     }
 
@@ -346,6 +330,7 @@ function showResult(result) {
         resultImage.src = url;
         resultImage.classList.remove('hidden');
     }
+
     resultWrapper.scrollIntoView({
         behavior: 'smooth',
         block: 'start'
@@ -392,34 +377,26 @@ document.querySelectorAll('.process-button').forEach(btn => {
             }
         }
 
-        // --- ИЗМЕНЕНО: Сначала берем файлы, потом очищаем глобальный объект ---
-        // Берем текущий набор файлов для этого конкретного запроса
         const currentFilesForRequest = filesByMode[mode] || { photos: [], videos: [], audios: [] };
         
-        // Очищаем filesByMode[mode] СРАЗУ, чтобы следующие действия пользователя
-        // (например, быстрый новый клик) не подмешали старые файлы.
-        // Это главная правка для "эффекта памяти".
         filesByMode[mode] = { photos: [], videos: [], audios: [] };
-        updateUI(section); // Обновляем UI, чтобы показать, что файлы "ушли" (превью пропадут)
-        // --- КОНЕЦ ИЗМЕНЕНИЯ ---
-
+        updateUI(section); 
 
         showLoader();
-        btn.disabled = true; // Деактивируем кнопку, чтобы избежать повторных кликов
+        btn.disabled = true; 
 
         try {
             const requestBody = {
                 user_id: USER_ID,
                 model: mode,
                 prompt: prompt,
-                image_urls: [], // Изначально пустой массив
+                image_urls: [], 
                 audio_url: null,
                 video_url: null,
                 style_prompt: stylePrompt,
                 lyrics: musicLyrics
             };
 
-            // Заполняем requestBody файлами, взятыми из currentFilesForRequest
             if (currentFilesForRequest.photos.length > 0) {
                 for (let f of currentFilesForRequest.photos) requestBody.image_urls.push(await fileToBase64(f));
             }
@@ -445,43 +422,37 @@ document.querySelectorAll('.process-button').forEach(btn => {
                     showCustomAlert(result.response, "Ответ Нейро-Помощника");
                     if (promptInput) promptInput.value = '';
                 } else if (result.task_id) {
-                    // Генерация принята, начинаем опрос статуса
                    showCustomAlert("Ваш запрос принят в работу! Пожалуйста, не закрывайте это приложение до появления результата (может занять 1-3 минуты).", "Магия началась!");
                     pollTaskStatus(result.task_id);
                     if (promptInput) promptInput.value = '';
-                    // --- ИЗМЕНЕНО: Удалена очистка filesByMode[mode] здесь, так как она уже сделана в начале ---
                 }
             } else {
-                // Если сервер вернул ошибку, отображаем ее
                 throw new Error(result.detail || "Ошибка сервера");
             }
         } catch (e) {
             hideLoader();
             showCustomAlert(e.message, "Ошибка");
         } finally {
-            btn.disabled = false; // Активируем кнопку обратно
+            btn.disabled = false; 
         }
     });
 });
 
 // --- 6. ДОП. ФУНКЦИИ ---
-
 document.querySelectorAll('.business-shortcut').forEach(btn => {
     btn.addEventListener('click', (e) => {
         const targetMode = e.target.dataset.target;
         const promptText = e.target.dataset.prompt;
         const targetSection = document.querySelector(`.mode-section[data-mode="${targetMode}"]`);
+        
         if (targetSection) {
             targetSection.scrollIntoView({
                 behavior: 'smooth',
                 block: 'center'
             });
 
-            // --- ИЗМЕНЕНО: Очистка файлов при переключении бизнес-сценариев ---
-            // Гарантируем, что при активации бизнес-режима, старые файлы не перенесутся
             filesByMode[targetMode] = { photos: [], videos: [], audios: [] };
-            updateUI(targetSection); // Обновляем UI, чтобы очистить превью
-            // --- КОНЕЦ ИЗМЕНЕНИЯ ---
+            updateUI(targetSection); 
 
             document.querySelectorAll('.mode-section h2').forEach(h2 => {
                 if (h2.dataset.orig) h2.innerText = h2.dataset.orig;
@@ -489,11 +460,13 @@ document.querySelectorAll('.business-shortcut').forEach(btn => {
             const title = targetSection.querySelector('h2');
             if (!title.dataset.orig) title.dataset.orig = title.innerText;
             title.innerText = `💼 ${e.target.innerText} (Шаблон)`;
+            
             targetSection.style.transition = 'box-shadow 0.3s ease';
             targetSection.style.boxShadow = '0 0 0 3px #2787F5';
             setTimeout(() => {
                 targetSection.style.boxShadow = '';
             }, 2000);
+            
             const input = targetSection.querySelector('.prompt-input');
             if (input) {
                 input.value = promptText;
@@ -518,21 +491,14 @@ document.getElementById('downloadButton')?.addEventListener('click', () => {
     const url = activeMedia?.src;
     if (!url) return;
 
-    // --- ИЗМЕНЕНО: Улучшена обработка скачивания для VK Mini App ---
-    // VKWebAppShowImages только для картинок. Для видео/аудио открываем в новой вкладке.
     if (vkBridge.isWebView() && (url.includes('.mp4') || url.includes('.mov') || url.includes('.mp3') || url.includes('.wav'))) {
-        // Для видео/аудио в VK Mini App нет прямого API для скачивания,
-        // поэтому открываем в новой вкладке/окне, надеясь на браузер
         window.open(url, '_blank');
     } else if (vkBridge.isWebView() && !url.includes('.mp4') && !url.includes('.mov')) {
-        // Для изображений в VK Mini App используем VKWebAppShowImages
         vkBridge.send("VKWebAppShowImages", { images: [url] });
     } else {
-        // Для всех остальных случаев (не VK Mini App, или не поддерживаемый тип)
         window.open(url, '_blank');
     }
 });
-
 
 document.querySelectorAll('.buy-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
