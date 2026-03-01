@@ -142,15 +142,14 @@ document.querySelectorAll('.universal-upload-button').forEach(btn => {
                 
                 if (!filesByMode[mode]) filesByMode[mode] = { photos: [], videos: [], audios: [] };
                 
-                const accept = input.getAttribute('accept');
+               const accept = input.getAttribute('accept');
                 for (let file of files) {
+                    // 1. Строгая валидация формата
                     if (typeKey === 'photos') {
-                        if (file.type.includes('svg') || file.name.toLowerCase().endsWith('.svg')) {
-                            showCustomAlert(`Векторный формат SVG не поддерживается. Пожалуйста, загрузите фото в формате JPG или PNG.`, "Неверный формат");
-                            continue;
-                        }
-                        if (!file.type.startsWith('image/')) {
-                            showCustomAlert(`Файл ${file.name} не является изображением.`, "Неверный формат");
+                        // Разрешаем ТОЛЬКО jpeg, png и webp. Запрещаем svg, tiff, bmp и прочее.
+                        const validImageTypes = ['image/jpeg', 'image/png', 'image/webp'];
+                        if (!validImageTypes.includes(file.type)) {
+                            showCustomAlert(`Формат файла ${file.name} не поддерживается. Пожалуйста, используйте только JPG, PNG или WEBP.`, "Неверный формат");
                             continue;
                         }
                     } else if (accept && accept !== '*/*' && !file.type.startsWith(accept.split('/')[0])) {
