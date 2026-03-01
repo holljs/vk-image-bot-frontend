@@ -241,6 +241,19 @@ function updateUI(section) {
     
     const audioBtn = section.querySelector('.universal-upload-button[data-type="audio"]');
     if (audioBtn) audioBtn.textContent = files.audios.length > 0 ? "Изменить аудио" : "2. Голосовое (до 15 сек)";
+
+    // 🔴 ВОТ ТОТ САМЫЙ БЛОК, КОТОРЫЙ ВКЛЮЧАЕТ КНОПКУ "ЗАПУСТИТЬ"
+    const processBtn = section.querySelector('.process-button');
+    if (processBtn) {
+        let ready = false;
+        if (['t2i', 't2v', 'chat', 'music'].includes(mode)) ready = true;
+        else if (mode === 'vip_clip' && files.photos.length > 0 && files.videos.length > 0) ready = true;
+        else if (mode === 'talking_photo' && files.photos.length > 0 && files.audios.length > 0) ready = true;
+        else if (files.photos.length > 0) ready = true;
+        
+        if (ready) processBtn.classList.remove('hidden');
+        else processBtn.classList.add('hidden');
+    }
 }
 
 
