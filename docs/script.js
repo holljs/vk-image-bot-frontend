@@ -430,8 +430,7 @@ document.querySelectorAll('.process-button').forEach(btn => {
                     hideLoader();
                     showCustomAlert(result.response, "Ответ Нейро-Помощника");
                 } else if (result.task_id) {
-                   showCustomAlert("Ваш запрос принят в работу! Пожалуйста, не закрывайте это приложение до появления результата (может занять 1-3 минуты).", "Магия началась!");
-                   pollTaskStatus(result.task_id);
+                   pollTaskStatus(result.task_id); // Оставляем только запуск поллинга
                 }
             } else {
                 throw new Error(result.detail || "Ошибка сервера");
