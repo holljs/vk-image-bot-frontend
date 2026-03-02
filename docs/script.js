@@ -398,8 +398,8 @@ document.querySelectorAll('.process-button').forEach(btn => {
             if (lyricsLength < 10 || lyricsLength > 600) {
                 return showCustomAlert("Текст песни должен быть от 10 до 600 символов.", "Ошибка текста");
             }
-            if (btn.dataset.style === 'custom') {
-                if (styleLength < 10) return showCustomAlert("Опишите свой стиль подробнее (не менее 10 символов).", "Ошибка стиля");
+           if (btn.dataset.style === 'custom') {
+                if (styleLength < 2) return showCustomAlert("Введите название жанра (от 2 символов).", "Ошибка стиля");
                 if (styleLength > 300) return showCustomAlert("Стиль музыки не должен превышать 300 символов.", "Ошибка стиля");
             }
         }
