@@ -244,7 +244,8 @@ function updateUI(section) {
     const processBtn = section.querySelector('.process-button');
     if (processBtn) {
         let ready = false;
-        if (['t2i', 't2v', 'chat', 'music'].includes(mode)) ready = true;
+       // СТАЛО: добавили vip_mix
+        if (['t2i', 't2v', 'chat', 'music', 'vip_mix'].includes(mode)) ready = true;
         else if (mode === 'vip_clip' && files.photos.length > 0 && files.videos.length > 0) ready = true;
         else if (mode === 'talking_photo' && files.photos.length > 0 && files.audios.length > 0) ready = true;
         else if (files.photos.length > 0) ready = true;
@@ -385,7 +386,7 @@ document.querySelectorAll('.process-button').forEach(btn => {
             }
         }
 
-        // БАЗОВАЯ ПРОВЕРКА ПРОМПТА
+       // БАЗОВАЯ ПРОВЕРКА ПРОМПТА
         if (!prompt && !['i2v', 'music', 'vip_clip', 'talking_photo'].includes(mode)) {
             return showCustomAlert("Пожалуйста, введите текстовое описание.", "Пустой запрос");
         }
