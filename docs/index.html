@@ -118,9 +118,13 @@
 
         <hr>
 
-        <div class="mode-section" data-mode="t2i">
+        <div class="mode-section" data-mode="t2i" data-max-photos="4">
             <h2>🎨 Нейро-Художник</h2>
-            <p class="section-desc">Рисование уникальных изображений по вашему описанию</p>
+            <p class="section-desc">Рисование с нуля или по вашему фото-примеру</p>
+            <div class="image-previews"></div>
+            <input type="file" class="file-upload-input hidden" accept="image/*" multiple>
+            <button class="universal-upload-button">1. Выбрать фото-стиль (до 4 шт, необязательно)</button>
+            <p style="margin-top: 10px;">2. Напишите, что нарисовать:</p>
             <textarea class="prompt-input" maxlength="5000" placeholder="Например: кот в скафандре"></textarea>
             <button class="process-button" style="background-color: #4a76a8;">Нарисовать</button>
         </div>
