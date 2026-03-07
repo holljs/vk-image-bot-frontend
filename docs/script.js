@@ -142,6 +142,10 @@ document.querySelectorAll('.universal-upload-button').forEach(btn => {
                 
                 if (!filesByMode[mode]) filesByMode[mode] = { photos: [], videos: [], audios: [] };
                 
+                // ИСПРАВЛЕНИЕ: Очищаем старые файлы перед загрузкой новых
+                const maxLim = parseInt(section.dataset.maxPhotos) || 1;
+                if (maxLim === 1) filesByMode[mode][typeKey] = [];
+                
                 const accept = input.getAttribute('accept');
                 for (let file of files) {
                     // 1. Строгая валидация формата (только растр для фото)
