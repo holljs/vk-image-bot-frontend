@@ -582,3 +582,47 @@ document.querySelectorAll('.buy-btn').forEach(btn => {
         }
     });
 });
+
+// --- ПОЛУЧЕНИЕ БОНУСА ЗА РАЗРЕШЕНИЕ СООБЩЕНИЙ ---
+document.getElementById('getBonusBtn')?.addEventListener('click', async () => {
+    if (!USER_ID) return showCustomAlert("Пожалуйста, подождите загрузки профиля.", "Ошибка");
+    
+    try {
+        // ID вашей группы "Нейро-Магия"
+        const GROUP_ID = 191367447; 
+        
+        // Вызываем официальное окно ВК с просьбой разрешить сообщения
+        const bridgeResponse = await vkBridge.send("VKWebAppAllowMessagesFromGroup", {"group_id": GROUP_ID});
+        
+        if (bridgeResponse.result) {
+            // Если юзер нажал "Разрешить", отправляем запрос на наш сервер для начисления бонуса
+            showLoader();
+            const response = await fetch(`${BRAIN_API_URL}/bonus`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-VK-Sign': getAuthHeader() },
+                body: JSON.stringify({ user_id: USER_ID })
+            });
+            
+            const result = await response.json();
+            hideLoader();
+            
+            if (result.success) {
+                showCustomAlert("Вам начислено 5 кредитов! 🎉 Теперь вы будете получать наши новости и акции в личные сообщения.", "Бонус получен");
+                updateBalance();
+                // Прячем кнопку, чтобы не нажимали дважды
+                document.getElementById('getBonusBtn').style.display = 'none';
+            } else {
+                showCustomAlert(result.detail || "Вы уже получали этот бонус ранее.", "Упс!");
+            }
+        }
+    } catch (e) {
+        // Пользователь нажал "Отмена" в окне ВК
+        if (e.error_data && e.error_data.error_reason === "User denied") {
+            showCustomAlert("Вы отменили действие. Чтобы получить бонус, необходимо разрешить сообщения.", "Отмена");
+        } else {
+            console.log("Бонус: Ошибка или уже разрешено", e);
+            // Пытаемся начислить бонус, вдруг он уже давал разрешение раньше
+            showCustomAlert("Кредиты выдаются только при первом разрешении сообщений.", "Информация");
+        }
+    }
+});
