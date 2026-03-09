@@ -279,7 +279,7 @@
                 return;
             }
 
-          <!-- ПРЯМОЙ КОД СКАЧИВАНИЯ (ПРОКСИ ЧЕРЕЗ НАШ СЕРВЕР) -->
+           <!-- ПРЯМОЙ КОД СКАЧИВАНИЯ (ПРОСТОЙ МЕТОД ИЗ БЕКАПА) -->
     <script>
         function forceDownloadMedia() {
             const activeMedia = document.querySelector('#result-wrapper img:not(.hidden), #result-wrapper video:not(.hidden), #result-wrapper audio:not(.hidden)');
@@ -295,19 +295,9 @@
             // Если это фото в ВК - просто открываем просмотрщик
             if (window.vkBridge && window.vkBridge.isWebView() && !isVideo && !isAudio) {
                 vkBridge.send("VKWebAppShowImages", { images: [url] });
-                return;
-            }
-
-            // ДЛЯ ВИДЕО И АУДИО: Направляем пользователя на наш сервер-прокси
-            // Сервер сам заставит браузер (даже ВКонтакте) сохранить файл
-            const proxyUrl = "https://neuro-master.online/api/download?url=" + encodeURIComponent(url);
-            
-            // В мобильном ВК открываем эту ссылку, и ВК скачает ее, так как это ВАШ домен
-            if (window.vkBridge && window.vkBridge.isWebView()) {
-                window.location.href = proxyUrl;
             } else {
-                // На ПК тоже работает идеально
-                window.location.href = proxyUrl;
+                // Для всего остального (видео, аудио, ПК) - просто открываем ссылку в новой вкладке
+                window.open(url, '_blank');
             }
         }
     </script>
