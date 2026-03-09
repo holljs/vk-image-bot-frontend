@@ -1,10 +1,15 @@
-// --- 1. ИНИЦИАЛИЗАЦИЯ И СКРЫТИЕ КНОПОК ОПЛАТЫ ---
+// script.js (Версия "Как было раньше, но с подписью")
 
-// Просто вызываем Init, не ждем ответа, потому что он может не прийти!
-vkBridge.send('VKWebAppInit').catch(console.error);
+const BRAIN_API_URL = 'https://neuro-master.online/api';
+let USER_ID = null;
+const filesByMode = {};
 
+// Просто шлем Init. Без .then(), без .catch(). Просто в пустоту.
+vkBridge.send('VKWebAppInit');
+
+// И сразу вызываем наши функции, как вы и говорили:
 hidePaymentsOnMobile();
-initUser(); // СРАЗУ вызываем получение пользователя, не ждем Bridge!
+initUser();
 
 function hidePaymentsOnMobile() {
     const urlParams = new URLSearchParams(window.location.search); 
@@ -17,15 +22,34 @@ function hidePaymentsOnMobile() {
 
 async function initUser() {
     try { 
+        // Если Bridge не загрузился, это просто упадет в catch, без паники
         const data = await vkBridge.send('VKWebAppGetUserInfo'); 
         if (data.id) { 
             USER_ID = data.id; 
             updateBalance(); 
         } 
     } catch (e) { 
-        console.error("Ошибка получения профиля:", e); 
-        // Убрали alert(), чтобы не было окна "Подтвердите действие..."
+        console.error("VK Bridge не готов:", e); 
     }
+}
+
+function getAuthHeader() { return window.location.search.slice(1); }
+
+function updateBalance() {
+    if (!USER_ID) return; 
+    const balanceEl = document.getElementById('user-balance-display'); 
+    if (balanceEl) balanceEl.textContent = "Обновление..."; 
+    
+    fetch(`${BRAIN_API_URL}/user/${USER_ID}`, { 
+        headers: { 'X-VK-Sign': getAuthHeader() } // Защита
+    }) 
+    .then(r => r.json()) 
+    .then(info => { 
+        if (balanceEl) balanceEl.textContent = `Баланс: ${info.balance} кр.`; 
+    }) 
+    .catch((e) => { 
+        if (balanceEl) balanceEl.textContent = "Ошибка"; 
+    });
 }
 
 // --- 2. БАЛАНС ---
