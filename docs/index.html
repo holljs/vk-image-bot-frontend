@@ -259,30 +259,56 @@
     <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
     <script src="script.js?v=111"></script>
     
-    <!-- ПРЯМОЙ КОД СКАЧИВАНИЯ (ОБХОД КЭША) -->
+     <!-- ПРЯМОЙ КОД СКАЧИВАНИЯ (ОБХОД КЭША И БЛОКИРОВОК) -->
     <script>
-        function forceDownloadMedia() {
+        async function forceDownloadMedia() {
             const activeMedia = document.querySelector('#result-wrapper img:not(.hidden), #result-wrapper video:not(.hidden), #result-wrapper audio:not(.hidden)');
             const url = activeMedia ? activeMedia.src : null;
             if (!url) {
-                alert("Ошибка: нет медиа для скачивания");
+                alert("Ошибка: нет файла для скачивания");
                 return;
             }
 
             const isVideo = url.includes('.mp4') || url.includes('.mov');
             const isAudio = url.includes('.mp3') || url.includes('.wav');
+            const fileName = `neuro_master_${Date.now()}${isVideo ? '.mp4' : (isAudio ? '.mp3' : '.jpg')}`;
 
-            if (window.vkBridge && window.vkBridge.isWebView()) {
-                if (!isVideo && !isAudio) {
-                    vkBridge.send("VKWebAppShowImages", { images: [url] });
-                } else {
-                    // Жестко кидаем в браузер!
-                    vkBridge.send("VKWebAppOpenUrl", { "url": url }).catch(() => {
-                        window.open(url, '_blank');
-                    });
-                }
-            } else {
-                // Для ПК
+            // Если это фото в ВК - просто открываем просмотрщик
+            if (window.vkBridge && window.vkBridge.isWebView() && !isVideo && !isAudio) {
+                vkBridge.send("VKWebAppShowImages", { images: [url] });
+                return;
+            }
+
+            // УНИВЕРСАЛЬНЫЙ ХАК ДЛЯ СКАЧИВАНИЯ (Обходит ВК и браузеры)
+            try {
+                // Скачиваем файл в оперативную память телефона/ПК
+                const response = await fetch(url);
+                const blob = await response.blob();
+                
+                // Создаем локальную (внутреннюю) ссылку на скачанный файл
+                const localUrl = window.URL.createObjectURL(blob);
+                
+                // Создаем невидимую кнопку-ссылку
+                const link = document.createElement('a');
+                link.style.display = 'none';
+                link.href = localUrl;
+                link.download = fileName; // Приказ "Скачать, а не открывать!"
+                
+                // Нажимаем на неё программно
+                document.body.appendChild(link);
+                link.click();
+                
+                // Убираем за собой мусор
+                setTimeout(() => {
+                    document.body.removeChild(link);
+                    window.URL.revokeObjectURL(localUrl);
+                }, 1000);
+                
+            } catch (error) {
+                // Если fetch заблокирован из-за CORS (защиты серверов Replicate)
+                console.error("Ошибка прямого скачивания:", error);
+                alert("Из-за настроек безопасности ВК прямое скачивание недоступно. Видео откроется в новой вкладке — зажмите его пальцем и выберите 'Сохранить'.");
+                // Пытаемся открыть хотя бы как ссылку
                 window.open(url, '_blank');
             }
         }
