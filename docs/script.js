@@ -512,7 +512,7 @@ document.getElementById('gallery-link')?.addEventListener('click', () => {
         .catch(() => { window.open("https://vk.com/hollie_ai_bot", "_blank"); });
 });
 
-// --- ИСПРАВЛЕННОЕ СКАЧИВАНИЕ (Надежный метод) ---
+// --- ОРИГИНАЛЬНОЕ СКАЧИВАНИЕ (Fetch + Blob) ---
 document.getElementById('downloadButton')?.addEventListener('click', () => {
     const activeMedia = document.querySelector('#result-wrapper img:not(.hidden), #result-wrapper video:not(.hidden), #result-wrapper audio:not(.hidden)');
     const url = activeMedia?.src;
@@ -520,28 +520,38 @@ document.getElementById('downloadButton')?.addEventListener('click', () => {
 
     const isVideo = url.includes('.mp4') || url.includes('.mov');
     const isAudio = url.includes('.mp3') || url.includes('.wav');
+    const filename = `neuro_master_${Date.now()}${isVideo ? '.mp4' : (isAudio ? '.mp3' : '.jpg')}`;
 
     if (vkBridge.isWebView()) {
         if (!isVideo && !isAudio) {
-            // Фото в мобильном ВК - открываем просмотрщик
+            // Если это фото в мобильном клиенте - открываем нативный просмотрщик ВК
             vkBridge.send("VKWebAppShowImages", { images: [url] });
         } else {
-            // АУДИО И ВИДЕО в мобильном ВК - просим ВК открыть внешнюю ссылку
+            // ДЛЯ АУДИО И ВИДЕО: Принудительно открываем внешний браузер, чтобы телефон скачал файл
             vkBridge.send("VKWebAppOpenUrl", { "url": url })
-                .catch(() => { window.open(url, '_blank'); });
+                .catch(() => {
+                    window.open(url, '_blank');
+                });
         }
     } else {
-        // ДЛЯ ПК: Просто открываем файл в новой вкладке. Браузер сам предложит его сохранить!
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = ''; // Просим браузер скачать, а не открыть
-        a.target = '_blank';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        // Жесткое скачивание для браузеров на ПК
+        fetch(url)
+            .then(response => response.blob())
+            .then(blob => {
+                const blobUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(blobUrl);
+            })
+            .catch(() => {
+                window.open(url, '_blank');
+            });
     }
 });
-
 // Оплата ЮKassa
 document.querySelectorAll('.buy-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
