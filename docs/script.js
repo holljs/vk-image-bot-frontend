@@ -337,9 +337,19 @@ function showResult(result) {
     const isVideo = url.includes('.mp4') || url.includes('.mov');
     const isAudio = url.includes('.mp3') || url.includes('.wav');
 
-    const downloadBtn = document.getElementById('downloadButton');
-    if (downloadBtn) {
-        downloadBtn.textContent = isAudio ? "Скачать песню" : "Скачать на устройство";
+    // --- НОВОЕ: Просто даем кнопке правильную ссылку ---
+    if (downloadButton) {
+        downloadButton.href = url; // Вставляем ссылку прямо в атрибут href!
+        // Для фото в ВК оставляем старую логику просмотра
+        if (!isVideo && !isAudio && vkBridge.isWebView()) {
+            downloadButton.onclick = (e) => {
+                e.preventDefault();
+                vkBridge.send("VKWebAppShowImages", { images: [url] });
+            };
+        } else {
+            // Для видео/аудио просто отключаем перехват клика, пусть браузер делает свое дело
+            downloadButton.onclick = null; 
+        }
     }
 
     if (isVideo) {
