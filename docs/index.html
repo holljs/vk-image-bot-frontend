@@ -279,37 +279,35 @@
                 return;
             }
 
-            // УНИВЕРСАЛЬНЫЙ ХАК ДЛЯ СКАЧИВАНИЯ (Обходит ВК и браузеры)
-            try {
-                // Скачиваем файл в оперативную память телефона/ПК
-                const response = await fetch(url);
-                const blob = await response.blob();
-                
-                // Создаем локальную (внутреннюю) ссылку на скачанный файл
-                const localUrl = window.URL.createObjectURL(blob);
-                
-                // Создаем невидимую кнопку-ссылку
-                const link = document.createElement('a');
-                link.style.display = 'none';
-                link.href = localUrl;
-                link.download = fileName; // Приказ "Скачать, а не открывать!"
-                
-                // Нажимаем на неё программно
-                document.body.appendChild(link);
-                link.click();
-                
-                // Убираем за собой мусор
-                setTimeout(() => {
-                    document.body.removeChild(link);
-                    window.URL.revokeObjectURL(localUrl);
-                }, 1000);
-                
-            } catch (error) {
-                // Если fetch заблокирован из-за CORS (защиты серверов Replicate)
-                console.error("Ошибка прямого скачивания:", error);
-                alert("Из-за настроек безопасности ВК прямое скачивание недоступно. Видео откроется в новой вкладке — зажмите его пальцем и выберите 'Сохранить'.");
-                // Пытаемся открыть хотя бы как ссылку
-                window.open(url, '_blank');
+          <!-- ПРЯМОЙ КОД СКАЧИВАНИЯ (ПРОКСИ ЧЕРЕЗ НАШ СЕРВЕР) -->
+    <script>
+        function forceDownloadMedia() {
+            const activeMedia = document.querySelector('#result-wrapper img:not(.hidden), #result-wrapper video:not(.hidden), #result-wrapper audio:not(.hidden)');
+            const url = activeMedia ? activeMedia.src : null;
+            if (!url) {
+                alert("Ошибка: нет файла для скачивания");
+                return;
+            }
+
+            const isVideo = url.includes('.mp4') || url.includes('.mov');
+            const isAudio = url.includes('.mp3') || url.includes('.wav');
+
+            // Если это фото в ВК - просто открываем просмотрщик
+            if (window.vkBridge && window.vkBridge.isWebView() && !isVideo && !isAudio) {
+                vkBridge.send("VKWebAppShowImages", { images: [url] });
+                return;
+            }
+
+            // ДЛЯ ВИДЕО И АУДИО: Направляем пользователя на наш сервер-прокси
+            // Сервер сам заставит браузер (даже ВКонтакте) сохранить файл
+            const proxyUrl = "https://neuro-master.online/api/download?url=" + encodeURIComponent(url);
+            
+            // В мобильном ВК открываем эту ссылку, и ВК скачает ее, так как это ВАШ домен
+            if (window.vkBridge && window.vkBridge.isWebView()) {
+                window.location.href = proxyUrl;
+            } else {
+                // На ПК тоже работает идеально
+                window.location.href = proxyUrl;
             }
         }
     </script>
