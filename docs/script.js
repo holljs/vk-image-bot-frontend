@@ -512,7 +512,7 @@ document.getElementById('gallery-link')?.addEventListener('click', () => {
         .catch(() => { window.open("https://vk.com/hollie_ai_bot", "_blank"); });
 });
 
-// --- ИСПРАВЛЕННОЕ СКАЧИВАНИЕ (Аудио и Видео для мобильных устройств) ---
+// --- ИСПРАВЛЕННОЕ СКАЧИВАНИЕ (Надежный метод) ---
 document.getElementById('downloadButton')?.addEventListener('click', () => {
     const activeMedia = document.querySelector('#result-wrapper img:not(.hidden), #result-wrapper video:not(.hidden), #result-wrapper audio:not(.hidden)');
     const url = activeMedia?.src;
@@ -520,36 +520,25 @@ document.getElementById('downloadButton')?.addEventListener('click', () => {
 
     const isVideo = url.includes('.mp4') || url.includes('.mov');
     const isAudio = url.includes('.mp3') || url.includes('.wav');
-    const filename = `neuro_master_${Date.now()}${isVideo ? '.mp4' : (isAudio ? '.mp3' : '.jpg')}`;
 
     if (vkBridge.isWebView()) {
         if (!isVideo && !isAudio) {
-            // Если это фото в мобильном клиенте - открываем нативный просмотрщик ВК
+            // Фото в мобильном ВК - открываем просмотрщик
             vkBridge.send("VKWebAppShowImages", { images: [url] });
         } else {
-            // ДЛЯ АУДИО И ВИДЕО: Принудительно открываем внешний браузер, чтобы телефон скачал файл
+            // АУДИО И ВИДЕО в мобильном ВК - просим ВК открыть внешнюю ссылку
             vkBridge.send("VKWebAppOpenUrl", { "url": url })
-                .catch(() => {
-                    window.open(url, '_blank');
-                });
+                .catch(() => { window.open(url, '_blank'); });
         }
     } else {
-        // Жесткое скачивание для браузеров на ПК
-        fetch(url)
-            .then(response => response.blob())
-            .then(blob => {
-                const blobUrl = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = blobUrl;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                window.URL.revokeObjectURL(blobUrl);
-            })
-            .catch(() => {
-                window.open(url, '_blank');
-            });
+        // ДЛЯ ПК: Просто открываем файл в новой вкладке. Браузер сам предложит его сохранить!
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = ''; // Просим браузер скачать, а не открыть
+        a.target = '_blank';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
     }
 });
 
