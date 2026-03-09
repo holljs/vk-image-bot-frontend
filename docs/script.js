@@ -345,6 +345,9 @@ function showResult(result) {
     if (isVideo) {
         resultVideo.src = url;
         resultVideo.classList.remove('hidden');
+        // Очень важно! Для видео - не открываем внешнюю ссылку, а просто отдаем URL.
+        // Браузер сам покажет кнопки для скачивания (три точки).
+        // Если это не сработает, то нужно будет искать, почему Replicate блокирует прямую ссылку.
     } else if (isAudio) {
         resultAudio.src = url;
         resultAudio.classList.remove('hidden');
@@ -512,7 +515,7 @@ document.getElementById('gallery-link')?.addEventListener('click', () => {
         .catch(() => { window.open("https://vk.com/hollie_ai_bot", "_blank"); });
 });
 
-// --- ОРИГИНАЛЬНОЕ СКАЧИВАНИЕ (Fetch + Blob) ---
+// --- ИСПРАВЛЕННОЕ СКАЧИВАНИЕ (Аудио и Видео для мобильных устройств) ---
 document.getElementById('downloadButton')?.addEventListener('click', () => {
     const activeMedia = document.querySelector('#result-wrapper img:not(.hidden), #result-wrapper video:not(.hidden), #result-wrapper audio:not(.hidden)');
     const url = activeMedia?.src;
@@ -552,6 +555,7 @@ document.getElementById('downloadButton')?.addEventListener('click', () => {
             });
     }
 });
+
 // Оплата ЮKassa
 document.querySelectorAll('.buy-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
