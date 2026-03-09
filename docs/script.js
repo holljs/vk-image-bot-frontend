@@ -2,16 +2,40 @@ const BRAIN_API_URL = 'https://neuro-master.online/api';
 let USER_ID = null;
 const filesByMode = {};
 
-// --- 1. ИНИЦИАЛИЗАЦИЯ И СКРЫТИЕ КНОПОК ОПЛАТЫ ---
-vkBridge.send('VKWebAppInit');
-hidePaymentsOnMobile();
-initUser();
+const loader = document.getElementById('loader');
+const resultWrapper = document.getElementById('result-wrapper');
+const resultImage = document.getElementById('resultImage');
+const resultVideo = document.getElementById('resultVideo');
+const resultAudio = document.getElementById('resultAudio');
+const downloadButton = document.getElementById('downloadButton');
+const shareButton = document.getElementById('shareButton');
+const helpModal = document.getElementById('helpModal');
+
+// --- 1. ИНИЦИАЛИЗАЦИЯ (ПРОФЕССИОНАЛЬНАЯ) ---
+if (typeof vkBridge === 'undefined') {
+    console.error('VK Bridge не загружен');
+    alert("Ошибка инициализации: Пожалуйста, перезагрузите приложение.");
+} else {
+    vkBridge.send('VKWebAppInit')
+        .then(() => {
+            console.log('VK Bridge успешно инициализирован');
+            initApp(); // Запускаем приложение только после ответа ВК
+        })
+        .catch(error => {
+            console.error('Ошибка инициализации VK Bridge:', error);
+            alert("Не удалось инициализировать VK Bridge");
+        });
+}
+
+function initApp() {
+    hidePaymentsOnMobile();
+    initUser();
+}
 
 function hidePaymentsOnMobile() {
     const urlParams = new URLSearchParams(window.location.search);
     const platform = urlParams.get('vk_platform');
     
-    // Скрываем только в нативных приложениях. На ПК и мобильном вебе (m.vk.com) оплата останется!
     const isNativeApp = platform === 'mobile_android' || platform === 'mobile_iphone' || platform === 'mobile_ipad';
     if (isNativeApp) {
         document.querySelectorAll('.buy-btn').forEach(btn => btn.style.display = 'none');
