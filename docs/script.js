@@ -515,7 +515,7 @@ document.getElementById('gallery-link')?.addEventListener('click', () => {
         .catch(() => { window.open("https://vk.com/hollie_ai_bot", "_blank"); });
 });
 
-// --- ИСПРАВЛЕННОЕ СКАЧИВАНИЕ (Аудио и Видео для мобильных устройств) ---
+// --- ИСПРАВЛЕННОЕ СКАЧИВАНИЕ (Универсальное для ПК и Мобилок) ---
 document.getElementById('downloadButton')?.addEventListener('click', () => {
     const activeMedia = document.querySelector('#result-wrapper img:not(.hidden), #result-wrapper video:not(.hidden), #result-wrapper audio:not(.hidden)');
     const url = activeMedia?.src;
@@ -525,35 +525,41 @@ document.getElementById('downloadButton')?.addEventListener('click', () => {
     const isAudio = url.includes('.mp3') || url.includes('.wav');
     const filename = `neuro_master_${Date.now()}${isVideo ? '.mp4' : (isAudio ? '.mp3' : '.jpg')}`;
 
-    if (vkBridge.isWebView()) {
-        if (!isVideo && !isAudio) {
-            // Если это фото в мобильном клиенте - открываем нативный просмотрщик ВК
-            vkBridge.send("VKWebAppShowImages", { images: [url] });
-        } else {
-            // ДЛЯ АУДИО И ВИДЕО: Принудительно открываем внешний браузер, чтобы телефон скачал файл
-            vkBridge.send("VKWebAppOpenUrl", { "url": url })
-                .catch(() => {
-                    window.open(url, '_blank');
-                });
-        }
-    } else {
-        // Жесткое скачивание для браузеров на ПК
-        fetch(url)
-            .then(response => response.blob())
-            .then(blob => {
-                const blobUrl = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = blobUrl;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                window.URL.revokeObjectURL(blobUrl);
-            })
-            .catch(() => {
-                window.open(url, '_blank');
-            });
+    // Если это мобилка ВК и это просто ФОТО - открываем просмотрщик (это удобно)
+    if (vkBridge.isWebView() && !isVideo && !isAudio) {
+        vkBridge.send("VKWebAppShowImages", { images: [url] });
+        return;
     }
+
+    // ДЛЯ ВИДЕО, АУДИО и ПК (Жесткое скачивание через Blob)
+    showCustomAlert("Начинаем скачивание файла. Пожалуйста, подождите...", "Загрузка");
+    
+    fetch(url)
+        .then(response => {
+            if (!response.ok) throw new Error("Network response was not ok");
+            return response.blob();
+        })
+        .then(blob => {
+            const blobUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(blobUrl);
+            
+            // Закрываем окно "Загрузка" (костыль для старых телефонов)
+            setTimeout(() => {
+                document.getElementById('customAlertModal').classList.add('hidden');
+                document.body.classList.remove('modal-open');
+            }, 1000);
+        })
+        .catch((error) => {
+            console.error("Ошибка скачивания Blob:", error);
+            // Если Blob не сработал (например, из-за CORS) - пробуем просто открыть в новой вкладке
+            window.open(url, '_blank');
+        });
 });
 
 // Оплата ЮKassa
