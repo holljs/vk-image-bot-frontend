@@ -365,6 +365,23 @@ function showResult(result) {
         };
     }
 
+    // --- НОВОЕ: Просто даем кнопке правильную ссылку ---
+    const downloadBtn = document.getElementById('downloadButton');
+    if (downloadBtn) {
+        downloadBtn.href = url; // Вставляем ссылку прямо в атрибут href!
+        // Для фото в ВК оставляем старую логику просмотра
+        if (!isVideo && !isAudio && vkBridge.isWebView()) {
+            downloadBtn.onclick = (e) => {
+                e.preventDefault();
+                vkBridge.send("VKWebAppShowImages", { images: [url] });
+            };
+        } else {
+            // Для видео/аудио просто отключаем перехват клика, пусть браузер делает свое дело
+            downloadBtn.onclick = null; 
+        }
+    }
+    // ----------------------------------------------------
+
     resultWrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
