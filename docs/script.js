@@ -1,4 +1,63 @@
+// script.js (v121 - ИСПРАВЛЕНА ИНИЦИАЛИЗАЦИЯ)
 
+const BRAIN_API_URL = 'https://neuro-master.online/api';
+let USER_ID = null;
+let userIdInitialized = false;
+const filesByMode = {};
+
+const loader = document.getElementById('loader');
+const resultWrapper = document.getElementById('result-wrapper');
+const originalPreviewsContainer = document.querySelector('#originalImageContainer .image-previews');
+const resultContainer = document.getElementById('resultContainer');
+const resultImage = document.getElementById('resultImage');
+const resultVideo = document.getElementById('resultVideo');
+const resultAudio = document.getElementById('resultAudio');
+const downloadButton = document.getElementById('downloadButton');
+const shareButton = document.getElementById('shareButton');
+const helpModal = document.getElementById('helpModal');
+
+// --- 1. ИНИЦИАЛИЗАЦИЯ (БЕЗ ПАРАНОЙИ) ---
+// Просто вызываем Bridge, он уже должен быть (если нет - упадет молча)
+vkBridge.send('VKWebAppInit').then(() => {
+    hidePaymentsOnMobile();
+}).catch(console.error);
+
+// Подписка на обновление конфига (самый надежный способ получить ID)
+vkBridge.subscribe(e => {
+    if (e.detail && e.detail.type === 'VKWebAppUpdateConfig' && !userIdInitialized) {
+        initUser();
+    }
+});
+
+// Запасной план, если событие UpdateConfig не пришло
+setTimeout(() => { 
+    if (!userIdInitialized) {
+        console.warn("Таймаут VK Bridge. Пробуем получить ID принудительно.");
+        initUser(); 
+    }
+}, 2000);
+
+function hidePaymentsOnMobile() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const platform = urlParams.get('vk_platform');
+    const isNativeApp = platform === 'mobile_android' || platform === 'mobile_iphone' || platform === 'mobile_ipad';
+    if (isNativeApp) {
+        document.querySelectorAll('.buy-btn').forEach(btn => btn.style.display = 'none');
+    }
+}
+
+async function initUser() {
+    try {
+        const data = await vkBridge.send('VKWebAppGetUserInfo');
+        if (data.id) {
+            USER_ID = data.id;
+            userIdInitialized = true;
+            updateBalance();
+        }
+    } catch (e) { 
+        console.error("Ошибка получения профиля:", e); 
+    }
+}
 
 // --- 2. БАЛАНС ---
 function getAuthHeader() { return window.location.search.slice(1); }
