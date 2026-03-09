@@ -515,58 +515,6 @@ document.getElementById('gallery-link')?.addEventListener('click', () => {
         .catch(() => { window.open("https://vk.com/hollie_ai_bot", "_blank"); });
 });
 
-// --- СКАЧИВАНИЕ (Побег из WebView для видео) ---
-document.getElementById('downloadButton')?.addEventListener('click', () => {
-    const activeMedia = document.querySelector('#result-wrapper img:not(.hidden), #result-wrapper video:not(.hidden), #result-wrapper audio:not(.hidden)');
-    const url = activeMedia?.src;
-    if (!url) return;
-
-    const isVideo = url.includes('.mp4') || url.includes('.mov');
-    const isAudio = url.includes('.mp3') || url.includes('.wav');
-
-    // Если это мобилка ВК
-    if (vkBridge.isWebView()) {
-        if (!isVideo && !isAudio) {
-            // ФОТО: просто открываем в полноэкранном режиме ВК (там можно нажать сохранить)
-            vkBridge.send("VKWebAppShowImages", { images: [url] });
-        } else {
-            // ВИДЕО / АУДИО: Выкидываем пользователя во ВНЕШНИЙ БРАУЗЕР
-            // Там он сможет просто зажать палец на видео и нажать "Сохранить"
-            let externalUrl = url;
-            
-            // Если вдруг Replicate отдает ссылку без https://, добавляем
-            if (!externalUrl.startsWith('http')) externalUrl = 'https://' + externalUrl;
-            
-            try {
-                // Команда открыть ссылку во внешнем браузере устройства (Safari/Chrome)
-                vkBridge.send("VKWebAppOpenUrl", { "url": externalUrl });
-                // Если первая не сработала, дергаем системную ссылку
-                setTimeout(() => { window.open(externalUrl, '_blank'); }, 500);
-            } catch (e) {
-                window.open(externalUrl, '_blank');
-            }
-        }
-    } else {
-        // ДЛЯ ПК: Оставляем старый рабочий Blob
-        const filename = `neuro_master_${Date.now()}${isVideo ? '.mp4' : (isAudio ? '.mp3' : '.jpg')}`;
-        fetch(url)
-            .then(response => response.blob())
-            .then(blob => {
-                const blobUrl = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = blobUrl;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                window.URL.revokeObjectURL(blobUrl);
-            })
-            .catch(() => {
-                window.open(url, '_blank');
-            });
-    }
-});
-
 // Оплата ЮKassa
 document.querySelectorAll('.buy-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
