@@ -118,7 +118,8 @@
                 <audio id="resultAudio" class="hidden" controls style="width: 100%; margin-top: 10px;"></audio>
             </div>
             <div class="result-buttons">
-                <button id="downloadButton" onclick="forceDownloadMedia()" class="download-button" style="background-color: #333; width: 100%;">Скачать на устройство</button>
+                <!-- Это теперь не кнопка, а ссылка, стилизованная под кнопку. Скрипт будет просто подставлять в неё URL -->
+                <a id="downloadButton" href="#" download="neuro_master_media" target="_blank" class="download-button" style="display: block; background-color: #333; width: 100%; text-align: center; color: white; text-decoration: none; padding: 10px; border-radius: 8px;">Скачать на устройство</a>
             </div>
         </div>
         
@@ -258,33 +259,6 @@
 
     </div>
     <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
-    <script src="script.js?v=111"></script>
-    
-     <!-- ПРЯМОЙ КОД СКАЧИВАНИЯ (ДЛЯ СТРОГИХ ПРАВИЛ ВК) -->
-    <script>
-        function forceDownloadMedia() {
-            const activeMedia = document.querySelector('#result-wrapper img:not(.hidden), #result-wrapper video:not(.hidden), #result-wrapper audio:not(.hidden)');
-            const url = activeMedia ? activeMedia.src : null;
-            if (!url) return;
-
-            const isVideo = url.includes('.mp4') || url.includes('.mov');
-            const isAudio = url.includes('.mp3') || url.includes('.wav');
-
-            if (window.vkBridge && window.vkBridge.isWebView()) {
-                if (!isVideo && !isAudio) {
-                    vkBridge.send("VKWebAppShowImages", { images: [url] });
-                } else {
-                    // Используем официальный метод ВК для открытия ссылок!
-                    vkBridge.send("VKWebAppOpenUrl", { "url": url })
-                        .catch(() => {
-                            // Если ВК блокирует, выводим ссылку на экран, чтобы пользователь мог ее скопировать!
-                            prompt("ВК заблокировал прямое открытие. Скопируйте ссылку на ваше видео:", url);
-                        });
-                }
-            } else {
-                window.open(url, '_blank');
-            }
-        }
-    </script>
+    <script src="script.js?v=115"></script>
 </body>
 </html>
