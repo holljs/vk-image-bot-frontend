@@ -343,7 +343,6 @@ function showResult(result) {
     wrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-
 document.querySelectorAll('.process-button').forEach(btn => {
     btn.addEventListener('click', async (event) => {
         const section = event.target.closest('.mode-section');
