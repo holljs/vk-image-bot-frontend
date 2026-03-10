@@ -240,7 +240,7 @@ function updateUI(section) {
     const processBtn = section.querySelector('.process-button');
     if (processBtn) {
         let ready = false;
-        if (['t2i', 't2v', 'chat', 'music', 'vip_mix'].includes(mode)) ready = true;
+        if (['t2i', 't2v', 'chat', 'music', 'vip_mix', 'seadream_mix'].includes(mode)) ready = true;
         else if (mode === 'vip_clip' && files.photos.length > 0 && files.videos.length > 0) ready = true;
         else if (mode === 'talking_photo' && files.photos.length > 0 && files.audios.length > 0) ready = true;
         else if (files.photos.length > 0) ready = true;
