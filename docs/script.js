@@ -48,25 +48,6 @@ async function initUser() {
     }
 }
 
-function getAuthHeader() { return window.location.search.slice(1); }
-
-function updateBalance() {
-    if (!USER_ID) return; 
-    const balanceEl = document.getElementById('user-balance-display'); 
-    if (balanceEl) balanceEl.textContent = "Обновление..."; 
-    
-    fetch(`${BRAIN_API_URL}/user/${USER_ID}`, { 
-        headers: { 'X-VK-Sign': getAuthHeader() } // Защита
-    }) 
-    .then(r => r.json()) 
-    .then(info => { 
-        if (balanceEl) balanceEl.textContent = `Баланс: ${info.balance} кр.`; 
-    }) 
-    .catch((e) => { 
-        if (balanceEl) balanceEl.textContent = "Ошибка"; 
-    });
-}
-
 // --- 2. БАЛАНС ---
 
 function getAuthHeader() { return window.location.search.slice(1); }
