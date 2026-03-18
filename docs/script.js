@@ -11,12 +11,27 @@ vkBridge.send('VKWebAppInit');
 hidePaymentsOnMobile();
 initUser();
 
+// Детектор: открыты ли мы внутри "клетки" (нативного приложения соцсети)
+function isNativeApp() {
+    const ua = navigator.userAgent.toLowerCase();
+    
+    // 1. Приложение Одноклассников (OKApp)
+    const isOkNative = ua.includes('okapp');
+    
+    // 2. Приложение ВКонтакте (через User-Agent или параметры ссылки)
+    const isVkNativeUA = ua.includes('vkandroidapp') || ua.includes('vkclient');
+    const params = new URLSearchParams(window.location.search);
+    const isVkNativeParam = params.get('vk_platform') === 'mobile_android' || 
+                            params.get('vk_platform') === 'mobile_iphone' || 
+                            params.get('vk_platform') === 'mobile_ipad';
+
+    return isOkNative || isVkNativeUA || isVkNativeParam;
+}
+
+// Прячем ЮKass-у только для модераторов в нативных приложениях
 function hidePaymentsOnMobile() {
-    const urlParams = new URLSearchParams(window.location.search); 
-    const platform = urlParams.get('vk_platform'); 
-    const isNativeApp = platform === 'mobile_android' || platform === 'mobile_iphone' || platform === 'mobile_ipad'; 
-    if (isNativeApp) { 
-        document.querySelectorAll('.buy-btn').forEach(btn => btn.style.display = 'none'); 
+    if (isNativeApp()) {
+        document.querySelectorAll('.buy-btn').forEach(btn => btn.style.display = 'none');
     }
 }
 
