@@ -16,7 +16,7 @@ function isNativeApp() {
     const ua = navigator.userAgent.toLowerCase();
     
     // 1. Приложение Одноклассников (OKApp)
-    const isOkNative = ua.includes('okapp');
+    const isOkNative = ua.includes('okapp') || ua.includes('odnoklassniki');
     
     // 2. Приложение ВКонтакте (через User-Agent или параметры ссылки)
     const isVkNativeUA = ua.includes('vkandroidapp') || ua.includes('vkclient');
