@@ -44,21 +44,23 @@
         document.getElementById('loader').style.display = 'block';
 
         try {
-            // Стучимся на ВАШ сервер, который мы уже настроили!
+            // Стучимся на ВАШ сервер
             const response = await fetch(`https://neuro-master.online/api/yookassa/create-payment`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                // 👇 ДОБАВИЛИ platform: "web" ВОТ СЮДА 👇
                 body: JSON.stringify({ 
                     user_id: parseInt(vkId), 
                     amount: amount, 
-                    description: `Покупка ${credits} кредитов (VK: ${vkId})` 
+                    description: `Покупка ${credits} кредитов (VK: ${vkId})`,
+                    platform: "web" 
                 })
             });
 
             const result = await response.json();
             
             if (result.success && result.payment_url) {
-                // Перекидываем пользователя на кассу ЮMoney!
+                // Перекидываем пользователя на кассу ЮKassa!
                 window.location.href = result.payment_url;
             } else {
                 alert("Ошибка создания платежа: " + (result.detail || "Неизвестная ошибка"));
