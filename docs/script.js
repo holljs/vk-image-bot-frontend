@@ -479,7 +479,8 @@ document.querySelectorAll('.buy-btn').forEach(btn => {
         try {
             const response = await fetch(`${BRAIN_API_URL}/yookassa/create-payment`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json', 'X-VK-Sign': getAuthHeader() },
-                body: JSON.stringify({ user_id: USER_ID, amount: amount, description: `Покупка ${credits} кредитов` })
+                // ДОБАВЛЯЕМ ПЛАТФОРМУ В КОНЕЦ СТРОКИ НИЖЕ:
+                body: JSON.stringify({ user_id: USER_ID, amount: amount, description: `Покупка ${credits} кредитов`, platform: "vk" })
             });
             const result = await response.json();
             if (result.success) window.open(result.payment_url, '_blank');
