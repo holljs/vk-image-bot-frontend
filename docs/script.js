@@ -13,19 +13,24 @@ initUser();
 
 // Детектор: открыты ли мы внутри "клетки" (нативного приложения соцсети)
 function isNativeApp() {
-    const ua = navigator.userAgent.toLowerCase();
-    
-    // 1. Приложение Одноклассников (OKApp)
-    const isOkNative = ua.includes('okapp') || ua.includes('odnoklassniki');
-    
-    // 2. Приложение ВКонтакте (через User-Agent или параметры ссылки)
-    const isVkNativeUA = ua.includes('vkandroidapp') || ua.includes('vkclient');
     const params = new URLSearchParams(window.location.search);
-    const isVkNativeParam = params.get('vk_platform') === 'mobile_android' || 
-                            params.get('vk_platform') === 'mobile_iphone' || 
-                            params.get('vk_platform') === 'mobile_ipad';
+    
+    // 1. ОФИЦИАЛЬНЫЕ ПАРАМЕТРЫ ЗАПУСКА
+    const vkPlatform = params.get('vk_platform');
+    const vkClient = params.get('vk_client');
 
-    return isOkNative || isVkNativeUA || isVkNativeParam;
+    const isMobilePlatform = vkPlatform === 'mobile_android' || 
+                             vkPlatform === 'mobile_iphone' || 
+                             vkPlatform === 'mobile_ipad';
+
+    const isOkClient = vkClient === 'ok'; // Тот самый официальный маркер ОК!
+
+    // 2. РЕЗЕРВНАЯ ПРОВЕРКА (по User-Agent)
+    const ua = navigator.userAgent.toLowerCase();
+    const isOkUA = ua.includes('okapp') || ua.includes('odnoklassniki');
+    const isVkUA = ua.includes('vkandroidapp') || ua.includes('vkclient');
+
+    return isMobilePlatform || isOkClient || isOkUA || isVkUA;
 }
 
 // Прячем ЮKass-у только для модераторов в нативных приложениях
