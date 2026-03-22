@@ -205,18 +205,16 @@
 
         <!-- НОВЫЙ РЕЖИМ 3.5: Мега-Микс (Seadream) -->
         <div class="mode-section" data-mode="seadream_mix" data-max-photos="15">
-            <h2>🔥 Мега-Микс (Точные лица)</h2>
-            <p class="section-desc">Отлично работает с групповыми фото (до 15 лиц).</p>
-            <div class="image-previews"></div>
-            <input type="file" class="file-upload-input hidden" accept="image/*" multiple>
-            <button class="universal-upload-button">1. Добавить фото (0/15)</button>
-            <p style="margin-top: 10px;">2. Опишите результат:</p>
-            <textarea class="prompt-input" maxlength="5000" placeholder="Например: друзья на вечеринке в стиле киберпанк"></textarea>
-            <button class="process-button hidden">3. Запустить</button>
-        </div>
-        
-        <hr>
-        <p style="text-align: center; font-weight: bold; margin: 20px 0;">📸 ОБРАБОТКА ФОТО 📸</p>
+            <h2>🔥 Мега-Микс (Точные лица)</h2>
+            <p class="section-desc">Отлично работает с групповыми фото (до 15 лиц).</p>
+            <div class="image-previews"></div>
+            <input type="file" class="file-upload-input hidden" accept="image/*" multiple>
+            <button class="universal-upload-button">1. Добавить фото (0/15)</button>
+            <p style="margin-top: 10px;">2. Опишите результат:</p>
+            <textarea class="prompt-input" maxlength="5000" placeholder="Например: друзья на вечеринке в стиле киберпанк"></textarea>
+            <button class="process-button hidden">3. Запустить</button>
+        </div>
+        
         <hr>
 
                 <div class="mode-section" data-mode="gfpgan" data-max-photos="1">
@@ -227,23 +225,25 @@
             <button class="universal-upload-button">1. Выбрать фото</button>
             <button class="process-button hidden" style="margin-top: 15px; background: linear-gradient(135deg, #2787F5, #4a76a8);">2. Улучшить качество (1 кр)</button>
         </div>
-        
+
         <hr>
-        
-        <div class="mode-section" data-mode="quick_edit" data-max-photos="3">
-            <h2>✨ Живое Фото</h2>
-            <p class="section-desc">Анимация статичного снимка (ветер, зум, движение)</p>
-            <div class="image-previews"></div>
-            <input type="file" class="file-upload-input hidden" accept="image/*">
-            <button class="universal-upload-button">1. Выбрать фото</button>
-            <p style="margin-top: 10px;">2. Сценарий (можно оставить пустым):</p>
-            <textarea class="prompt-input" maxlength="3000" placeholder="Например: камера летит вперед"></textarea>
-            <button class="process-button hidden">3. Анимировать</button>
-        </div>
+        <p style="text-align: center; font-weight: bold; margin: 20px 0;">✨ ВИДЕО-МАГИЯ ✨</p>
+        <hr>
 
-        <hr>
+        <div class="mode-section" data-mode="i2v" data-max-photos="1">
+            <h2>✨ Живое Фото</h2>
+            <p class="section-desc">Анимация статичного снимка (ветер, зум, движение)</p>
+            <div class="image-previews"></div>
+            <input type="file" class="file-upload-input hidden" accept="image/*">
+            <button class="universal-upload-button">1. Выбрать фото</button>
+            <p style="margin-top: 10px;">2. Сценарий (можно оставить пустым):</p>
+            <textarea class="prompt-input" maxlength="3000" placeholder="Например: камера летит вперед"></textarea>
+            <button class="process-button hidden">3. Анимировать</button>
+        </div>
 
-        <div class="mode-section" data-mode="t2v">
+        <hr>
+
+        <div class="mode-section" data-mode="t2v">
             <h2>🎬 Видео-Клип</h2>
             <p class="section-desc">Создание короткого видеоролика по текстовому описанию</p>
             <textarea class="prompt-input" maxlength="2000" placeholder="Например: дрон пролетает над горами"></textarea>
