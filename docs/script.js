@@ -370,9 +370,9 @@ document.querySelectorAll('.process-button').forEach(btn => {
             }
         }
         
-        if (!prompt && !['i2v', 'music', 'vip_clip', 'talking_photo'].includes(mode)) {
-            return showCustomAlert("Пожалуйста, введите текстовое описание.", "Пустой запрос");
-        }
+        if (!prompt && !['i2v', 'music', 'vip_clip', 'talking_photo', 'gfpgan'].includes(mode)) {
+            return showCustomAlert("Пожалуйста, введите текстовое описание.", "Пустой запрос");
+        }
         
         if (mode === 'music') {
             const lyricsLength = musicLyrics ? musicLyrics.length : 0;
