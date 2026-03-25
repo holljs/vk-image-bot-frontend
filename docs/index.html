@@ -4,17 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Нейро-художник</title>
-
     <link rel="stylesheet" href="style.css">
-    
-    <!-- И если мы переносили ваш script.js наверх, то он остается здесь: -->
-    <!-- <script src="script.js?v=200" defer></script> -->
-    
-    <!-- (Но если он у вас внизу перед </body>, то оставьте его там, где он у вас был в рабочем варианте) -->
 </head>
 <body>
     <div id="app">
-        <!-- ШАПКА -->
         <header class="app-header" style="padding-right: 40px;">
             <h1>✨ Нейро-художник</h1>
             <div class="user-info">
@@ -31,73 +24,58 @@
             </div>
         </div>
 
-       <!-- ЛИЧНЫЙ КАБИНЕТ -->
-        <div class="mode-section profile-section">
+       <div class="mode-section profile-section">
             <div class="step-buttons">
-                <!-- Обычная покупка: Базовый синий -->
                 <button class="buy-btn" data-amount="150" data-credits="15" style="background-color: #4a76a8;">💎 15 кредитов (150₽)</button>
-                
-                <!-- Выгодная покупка: Синий градиент (выглядит премиально) -->
                 <button class="buy-btn" data-amount="700" data-credits="100" style="background: linear-gradient(135deg, #2787F5, #4a76a8); font-weight: bold; box-shadow: 0 2px 6px rgba(39,135,245,0.3);">💎💎 100 кредитов (700₽)</button>
-                
-                <!-- Бонус: Темно-синий с пунктирной рамкой-купоном -->
                 <div style="margin-top: 5px;">
                     <button id="getBonusBtn" style="background-color: #3b5f87; width: 100%; border: 2px dashed rgba(255,255,255,0.6); box-shadow: none;">🎁 Получить +5 кредитов (Бесплатно)</button>
                 </div>
-                
-                <!-- Справка: Нейтральный прозрачно-синий -->
                 <div style="margin-top: 5px;">
                     <button id="helpButton" style="background-color: transparent; border: 1px solid #4a76a8; color: #4a76a8; width: 100%;">ℹ️ Справка и Цены</button>
                 </div>
             </div>
         </div>
 
-        <!-- МОДАЛКА ПОМОЩИ -->
         <div id="helpModal" class="modal hidden">
             <div class="modal-content" style="max-height: 85vh; overflow-y: auto; padding: 25px 20px;">
                 <button class="close-modal-icon close-modal">&times;</button>
                 <h2 style="margin-bottom: 15px; color: #4a76a8;">Справка и Цены</h2>
                 
-               <div style="text-align: left; font-size: 14px; line-height: 1.5; color: #333;">
+                <div style="text-align: left; font-size: 14px; line-height: 1.5; color: #333;">
+                    
+                    <div style="background: #e8f4f8; padding: 12px; border-radius: 8px; margin-bottom: 15px; text-align: center; color: #2787F5; font-weight: bold; border: 1px solid #cce1f9;">
+                        💡 1 кредит = от 7 до 10 рублей<br>
+                        <span style="font-size: 12px; font-weight: normal; color: #666;">(в зависимости от покупаемого пакета)</span>
+                    </div>
+
                     <p style="margin-bottom: 10px;"><b>💡 Где брать идеи?</b><br>
                     Лучшие промпты (описания) и примеры работ мы публикуем в нашем сообществе. Подписывайтесь: <a href="https://vk.com/hollie_ai_bot" target="_blank" style="color: #4a76a8; text-decoration: underline; cursor: pointer; font-weight: bold;">Галерея Промптов</a>.</p>
                     <hr style="margin: 15px 0;">
                     
-                   <!-- ЗАКОММЕНТИРОВАННЫЙ БЛОК ОПЛАТЫ (ДЛЯ ПРОХОЖДЕНИЯ МОДЕРАЦИИ ВК) -->
-                   <!-- 
-                    <div style="background: #f0f4f8; padding: 12px; border-radius: 8px; margin-bottom: 15px; text-align: center;">
-                        <h3 style="font-size: 15px; margin-bottom: 5px; color: #4a76a8;">💎 Пополнение баланса</h3>
-                        <p style="margin-bottom: 10px; font-size: 13px;">С телефона оплата временно ограничена. Вы можете пополнить баланс на нашем официальном сайте (через ЮKassa):</p>
-                        <a href="https://neuro-master.online/pay.html" target="_blank" style="display: block; width: 100%; background-color: #4CAF50; color: white; text-align: center; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; margin-bottom: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-decoration: none; cursor: pointer; box-sizing: border-box;">💻 Оплатить на сайте</a>
-                    </div>
-                    -->
-
-                   <!-- БЕЗОПАСНЫЙ БЛОК "НАПИСАТЬ В ЛИЧКУ" ДЛЯ МОДЕРАТОРОВ -->
                     <div style="background: #f0f4f8; padding: 12px; border-radius: 8px; margin-bottom: 15px; text-align: center;">
                         <h3 style="font-size: 15px; margin-bottom: 5px; color: #4a76a8;">💎 Возникли вопросы?</h3>
                         <p style="margin-bottom: 10px; font-size: 13px;">По любым вопросам работы приложения и начислениям обращайтесь напрямую к создателю. Я с радостью помогу!</p>
                         <a href="https://vk.com/nataliselyahova" target="_blank" style="display: block; background-color: #4a76a8; color: white; padding: 10px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-bottom: 5px;">💬 Написать в личные сообщения</a>
                     </div>
-                    <!-- КОНЕЦ БЕЗОПАСНОГО БЛОКА -->
                     
-                   <!-- РАСКРЫВАЮЩИЙСЯ СПИСОК РЕЖИМОВ -->
                     <details style="background: #f9f9f9; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #e0e0e0; cursor: pointer;">
                         <summary style="font-size: 15px; font-weight: bold; color: #4a76a8; outline: none;">🎨 Нажмите, чтобы посмотреть подробные описания и цены</summary>
                         <ul style="padding-left: 20px; margin-bottom: 5px; margin-top: 15px; cursor: default;">
-                            <li style="margin-bottom: 10px;"><b>📜 Реставратор (3 кредита):</b> Мгновенное улучшение качества, удаление царапин и раскрашивание старых фотографий. Текст писать не нужно!</li>
-                            <li style="margin-bottom: 10px;"><b>Нейро-Художник (1 кредит):</b> Рисует потрясающие арты с нуля по вашему тексту. Обратите внимание: этот режим не копирует лица с загруженных фото.</li>
-                            <li style="margin-bottom: 10px;"><b>Фото Микс (2 кредита):</b> Умное редактирование. Идеально подходит, чтобы заменить фон, поменять одежду или добавить новые предметы.</li>
-                            <li style="margin-bottom: 10px;"><b>👑 VIP-Микс (3 кредита):</b> <b>Самый реалистичный режим!</b> Безупречное качество фотореализма (лицо + тело + фон). Рекомендуется смешивать до 3-х фото для максимального сходства лиц.</li>
-                            <li style="margin-bottom: 10px;"><b>Мега-Микс (3 кредита):</b> Мастер логики и больших композиций. Можно добавить до 14 фото! Понимает пространственные отношения, перенос стиля "до/после", рендер текста. Отлично справляется с интерьерами и групповыми снимками.</li>
+                            <li style="margin-bottom: 10px;"><b>👑 VIP-Микс (3 кредита):</b> <b>Самый реалистичный режим!</b> Безупречное качество фотореализма (лицо + тело + фон).</li>
+                            <li style="margin-bottom: 10px;"><b>Нейро-Художник (1 кредит):</b> Рисует арты с нуля по вашему тексту. Не копирует лица с фото.</li>
+                            <li style="margin-bottom: 10px;"><b>Фото Микс (2 кредита):</b> Умное редактирование. Идеально подходит, чтобы заменить фон, поменять одежду или детали.</li>
+                            <li style="margin-bottom: 10px;"><b>Мега-Микс (3 кредита):</b> Мастер логики и больших композиций. Понимает пространственные отношения.</li>
+                            <li style="margin-bottom: 10px;"><b>📜 Реставратор (3 кредита):</b> Мгновенное улучшение качества, удаление царапин и раскрашивание старых фото.</li>
                             <li style="margin-bottom: 10px;"><b>Живое Фото (3 кредита):</b> Загрузите 1 фото, и оно оживет (анимация ветра, воды, улыбки, движения камеры).</li>
                             <li style="margin-bottom: 10px;"><b>Видео-Клип (5 кредитов):</b> Создает видео 3-5 секунд полностью по вашему текстовому описанию.</li>
                             <li style="margin-bottom: 10px;"><b>VIP-Клип (10 кредитов):</b> Замена лица в видео! Загрузите видео-шаблон (до 15 сек) и фото персонажа.</li>
-                            <li style="margin-bottom: 10px;"><b>Говорящее Фото (10 кредитов):</b> Оживите фото и заставьте его говорить вашим голосом (аудио до 15 сек).</li>
+                            <li style="margin-bottom: 10px;"><b>Говорящее Фото (10 кредитов):</b> Оживите фото и заставьте его говорить вашим голосом.</li>
+                            <li style="margin-bottom: 10px;"><b>🎤 Озвучка текста (1 кредит):</b> Превращает любой текст в красивую аудиозапись голосом диктора.</li>
                             <li style="margin-bottom: 10px;"><b>Нейро-Музыка (2 кредита):</b> Напишите свой текст и выберите стиль — нейросеть споет полноценную песню.</li>
-                            <li style="margin-top: 10px;"><b>🧠 Нейро-Помощник (0 кредитов):</b> Бесплатный умный чат с ИИ (работает при наличии на балансе от 1 кредита).</li>
+                            <li style="margin-top: 10px;"><b>🧠 Нейро-Помощник (0 кредитов):</b> Бесплатный умный чат с ИИ (работает при балансе от 1 кредита).</li>
                         </ul>
                     </details>
-                    <!-- КОНЕЦ СПИСКА РЕЖИМОВ -->
 
                     <h3 style="font-size: 15px; margin-bottom: 8px;">💼 Для Бизнеса:</h3>
                     <ul style="padding-left: 20px; margin-bottom: 15px;">
@@ -107,13 +85,12 @@
                     </ul>
                     <hr style="margin: 15px 0;">
 
-                    <!-- БЛОК КОНТАКТОВ И ПОДДЕРЖКИ -->
                     <h3 style="font-size: 15px; margin-bottom: 8px;">📞 Служба поддержки:</h3>
                     <p style="font-size: 13px; margin-bottom: 10px;">Возникли вопросы или не начислились кредиты? Напишите создателю приложения напрямую, я с радостью помогу!</p>
                     <a href="https://vk.com/nataliselyahova" target="_blank" style="display: flex; align-items: center; justify-content: center; gap: 8px; background: #ebf2fa; color: #4a76a8; padding: 10px; border-radius: 6px; text-decoration: none; font-weight: bold; border: 1px solid #cce1f9;">
                         👤 Написать Наталье (ВКонтакте)
                     </a>
-                   
+                    
                     <div style="font-size: 12px; color: #666; background: #f9f9f9; padding: 10px; border-radius: 8px; margin-top: 15px;">
                         <p style="margin-bottom: 3px;"><b>Продавец:</b> Самозанятая Селяхова Наталья Викторовна</p>
                         <p style="margin-bottom: 3px;">ИНН: 502209781184</p>
@@ -142,16 +119,15 @@
                 <audio id="resultAudio" class="hidden" controls style="width: 100%; margin-top: 10px;"></audio>
             </div>
             <div class="result-buttons">
-                <!-- Это теперь не кнопка, а ссылка, стилизованная под кнопку. Скрипт будет просто подставлять в неё URL -->
                 <a id="downloadButton" href="#" download="neuro_master_media" target="_blank" class="download-button" style="display: block; background-color: #333; width: 100%; text-align: center; color: white; text-decoration: none; padding: 10px; border-radius: 8px;">Скачать на устройство</a>
             </div>
         </div>
         
-        <hr>
+        <div class="section-header" style="text-align: center; font-weight: bold; margin: 25px 0 15px; color: #4a76a8; text-transform: uppercase; background: #ebf2fa; padding: 10px; border-radius: 8px;">💼 Для Бизнеса</div>
 
         <div class="mode-section" data-mode="business">
-            <h2>💼 ДЛЯ БИЗНЕСА</h2>
-            <p class="section-desc">Нажмите кнопку, чтобы перейти к нужному режиму и заполнить шаблон</p>
+            <h2>💼 БИЗНЕС-ПАНЕЛЬ</h2>
+            <p class="section-desc">Выберите режим и заполните готовый шаблон</p>
             <div class="business-buttons">
                <button class="business-shortcut" data-target="quick_edit" data-prompt="одень девушку с фото номер один в одежду с фото номер два, фото в полный рост студийная съемка высокое качество, студийное освещение, светлый фон.">👚 Одежда / WB</button>
                <button class="business-shortcut" data-target="vip_mix" data-prompt="Возьми блюдо с фотографии. Сделай качественную фотографию с разными, подходящими к этому блюду аксессуарами, фоном и кулинарными принадлежностями. Студийная съемка, высокое качество, студийное освещение, профессиональная фуд фотография, 8к.">🍰 Еда (Мишлен)</button>
@@ -160,65 +136,59 @@
             </div>
         </div>
 
-        <hr>
+        <div class="section-header" style="text-align: center; font-weight: bold; margin: 30px 0 15px; color: #4a76a8; text-transform: uppercase; background: #ebf2fa; padding: 10px; border-radius: 8px;">📸 Обработка и Генерация</div>
 
-        <div class="mode-section" data-mode="t2i" data-max-photos="4">
-            <h2>🎨 Нейро-Художник</h2>
-            <p class="section-desc">Рисование с нуля или по вашему фото-примеру</p>
-            <div class="image-previews"></div>
-            <input type="file" class="file-upload-input hidden" accept="image/*" multiple>
-            <button class="universal-upload-button">1. Выбрать фото-стиль (до 4 шт, необязательно)</button>
-            <p style="margin-top: 10px;">2. Напишите, что нарисовать:</p>
-            <textarea class="prompt-input" maxlength="5000" placeholder="Например: кот в скафандре"></textarea>
-            <button class="process-button" style="background-color: #4a76a8;">Нарисовать</button>
-        </div>
-
-        <hr>
-        <p style="text-align: center; font-weight: bold; margin: 20px 0;">📸 ОБРАБОТКА ФОТО 📸</p>
-        <hr>
-        
-        <div class="mode-section" data-mode="quick_edit" data-max-photos="3">
-            <h2>✨ Фото Микс</h2>
-            <p class="section-desc">Умное смешивание до 3-х фотографий</p>
+        <div class="mode-section" data-mode="vip_mix" data-max-photos="3">
+            <h2>👑 VIP-Микс</h2>
+            <p style="color: #2787F5; font-size: 13px; font-weight: bold; margin-top: -10px; margin-bottom: 10px;">💎 Цена: 3 кредита</p>
+            <p class="section-desc">Фотореалистичное редактирование фотографий и замена лиц</p>
             <div class="image-previews"></div>
             <input type="file" class="file-upload-input hidden" accept="image/*" multiple>
             <button class="universal-upload-button">1. Добавить фото (0/3)</button>
-            <p style="margin-top: 10px;">2. Опишите, как смешать:</p>
-            <textarea class="prompt-input" maxlength="5000" placeholder="Например: лицо с первого фото, фон со второго"></textarea>
+            <p style="margin-top: 10px;">2. Опишите результат:</p>
+            <textarea class="prompt-input" maxlength="5000" rows="2" placeholder="Например: девушка на фоне Токио"></textarea>
             <button class="process-button hidden">3. Запустить</button>
         </div>
 
-         <hr>
-
-        <div class="mode-section" data-mode="vip_mix" data-max-photos="5">
-            <h2>👑 VIP-Микс</h2>
-            <p class="section-desc">Фотореалистичное совмещение нескольких объектов</p>
+        <div class="mode-section" data-mode="t2i" data-max-photos="4">
+            <h2>🎨 Нейро-Художник</h2>
+            <p style="color: #2787F5; font-size: 13px; font-weight: bold; margin-top: -10px; margin-bottom: 10px;">💎 Цена: 1 кредит</p>
+            <p class="section-desc">Рисование с нуля или по вашему фото-стилю</p>
             <div class="image-previews"></div>
             <input type="file" class="file-upload-input hidden" accept="image/*" multiple>
-            <button class="universal-upload-button">1. Добавить фото (0/5)</button>
-            <p style="margin-top: 10px;">2. Опишите результат:</p>
-            <textarea class="prompt-input" maxlength="5000" placeholder="Например: девушка на фоне Токио"></textarea>
+            <button class="universal-upload-button">1. Выбрать фото-стиль (необязательно)</button>
+            <p style="margin-top: 10px;">2. Напишите, что нарисовать:</p>
+            <textarea class="prompt-input" maxlength="5000" rows="2" placeholder="Например: милый кот в скафандре"></textarea>
+            <button class="process-button" style="background-color: #4a76a8;">Нарисовать</button>
+        </div>
+
+        <div class="mode-section" data-mode="quick_edit" data-max-photos="3">
+            <h2>✨ Фото Микс</h2>
+            <p style="color: #2787F5; font-size: 13px; font-weight: bold; margin-top: -10px; margin-bottom: 10px;">💎 Цена: 2 кредита</p>
+            <p class="section-desc">Умное редактирование: замена фона, одежды или деталей</p>
+            <div class="image-previews"></div>
+            <input type="file" class="file-upload-input hidden" accept="image/*" multiple>
+            <button class="universal-upload-button">1. Добавить фото (0/3)</button>
+            <p style="margin-top: 10px;">2. Опишите, как редактировать:</p>
+            <textarea class="prompt-input" maxlength="5000" rows="2" placeholder="Например: надень красное платье"></textarea>
             <button class="process-button hidden">3. Запустить</button>
         </div>
 
-        <hr>
-
-        <!-- НОВЫЙ РЕЖИМ 3.5: Мега-Микс (Seadream) -->
         <div class="mode-section" data-mode="seadream_mix" data-max-photos="15">
-            <h2>🔥 Мега-Микс (Точные лица)</h2>
-            <p class="section-desc">Отлично работает с групповыми фото (до 15 лиц).</p>
-            <div class="image-previews"></div>
-            <input type="file" class="file-upload-input hidden" accept="image/*" multiple>
-            <button class="universal-upload-button">1. Добавить фото (0/15)</button>
-            <p style="margin-top: 10px;">2. Опишите результат:</p>
-            <textarea class="prompt-input" maxlength="5000" placeholder="Например: друзья на вечеринке в стиле киберпанк"></textarea>
-            <button class="process-button hidden">3. Запустить</button>
-        </div>
-        
-        <hr>
-
-               <div class="mode-section" data-mode="gfpgan" data-max-photos="1">
+            <h2>🔥 Мега-Микс</h2>
+            <p style="color: #2787F5; font-size: 13px; font-weight: bold; margin-top: -10px; margin-bottom: 10px;">💎 Цена: 3 кредита</p>
+            <p class="section-desc">Мастер логики и композиций. Отлично для групповых фото.</p>
+            <div class="image-previews"></div>
+            <input type="file" class="file-upload-input hidden" accept="image/*" multiple>
+            <button class="universal-upload-button">1. Добавить фото (0/15)</button>
+            <p style="margin-top: 10px;">2. Опишите результат:</p>
+            <textarea class="prompt-input" maxlength="5000" rows="2" placeholder="Например: друзья на вечеринке в стиле киберпанк"></textarea>
+            <button class="process-button hidden">3. Запустить</button>
+        </div>
+        
+        <div class="mode-section" data-mode="gfpgan" data-max-photos="1">
             <h2>📜 Реставратор</h2>
+            <p style="color: #2787F5; font-size: 13px; font-weight: bold; margin-top: -10px; margin-bottom: 10px;">💎 Цена: 3 кредита</p>
             <p class="section-desc">Мгновенное улучшение качества, лиц и старых фото</p>
             <div class="image-previews"></div>
             <input type="file" class="file-upload-input hidden" accept="image/*">
@@ -226,78 +196,76 @@
             <button class="process-button hidden" style="margin-top: 15px; background: linear-gradient(135deg, #2787F5, #4a76a8);">2. Улучшить качество (3 кр)</button>
         </div>
 
-        <hr>
-        <p style="text-align: center; font-weight: bold; margin: 20px 0;">✨ ВИДЕО-МАГИЯ ✨</p>
-        <hr>
+        <div class="section-header" style="text-align: center; font-weight: bold; margin: 30px 0 15px; color: #4a76a8; text-transform: uppercase; background: #ebf2fa; padding: 10px; border-radius: 8px;">✨ Видео-Магия ✨</div>
 
-        <div class="mode-section" data-mode="i2v" data-max-photos="1">
-            <h2>✨ Живое Фото</h2>
-            <p class="section-desc">Анимация статичного снимка (ветер, зум, движение)</p>
-            <div class="image-previews"></div>
-            <input type="file" class="file-upload-input hidden" accept="image/*">
-            <button class="universal-upload-button">1. Выбрать фото</button>
-            <p style="margin-top: 10px;">2. Сценарий (можно оставить пустым):</p>
-            <textarea class="prompt-input" maxlength="3000" placeholder="Например: камера летит вперед"></textarea>
-            <button class="process-button hidden">3. Анимировать</button>
-        </div>
+        <div class="mode-section" data-mode="i2v" data-max-photos="1">
+            <h2>✨ Живое Фото</h2>
+            <p style="color: #2787F5; font-size: 13px; font-weight: bold; margin-top: -10px; margin-bottom: 10px;">💎 Цена: 3 кредита</p>
+            <p class="section-desc">Анимация статичного снимка (ветер, зум, движение)</p>
+            <div class="image-previews"></div>
+            <input type="file" class="file-upload-input hidden" accept="image/*">
+            <button class="universal-upload-button">1. Выбрать фото</button>
+            <p style="margin-top: 10px;">2. Сценарий (можно пустым):</p>
+            <textarea class="prompt-input" maxlength="3000" rows="2" placeholder="Например: камера летит вперед"></textarea>
+            <button class="process-button hidden">3. Анимировать</button>
+        </div>
 
-        <hr>
-
-        <div class="mode-section" data-mode="t2v">
+        <div class="mode-section" data-mode="t2v">
             <h2>🎬 Видео-Клип</h2>
-            <p class="section-desc">Создание короткого видеоролика по текстовому описанию</p>
-            <textarea class="prompt-input" maxlength="2000" placeholder="Например: дрон пролетает над горами"></textarea>
+            <p style="color: #2787F5; font-size: 13px; font-weight: bold; margin-top: -10px; margin-bottom: 10px;">💎 Цена: 5 кредитов</p>
+            <p class="section-desc">Создание видеоролика по текстовому описанию</p>
+            <p style="margin-top: 10px;">Сценарий:</p>
+            <textarea class="prompt-input" maxlength="2000" rows="2" placeholder="Например: дрон пролетает над горами"></textarea>
             <button class="process-button">Создать видео</button>
         </div>
 
-        <hr>
-
         <div class="mode-section" data-mode="vip_clip" data-max-photos="1" data-max-videos="1">
             <h2>🎬 VIP-Клип</h2>
+            <p style="color: #2787F5; font-size: 13px; font-weight: bold; margin-top: -10px; margin-bottom: 10px;">💎 Цена: 10 кредитов</p>
             <p class="section-desc" style="color:#d32f2f;">Замена лица в видео <b>(Максимум 15 секунд!)</b></p>
             <div class="image-previews"></div>
             <input type="file" class="file-upload-input hidden" accept="image/*">
             <input type="file" class="video-upload-input hidden" accept="video/*">
             <div class="step-buttons">
-                <button class="universal-upload-button" data-type="photo">1. Выбрать фото персонажа</button>
-                <button class="universal-upload-button" data-type="video">2. Видео-шаблон (до 15 сек)</button>
+                <button class="universal-upload-button" data-type="photo">1. Выбрать фото лица</button>
+                <button class="universal-upload-button" data-type="video">2. Видео-шаблон</button>
             </div>
             <button class="process-button hidden" style="margin-top: 15px;">3. Запустить</button>
         </div>
 
-        <hr>
-        <p style="text-align: center; font-weight: bold; margin: 20px 0;">🎙️ АУДИО И ТЕКСТ 🎙️</p>
-        <hr>
+        <div class="section-header" style="text-align: center; font-weight: bold; margin: 30px 0 15px; color: #4a76a8; text-transform: uppercase; background: #ebf2fa; padding: 10px; border-radius: 8px;">🎙️ Аудио и Текст 🎙️</div>
 
         <div class="mode-section" data-mode="talking_photo" data-max-photos="1" data-max-audios="1">
             <h2>🗣️ Говорящее Фото</h2>
+            <p style="color: #2787F5; font-size: 13px; font-weight: bold; margin-top: -10px; margin-bottom: 10px;">💎 Цена: 10 кредитов</p>
             <p class="section-desc" style="color:#d32f2f;">Озвучка фото <b>(Голос максимум 15 секунд!)</b></p>
             <div class="image-previews"></div>
             <input type="file" class="file-upload-input hidden" accept="image/*">
             <input type="file" class="audio-upload-input hidden" accept="audio/*">
             <div class="step-buttons">
                 <button class="universal-upload-button" data-type="photo">1. Выбрать фото</button>
-                <button class="universal-upload-button" data-type="audio">2. Голосовое (до 15 сек)</button>
+                <button class="universal-upload-button" data-type="audio">2. Загрузить голос</button>
             </div>
             <button class="process-button hidden" style="margin-top: 15px;">3. Запустить</button>
         </div>
-
-        <hr>
         
-        <div class="mode-section" data-mode="chat">
-            <h2>🧠 Нейро-Помощник</h2>
-            <p class="section-desc">Текстовые посты, идеи и советы от нейросети</p>
-            <textarea class="prompt-input" maxlength="2000" rows="3" placeholder="Например: напиши пост про осень..."></textarea>
-            <button class="process-button">Отправить</button>
+        <div class="mode-section" data-mode="tts">
+            <h2>🎤 Озвучка текста</h2>
+            <p style="color: #2787F5; font-size: 13px; font-weight: bold; margin-top: -10px; margin-bottom: 10px;">💎 Цена: 1 кредит</p>
+            <p class="section-desc">Превращает любой текст в красивую аудиозапись голосом диктора</p>
+            <p style="margin-top: 10px;">Текст для озвучки:</p>
+            <textarea class="prompt-input" maxlength="2000" rows="2" placeholder="Напишите текст..."></textarea>
+            <button class="process-button">Озвучить</button>
         </div>
 
         <div class="mode-section" data-mode="music">
             <h2>🎵 Нейро-Музыка</h2>
-            <p class="section-desc">Генерация полноценного трека по вашим словам</p>
+            <p style="color: #2787F5; font-size: 13px; font-weight: bold; margin-top: -10px; margin-bottom: 10px;">💎 Цена: 2 кредита</p>
+            <p class="section-desc">Генерация трека по вашим словам</p>
             <p>1. Напишите текст песни:</p>
-            <textarea class="prompt-input" maxlength="600" rows="3" placeholder="Текст песни (минимум 10 знаков)..."></textarea>
+            <textarea class="prompt-input" maxlength="600" rows="2" placeholder="Текст песни (минимум 10 знаков)..."></textarea>
             <p>2. Выберите стиль ИЛИ напишите свой:</p>
-            <textarea id="custom-style-input" class="prompt-input" maxlength="300" rows="2" placeholder="Свой стиль, инструменты, темп (например: Джаз, саксофон, медленно)..."></textarea>
+            <textarea id="custom-style-input" class="prompt-input" maxlength="300" rows="1" placeholder="Свой стиль (Джаз, саксофон)..."></textarea>
             <div class="music-styles" style="margin-top: 10px;">
                 <button class="process-button" data-style="Epic Rock">Рок</button>
                 <button class="process-button" data-style="Pop">Поп</button>
@@ -306,11 +274,17 @@
             </div>
         </div>
 
+        <div class="mode-section" data-mode="chat">
+            <h2>🧠 Нейро-Помощник</h2>
+            <p style="color: #2787F5; font-size: 13px; font-weight: bold; margin-top: -10px; margin-bottom: 10px;">💎 Цена: Бесплатно</p>
+            <p class="section-desc">Текстовые посты, идеи и советы от нейросети</p>
+            <textarea class="prompt-input" maxlength="2000" rows="2" placeholder="Например: напиши пост про осень..."></textarea>
+            <button class="process-button">Отправить</button>
+        </div>
+
     </div>
     
-     <!-- ВОТ ЗДЕСЬ, В САМОМ НИЗУ, КАК БЫЛО РАНЬШЕ: -->
     <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
     <script src="script.js?v=207"></script>
-
 </body>
 </html>
