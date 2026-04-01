@@ -506,9 +506,13 @@ document.getElementById('getBonusBtn')?.addEventListener('click', async () => {
             hideLoader();
             if (result.success) {
                 showCustomAlert("Вам начислено 5 кредитов! 🎉 Теперь вы будете получать наши новости и акции в личные сообщения.", "Бонус получен");
-                updateBalance(); document.getElementById('getBonusBtn').style.display = 'none';
-            } else { showCustomAlert(result.detail || "Вы уже получали этот бонус ранее.", "Упс!"); }
-        }
+                updateBalance(); 
+                document.getElementById('getBonusBtn').style.display = 'none'; // Прячем после успеха
+            } else { 
+                showCustomAlert(result.detail || "Вы уже получали этот бонус ранее.", "Упс!");
+                document.getElementById('getBonusBtn').style.display = 'none'; // Скрываем, если уже получал
+            }
+        } // <--- ВОТ ЭТУ СКОБКУ ТЫ СЛУЧАЙНО УДАЛИЛА, Я ВЕРНУЛ!
     } catch (e) {
         if (e.error_data && e.error_data.error_reason === "User denied") {
             showCustomAlert("Вы отменили действие. Чтобы получить бонус, необходимо разрешить сообщения.", "Отмена");
