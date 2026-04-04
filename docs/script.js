@@ -392,6 +392,21 @@ document.querySelectorAll('.process-button').forEach(btn => {
             const customInp = section.querySelector('#custom-style-input');
             if(customInp) customInp.value = '';
         }
+
+        // --- СБРОС БИЗНЕС-ШАБЛОНА ---
+        // Возвращаем родной заголовок
+        const sectionTitle = section.querySelector('h2');
+        if (sectionTitle && sectionTitle.dataset.orig) {
+            sectionTitle.innerText = sectionTitle.dataset.orig;
+        }
+        // Возвращаем родное описание
+        const sectionDesc = section.querySelector('p.section-desc');
+        if (sectionDesc && sectionDesc.dataset.orig) {
+            sectionDesc.innerHTML = sectionDesc.dataset.orig;
+            sectionDesc.style.color = ''; // Убираем синий цвет
+        }
+        // ----------------------------
+        
         updateUI(section);
         
         showLoader();
