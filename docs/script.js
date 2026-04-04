@@ -465,7 +465,7 @@ document.querySelectorAll('.business-shortcut').forEach(btn => {
             // 2. Меняем заголовок выбранной секции
             const title = targetSection.querySelector('h2');
             if (!title.dataset.orig) title.dataset.orig = title.innerHTML;
-            title.innerText = `💼 ${e.target.innerText} (Шаблон)`;
+            title.innerText = `${e.target.innerText} (Шаблон)`;
 
             // 3. МЕНЯЕМ ОПИСАНИЕ (ПОДСКАЗКУ) выбранной секции
             const desc = targetSection.querySelector('p.section-desc'); 
