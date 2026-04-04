@@ -444,20 +444,45 @@ document.querySelectorAll('.business-shortcut').forEach(btn => {
     btn.addEventListener('click', (e) => {
         const targetMode = e.target.dataset.target;
         const promptText = e.target.dataset.prompt;
+        const hintText = e.target.dataset.hint; // Получаем нашу новую подсказку из кнопки
+        
         const targetSection = document.querySelector(`.mode-section[data-mode="${targetMode}"]`);
+        
         if (targetSection) {
             targetSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
             filesByMode[targetMode] = { photos: [], videos: [], audios: [] };
             updateUI(targetSection);
-            document.querySelectorAll('.mode-section h2').forEach(h2 => { if (h2.dataset.orig) h2.innerText = h2.dataset.orig; });
+            
+            // 1. Возвращаем всем секциям оригинальные заголовки и описания
+            document.querySelectorAll('.mode-section h2').forEach(h2 => { if (h2.dataset.orig) h2.innerHTML = h2.dataset.orig; });
+            document.querySelectorAll('.mode-section p.section-desc').forEach(p => { 
+                if (p.dataset.orig) { 
+                    p.innerHTML = p.dataset.orig; 
+                    p.style.color = ''; // Сбрасываем цвет
+                } 
+            });
+
+            // 2. Меняем заголовок выбранной секции
             const title = targetSection.querySelector('h2');
-            if (!title.dataset.orig) title.dataset.orig = title.innerText;
+            if (!title.dataset.orig) title.dataset.orig = title.innerHTML;
             title.innerText = `💼 ${e.target.innerText} (Шаблон)`;
-            targetSection.style.transition = 'box-shadow 0.3s ease'; targetSection.style.boxShadow = '0 0 0 3px #2787F5';
+
+            // 3. МЕНЯЕМ ОПИСАНИЕ (ПОДСКАЗКУ) выбранной секции
+            const desc = targetSection.querySelector('p.section-desc'); 
+            if (desc && hintText) {
+                if (!desc.dataset.orig) desc.dataset.orig = desc.innerHTML;
+                desc.innerHTML = hintText; // Вставляем нашу инструкцию
+                desc.style.color = '#2787F5'; // Делаем текст синим цветом
+            }
+            
+            targetSection.style.transition = 'box-shadow 0.3s ease'; 
+            targetSection.style.boxShadow = '0 0 0 3px #2787F5';
             setTimeout(() => { targetSection.style.boxShadow = ''; }, 2000);
+            
             const input = targetSection.querySelector('.prompt-input');
             if (input) {
-                input.value = promptText; input.style.borderColor = '#2787F5';
+                input.value = promptText; 
+                input.style.borderColor = '#2787F5';
                 setTimeout(() => input.style.borderColor = '#dce1e6', 1500);
             }
         }
