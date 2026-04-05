@@ -47,6 +47,13 @@ async function initUser() {
         if (data.id) { 
             USER_ID = data.id; 
             updateBalance(); 
+
+            // --- НОВОЕ: Прячем кнопку бонуса при загрузке, если уже забирали ---
+            if (localStorage.getItem(`bonus_claimed_${USER_ID}`)) {
+                const bonusBtn = document.getElementById('getBonusBtn');
+                if (bonusBtn) bonusBtn.style.display = 'none';
+            }
+            // -------------------------------------------------------------------
         } 
     } catch (e) { 
         console.error("VK Bridge не готов:", e); 
@@ -548,9 +555,11 @@ document.getElementById('getBonusBtn')?.addEventListener('click', async () => {
                 showCustomAlert("Вам начислено 5 кредитов! 🎉 Теперь вы будете получать наши новости и акции в личные сообщения.", "Бонус получен");
                 updateBalance(); 
                 document.getElementById('getBonusBtn').style.display = 'none'; // Прячем после успеха
+                localStorage.setItem(`bonus_claimed_${USER_ID}`, 'true'); // Запоминаем в браузере навсегда
             } else { 
                 showCustomAlert(result.detail || "Вы уже получали этот бонус ранее.", "Упс!");
                 document.getElementById('getBonusBtn').style.display = 'none'; // Скрываем, если уже получал
+                localStorage.setItem(`bonus_claimed_${USER_ID}`, 'true'); // Запоминаем в браузере навсегда
             }
         } // <--- ВОТ ЭТУ СКОБКУ ТЫ СЛУЧАЙНО УДАЛИЛА, Я ВЕРНУЛ!
     } catch (e) {
