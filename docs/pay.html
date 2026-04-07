@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Пополнение баланса | Holljs AI</title>
-    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="icon" type="image/png" href="favicon.png?v=2">
     <style>
         body { font-family: -apple-system, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; color: #000; display: flex; justify-content: center; padding: 20px; margin: 0; }
         .container { background: #fff; max-width: 400px; width: 100%; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); text-align: center; }
@@ -32,6 +32,11 @@
     <div id="manual-id-section" class="input-group">
         <label id="label-text">Введите ваш цифровой ID:</label>
         <input type="number" id="userIdInput" placeholder="Например: 12345678">
+        
+        <div style="margin-top: 12px; font-size: 13px; color: #444; background: #ebf2fa; padding: 10px 12px; border-radius: 8px; border: 1px dashed #a2c1e5; line-height: 1.4;">
+            💡 <b>Где найти свой ID?</b><br>
+            Просто откройте приложение «Нейро-Художник» — ваш цифровой ID указан в самом верху экрана, прямо рядом с балансом!
+        </div>
     </div>
 
     <button class="buy-btn" onclick="pay(150, 15)">Купить 15 кредитов (150₽)</button>
