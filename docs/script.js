@@ -7,35 +7,29 @@ const filesByMode = {};
 // Просто шлем Init. Без .then(), без .catch(). Просто в пустоту.
 vkBridge.send('VKWebAppInit');
 
-// И сразу вызываем наши функции, как вы и говорили:
-hidePaymentsOnMobile();
-initUser();
+// Ждем, пока загрузится весь HTML, и только потом запускаем логику
+document.addEventListener('DOMContentLoaded', () => {
+    hidePaymentsOnMobile();
+    initUser();
+});
 
-// Детектор: открыты ли мы внутри "клетки" (нативного приложения соцсети)
-function isNativeApp() {
-    const params = new URLSearchParams(window.location.search);
-    
-    // 1. ОФИЦИАЛЬНЫЕ ПАРАМЕТРЫ ЗАПУСКА
-    const vkPlatform = params.get('vk_platform');
-    const vkClient = params.get('vk_client');
-
-    const isMobilePlatform = vkPlatform === 'mobile_android' || 
-                             vkPlatform === 'mobile_iphone' || 
-                             vkPlatform === 'mobile_ipad';
-
-    const isOkClient = vkClient === 'ok'; // Тот самый официальный маркер ОК!
-
-    // 2. РЕЗЕРВНАЯ ПРОВЕРКА (по User-Agent)
-    const ua = navigator.userAgent.toLowerCase();
-    const isOkUA = ua.includes('okapp') || ua.includes('odnoklassniki');
-    const isVkUA = ua.includes('vkandroidapp') || ua.includes('vkclient');
-
-    return isMobilePlatform || isOkClient || isOkUA || isVkUA;
-}
-
-// Прячем ЮKass-у только для модераторов в нативных приложениях
+// Прячем ЮKass-у ТОЛЬКО для модераторов в нативных мобильных приложениях
 function hidePaymentsOnMobile() {
-    if (isNativeApp()) {
+    const params = new URLSearchParams(window.location.search);
+    const vkPlatform = params.get('vk_platform'); // Передает ВК (desktop_web, mobile_web, mobile_android и т.д.)
+    const ua = navigator.userAgent.toLowerCase();
+
+    // 1. Если это обычный браузер (с ПК или мобильного), КНОПКИ ОСТАВЛЯЕМ! (Требование модерации)
+    if (vkPlatform === 'desktop_web' || vkPlatform === 'mobile_web') {
+        return; // Прерываем функцию, ничего не прячем
+    }
+
+    // 2. Вычисляем именно НАТИВНЫЕ мобильные приложения
+    const isVkNative = vkPlatform === 'mobile_android' || vkPlatform === 'mobile_iphone' || vkPlatform === 'mobile_ipad' || ua.includes('vkandroidapp') || ua.includes('vkclient');
+    const isOkNative = ua.includes('okapp'); // Это маркер именно мобильного приложения ОК (а не сайта)
+
+    // 3. Если это мобильное приложение - прячем кнопки ЮKassa
+    if (isVkNative || isOkNative) {
         document.querySelectorAll('.buy-btn').forEach(btn => btn.style.display = 'none');
     }
 }
