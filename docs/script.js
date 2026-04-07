@@ -67,21 +67,21 @@ function getAuthHeader() { return window.location.search.slice(1); }
 function updateBalance() {
     if (!USER_ID) return; 
     const balanceEl = document.getElementById('user-balance-display'); 
-    if (balanceEl) balanceEl.textContent = "Обновление..."; 
+    if (balanceEl) balanceEl.textContent = `ID: ${USER_ID} | Обновление...`; 
     
     fetch(`${BRAIN_API_URL}/user/${USER_ID}`, { 
-        headers: { 'X-VK-Sign': getAuthHeader() } // ВАЖНО: Заголовок для проверки подписи!
+        headers: { 'X-VK-Sign': getAuthHeader() } 
     }) 
     .then(r => { 
         if (!r.ok) throw new Error("Не удалось загрузить баланс"); 
         return r.json(); 
     }) 
     .then(info => { 
-        if (balanceEl) balanceEl.textContent = `Баланс: ${info.balance} кр.`; 
+        if (balanceEl) balanceEl.textContent = `ID: ${USER_ID} | Баланс: ${info.balance} кр.`; 
     }) 
     .catch((e) => { 
         console.error("Ошибка обновления баланса:", e); 
-        if (balanceEl) balanceEl.textContent = "Ошибка"; 
+        if (balanceEl) balanceEl.textContent = `ID: ${USER_ID} | Ошибка`; 
     });
 }
 
@@ -517,17 +517,21 @@ document.getElementById('gallery-link')?.addEventListener('click', () => {
 });
 
 // Оплата ЮKassa
-
 document.querySelectorAll('.buy-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
         if (!USER_ID) return showCustomAlert("Пожалуйста, авторизуйтесь.", "Ошибка");
         const amount = parseInt(btn.dataset.amount); const credits = parseInt(btn.dataset.credits);
         showLoader();
+
+        // Умное определение платформы: ВК или ОК
+        const isOk = window.location.href.includes('ok_browser') || window.location.href.includes('vk_client=ok');
+        const currentPlatform = isOk ? "ok" : "vk";
+
         try {
             const response = await fetch(`${BRAIN_API_URL}/yookassa/create-payment`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json', 'X-VK-Sign': getAuthHeader() },
-                // ДОБАВЛЯЕМ ПЛАТФОРМУ В КОНЕЦ СТРОКИ НИЖЕ:
-                body: JSON.stringify({ user_id: USER_ID, amount: amount, description: `Покупка ${credits} кредитов`, platform: "vk" })
+                // Передаем правильную платформу на сервер:
+                body: JSON.stringify({ user_id: USER_ID, amount: amount, description: `Покупка ${credits} кредитов`, platform: currentPlatform })
             });
             const result = await response.json();
             if (result.success) window.open(result.payment_url, '_blank');
