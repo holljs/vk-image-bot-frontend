@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Пополнение баланса | Нейро-Художник</title>
+    <title>Пополнение баланса | Holljs AI</title>
     <style>
         body { font-family: -apple-system, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; color: #000; display: flex; justify-content: center; padding: 20px; margin: 0; }
         .container { background: #fff; max-width: 400px; width: 100%; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); text-align: center; }
@@ -11,21 +11,26 @@
         p { font-size: 14px; color: #666; margin-bottom: 20px; }
         .input-group { text-align: left; margin-bottom: 20px; }
         label { font-weight: bold; font-size: 13px; display: block; margin-bottom: 5px; }
-        input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
-        .buy-btn { display: block; width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; color: #fff; cursor: pointer; margin-bottom: 12px; background-color: #4a76a8; }
+        input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; box-sizing: border-box; background-color: #f9f9f9; }
+        .buy-btn { display: block; width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; color: #fff; cursor: pointer; margin-bottom: 12px; background-color: #4a76a8; transition: opacity 0.2s; }
+        .buy-btn:active { opacity: 0.8; }
         .buy-btn.premium { background: linear-gradient(135deg, #2787F5, #4a76a8); }
         .loader { display: none; margin-top: 15px; color: #4a76a8; font-weight: bold; }
+        .id-badge { display: inline-block; padding: 4px 12px; background: #e7eff8; color: #4a76a8; border-radius: 16px; font-weight: bold; margin-bottom: 15px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>💎 Пополнение баланса</h1>
-    <p>Введите ваш ID ВКонтакте, чтобы мы знали, куда начислить кредиты.</p>
-    
-    <div class="input-group">
-        <label>Ваш цифровой ID ВКонтакте (только цифры):</label>
-        <input type="number" id="vkId" placeholder="Например: 12345678" required>
+    <div id="auto-id-section" style="display: none;">
+        <p>Начисление на профиль:</p>
+        <div class="id-badge"><span id="platform-name">ID</span>: <span id="display-id">...</span></div>
+    </div>
+
+    <div id="manual-id-section" class="input-group">
+        <label id="label-text">Введите ваш цифровой ID:</label>
+        <input type="number" id="userIdInput" placeholder="Например: 12345678">
     </div>
 
     <button class="buy-btn" onclick="pay(150, 15)">Купить 15 кредитов (150₽)</button>
@@ -33,37 +38,59 @@
 
     <div id="loader" class="loader">Создаем счет... ⏳</div>
     
-    <p style="font-size: 11px; margin-top: 20px;">Официальная оплата картой. Кредиты зачислятся автоматически в течение минуты.</p>
+    <p style="font-size: 11px; margin-top: 20px; color: #999;">Официальная оплата через ЮKassa. Кредиты зачислятся автоматически в течение минуты.</p>
 </div>
 
 <script>
+    // 1. Парсим параметры из ссылки
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlUserId = urlParams.get('user_id');
+    const urlPlatform = urlParams.get('platform') || 'vk'; // по умолчанию vk
+
+    // Настройка интерфейса под платформу
+    const platformMap = {
+        'vk': 'ВКонтакте',
+        'ok': 'Одноклассники',
+        'tg': 'Telegram'
+    };
+
+    if (urlUserId) {
+        document.getElementById('auto-id-section').style.display = 'block';
+        document.getElementById('manual-id-section').style.display = 'none';
+        document.getElementById('display-id').innerText = urlUserId;
+        document.getElementById('platform-name').innerText = platformMap[urlPlatform] || 'ID';
+    } else {
+        document.getElementById('label-text').innerText = `Введите ваш цифровой ID ${platformMap[urlPlatform] || ''}:`;
+    }
+
     async function pay(amount, credits) {
-        const vkId = document.getElementById('vkId').value.trim();
-        if (!vkId) { alert("Пожалуйста, введите ваш VK ID!"); return; }
+        const finalUserId = urlUserId || document.getElementById('userIdInput').value.trim();
+        
+        if (!finalUserId) { 
+            alert("Пожалуйста, введите ваш ID!"); 
+            return; 
+        }
 
         document.getElementById('loader').style.display = 'block';
 
         try {
-            // Стучимся на ВАШ сервер
             const response = await fetch(`https://neuro-master.online/api/yookassa/create-payment`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                // 👇 ДОБАВИЛИ platform: "web" ВОТ СЮДА 👇
                 body: JSON.stringify({ 
-                    user_id: parseInt(vkId), 
+                    user_id: parseInt(finalUserId), 
                     amount: amount, 
-                    description: `Покупка ${credits} кредитов (VK: ${vkId})`,
-                    platform: "web" 
+                    description: `Покупка ${credits} кредитов (${urlPlatform.toUpperCase()}: ${finalUserId})`,
+                    platform: urlPlatform // передаем платформу, чтобы ЮKassa знала куда вернуть юзера
                 })
             });
 
             const result = await response.json();
             
             if (result.success && result.payment_url) {
-                // Перекидываем пользователя на кассу ЮKassa!
                 window.location.href = result.payment_url;
             } else {
-                alert("Ошибка создания платежа: " + (result.detail || "Неизвестная ошибка"));
+                alert("Ошибка: " + (result.detail || "Не удалось создать платеж"));
             }
         } catch (e) {
             alert("Ошибка соединения с сервером.");
