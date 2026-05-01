@@ -13,9 +13,11 @@
         .input-group { text-align: left; margin-bottom: 20px; }
         label { font-weight: bold; font-size: 13px; display: block; margin-bottom: 5px; }
         input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; box-sizing: border-box; background-color: #f9f9f9; }
-        .buy-btn { display: block; width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; color: #fff; cursor: pointer; margin-bottom: 12px; background-color: #4a76a8; transition: opacity 0.2s; }
+        
+        /* === ВОТ ЭТИ СТИЛИ ДЕЛАЮТ КНОПКИ СИНИМИ === */
+        .buy-btn { display: block; width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; color: #fff; cursor: pointer; margin-bottom: 12px; background-color: #4a76a8; transition: opacity 0.2s; box-sizing: border-box; }
         .buy-btn:active { opacity: 0.8; }
-        .buy-btn.premium { background: linear-gradient(135deg, #2787F5, #4a76a8); }
+        
         .loader { display: none; margin-top: 15px; color: #4a76a8; font-weight: bold; }
         .id-badge { display: inline-block; padding: 4px 12px; background: #e7eff8; color: #4a76a8; border-radius: 16px; font-weight: bold; margin-bottom: 15px; }
     </style>
@@ -40,24 +42,25 @@
     </div>
 
     <div style="text-align: center; margin-bottom: 15px; color: #d32f2f; font-weight: bold; font-size: 1.1em; letter-spacing: 1px;">
-    ⭐️ ПОБЕДНЫЕ ЦЕНЫ ДО 10 МАЯ ⭐️
-</div>
+        ⭐️ ПОБЕДНЫЕ ЦЕНЫ ДО 10 МАЯ ⭐️
+    </div>
 
-<button class="btn btn-primary w-100 mb-2" onclick="pay(40)">
-    10 кредитов (<s>50₽</s> 40₽)
-</button>
+    <button class="buy-btn" onclick="pay(40, 10)">
+        10 кредитов (<s>50₽</s> 40₽)
+    </button>
 
-<button class="btn btn-primary w-100 mb-2" onclick="pay(100)">
-    💎 17 кредитов (<s>150₽</s> 100₽)
-</button>
+    <button class="buy-btn" onclick="pay(100, 17)">
+        💎 17 кредитов (<s>150₽</s> 100₽)
+    </button>
 
-<button class="btn btn-primary w-100 mb-2" onclick="pay(350)">
-    🚀 100 кредитов (<s>700₽</s> 350₽)
-</button>
+    <button class="buy-btn" onclick="pay(350, 100)">
+        🚀 100 кредитов (<s>700₽</s> 350₽)
+    </button>
 
-<button class="btn btn-primary w-100 mb-2" onclick="pay(1800)">
-    👑 500 кредитов (<s>2500₽</s> 1800₽)
-</button>
+    <button class="buy-btn" onclick="pay(1800, 500)">
+        👑 500 кредитов (<s>2500₽</s> 1800₽)
+    </button>
+    
     <div id="loader" class="loader">Создаем счет... ⏳</div>
     
     <p style="font-size: 11px; margin-top: 20px; color: #999;">Официальная оплата через ЮKassa. Кредиты зачислятся автоматически в течение минуты.</p>
