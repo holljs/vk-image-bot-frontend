@@ -39,12 +39,25 @@
         </div>
     </div>
 
-    <button class="buy-btn" style="background-color: #7b9cbe;" onclick="pay(50, 5)">🍬 Купить 5 кредитов (50₽)</button>
-    <button class="buy-btn" style="background-color: #4a76a8;" onclick="pay(150, 17)">💎 Купить 17 кредитов (150₽)</button>
-    <button class="buy-btn" style="background: linear-gradient(135deg, #cc0000, #ff4d4d); font-weight: bold; border: 2px solid #fff;" onclick="pay(350, 100)">🚩 АКЦИЯ: 100 кредитов (350₽)</button>
-    <button class="buy-btn premium" style="opacity: 0.7;" onclick="pay(700, 100)">💎💎 Купить 100 кредитов (700₽)</button>
-    <button class="buy-btn" style="background: linear-gradient(135deg, #FFD700, #FFA500); color: #000; box-shadow: 0 2px 6px rgba(255,165,0,0.4);" onclick="pay(2500, 500)">👑 Купить 500 кредитов (2500₽)</button>
+    <div style="text-align: center; margin-bottom: 15px; color: #d32f2f; font-weight: bold; font-size: 1.1em; letter-spacing: 1px;">
+    ⭐️ ПОБЕДНЫЕ ЦЕНЫ ДО 10 МАЯ ⭐️
+</div>
 
+<button class="btn btn-primary w-100 mb-2" onclick="pay(40)">
+    10 кредитов (<s>50₽</s> 40₽)
+</button>
+
+<button class="btn btn-primary w-100 mb-2" onclick="pay(100)">
+    💎 17 кредитов (<s>150₽</s> 100₽)
+</button>
+
+<button class="btn btn-primary w-100 mb-2" onclick="pay(350)">
+    🚀 100 кредитов (<s>700₽</s> 350₽)
+</button>
+
+<button class="btn btn-primary w-100 mb-2" onclick="pay(1800)">
+    👑 500 кредитов (<s>2500₽</s> 1800₽)
+</button>
     <div id="loader" class="loader">Создаем счет... ⏳</div>
     
     <p style="font-size: 11px; margin-top: 20px; color: #999;">Официальная оплата через ЮKassa. Кредиты зачислятся автоматически в течение минуты.</p>
