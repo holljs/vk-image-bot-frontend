@@ -14,9 +14,10 @@
         label { font-weight: bold; font-size: 13px; display: block; margin-bottom: 5px; }
         input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; box-sizing: border-box; background-color: #f9f9f9; }
         
-        /* === ВОТ ЭТИ СТИЛИ ДЕЛАЮТ КНОПКИ СИНИМИ === */
+        /* Стили для наших красивых синих кнопок */
         .buy-btn { display: block; width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; color: #fff; cursor: pointer; margin-bottom: 12px; background-color: #4a76a8; transition: opacity 0.2s; box-sizing: border-box; }
         .buy-btn:active { opacity: 0.8; }
+        .buy-btn s { color: #cce1f9; margin-right: 4px; } /* Делаем зачеркнутую цену чуть светлее */
         
         .loader { display: none; margin-top: 15px; color: #4a76a8; font-weight: bold; }
         .id-badge { display: inline-block; padding: 4px 12px; background: #e7eff8; color: #4a76a8; border-radius: 16px; font-weight: bold; margin-bottom: 15px; }
@@ -53,7 +54,7 @@
         💎 17 кредитов (<s>150₽</s> 100₽)
     </button>
 
-    <button class="buy-btn" onclick="pay(350, 100)">
+    <button class="buy-btn" onclick="pay(350, 100)" style="border: 1px solid #fff; box-shadow: 0 0 10px rgba(74, 118, 168, 0.5);">
         🚀 100 кредитов (<s>700₽</s> 350₽)
     </button>
 
