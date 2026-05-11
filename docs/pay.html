@@ -14,11 +14,13 @@
         label { font-weight: bold; font-size: 13px; display: block; margin-bottom: 5px; }
         input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; box-sizing: border-box; background-color: #f9f9f9; }
         
-        /* Стили для наших красивых синих кнопок */
-        .buy-btn { display: block; width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; color: #fff; cursor: pointer; margin-bottom: 12px; background-color: #4a76a8; transition: opacity 0.2s; box-sizing: border-box; }
+        .buy-btn { display: block; width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; color: #fff; cursor: pointer; margin-bottom: 12px; transition: opacity 0.2s; box-sizing: border-box; }
         .buy-btn:active { opacity: 0.8; }
-        .buy-btn s { color: #cce1f9; margin-right: 4px; } /* Делаем зачеркнутую цену чуть светлее */
+        .buy-btn s { color: rgba(255,255,255,0.7); margin-right: 4px; }
         
+        .btn-blue { background-color: #4a76a8; }
+        .btn-green { background-color: #10B981; }
+
         .loader { display: none; margin-top: 15px; color: #4a76a8; font-weight: bold; }
         .id-badge { display: inline-block; padding: 4px 12px; background: #e7eff8; color: #4a76a8; border-radius: 16px; font-weight: bold; margin-bottom: 15px; }
     </style>
@@ -26,7 +28,7 @@
 <body>
 
 <div class="container">
-    <h1>💎 Пополнение баланса</h1>
+    <h1 id="page-title">💎 Пополнение баланса</h1>
     <div id="auto-id-section" style="display: none;">
         <p>Начисление на профиль:</p>
         <div class="id-badge"><span id="platform-name">ID</span>: <span id="display-id">...</span></div>
@@ -38,47 +40,58 @@
         
         <div style="margin-top: 12px; font-size: 13px; color: #444; background: #ebf2fa; padding: 10px 12px; border-radius: 8px; border: 1px dashed #a2c1e5; line-height: 1.4;">
             💡 <b>Где найти свой ID?</b><br>
-            Просто откройте приложение «Нейро-Художник» — ваш цифровой ID указан в самом верху экрана, прямо рядом с балансом!
+            Просто откройте приложение — ваш цифровой ID указан в самом верху экрана!
         </div>
     </div>
 
-    <div style="text-align: center; margin-bottom: 15px; color: #d32f2f; font-weight: bold; font-size: 1.1em; letter-spacing: 1px;">
-        ⭐️ ПОБЕДНЫЕ ЦЕНЫ ДО 10 МАЯ ⭐️
+    <div id="credits-pricing" style="display: none;">
+        <button class="buy-btn btn-blue" onclick="pay(40, 10, 'credits')">
+            10 кредитов (<s>50₽</s> 40₽)
+        </button>
+        <button class="buy-btn btn-blue" onclick="pay(100, 17, 'credits')">
+            💎 17 кредитов (<s>150₽</s> 100₽)
+        </button>
+        <button class="buy-btn btn-blue" onclick="pay(350, 100, 'credits')" style="border: 1px solid #fff; box-shadow: 0 0 10px rgba(74, 118, 168, 0.5);">
+            🚀 100 кредитов (<s>700₽</s> 350₽)
+        </button>
+        <button class="buy-btn btn-blue" onclick="pay(1800, 500, 'credits')">
+            👑 500 кредитов (<s>2500₽</s> 1800₽)
+        </button>
     </div>
 
-    <button class="buy-btn" onclick="pay(40, 10)">
-        10 кредитов (<s>50₽</s> 40₽)
-    </button>
-
-    <button class="buy-btn" onclick="pay(100, 17)">
-        💎 17 кредитов (<s>150₽</s> 100₽)
-    </button>
-
-    <button class="buy-btn" onclick="pay(350, 100)" style="border: 1px solid #fff; box-shadow: 0 0 10px rgba(74, 118, 168, 0.5);">
-        🚀 100 кредитов (<s>700₽</s> 350₽)
-    </button>
-
-    <button class="buy-btn" onclick="pay(1800, 500)">
-        👑 500 кредитов (<s>2500₽</s> 1800₽)
-    </button>
+    <div id="energy-pricing" style="display: none;">
+        <button class="buy-btn btn-green" onclick="pay(150, 1500, 'energy')">
+            ⚡ 1 500 Энергии (150₽)
+        </button>
+        <button class="buy-btn btn-green" onclick="pay(300, 3200, 'energy')" style="border: 1px solid #fff; box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);">
+            🔥 3 200 Энергии (300₽) - ХИТ
+        </button>
+        <button class="buy-btn btn-green" onclick="pay(500, 5500, 'energy')">
+            💎 5 500 Энергии (500₽)
+        </button>
+    </div>
     
     <div id="loader" class="loader">Создаем счет... ⏳</div>
     
-    <p style="font-size: 11px; margin-top: 20px; color: #999;">Официальная оплата через ЮKassa. Кредиты зачислятся автоматически в течение минуты.</p>
+    <p style="font-size: 11px; margin-top: 20px; color: #999;">Официальная оплата через ЮKassa. Ресурс зачислится автоматически в течение минуты.</p>
 </div>
 
 <script>
-    // 1. Парсим параметры из ссылки
     const urlParams = new URLSearchParams(window.location.search);
     const urlUserId = urlParams.get('user_id');
-    const urlPlatform = urlParams.get('platform') || 'vk'; // по умолчанию vk
+    const urlPlatform = urlParams.get('platform') || 'vk'; 
+    const appType = urlParams.get('app') || 'artist'; // 'artist' или 'bro'
 
-    // Настройка интерфейса под платформу
-    const platformMap = {
-        'vk': 'ВКонтакте',
-        'ok': 'Одноклассники',
-        'tg': 'Telegram'
-    };
+    const platformMap = { 'vk': 'ВКонтакте', 'ok': 'Одноклассники', 'tg': 'Telegram' };
+
+    // Переключаем интерфейс
+    if (appType === 'bro') {
+        document.getElementById('energy-pricing').style.display = 'block';
+        document.getElementById('page-title').innerText = '⚡ Пополнение Энергии';
+        document.getElementById('page-title').style.color = '#10B981';
+    } else {
+        document.getElementById('credits-pricing').style.display = 'block';
+    }
 
     if (urlUserId) {
         document.getElementById('auto-id-section').style.display = 'block';
@@ -89,7 +102,7 @@
         document.getElementById('label-text').innerText = `Введите ваш цифровой ID ${platformMap[urlPlatform] || ''}:`;
     }
 
-    async function pay(amount, credits) {
+    async function pay(amount, count, currencyType) {
         const finalUserId = urlUserId || document.getElementById('userIdInput').value.trim();
         
         if (!finalUserId) { 
@@ -98,16 +111,19 @@
         }
 
         document.getElementById('loader').style.display = 'block';
+        const descName = currencyType === 'energy' ? 'Энергии' : 'кредитов';
 
         try {
+            // Запрос всегда идет на сервер Художника, так как он обрабатывает кассу
             const response = await fetch(`https://neuro-master.online/api/yookassa/create-payment`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     user_id: parseInt(finalUserId), 
                     amount: amount, 
-                    description: `Покупка ${credits} кредитов (${urlPlatform.toUpperCase()}: ${finalUserId})`,
-                    platform: urlPlatform // передаем платформу, чтобы ЮKassa знала куда вернуть юзера
+                    description: `Покупка ${count} ${descName} (${urlPlatform.toUpperCase()}: ${finalUserId})`,
+                    platform: urlPlatform,
+                    currency_type: currencyType
                 })
             });
 
