@@ -372,8 +372,15 @@ document.querySelectorAll('.process-button').forEach(btn => {
         }
         
         if (!prompt && !['i2v', 'music', 'vip_clip', 'talking_photo', 'gfpgan'].includes(mode)) {
-            return showCustomAlert("Пожалуйста, введите текстовое описание.", "Пустой запрос");
-        }
+            return showCustomAlert("Пожалуйста, введите текстовое описание.", "Пустой запрос");
+        }
+        
+        // ❗️ НОВАЯ ПРОВЕРКА: Если фото обязательны для режима, а их нет — ругаемся. 
+        // Для vip_mix, seadream_mix и ultra_photo — фотки теперь НЕОБЯЗАТЕЛЬНЫ, если написан текст!
+        const imageRequiredModes = ['quick_edit', 'gfpgan', 'i2v', 'vip_clip', 'talking_photo'];
+        if (imageRequiredModes.includes(mode) && files.photos.length === 0) {
+            return showCustomAlert("Пожалуйста, загрузите фотографию для этого режима.", "Отсутствует фото");
+        }
         
         if (mode === 'music') {
             const lyricsLength = musicLyrics ? musicLyrics.length : 0;
