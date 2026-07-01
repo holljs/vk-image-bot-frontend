@@ -9,7 +9,7 @@
 </head>
 <body>
     <div id="app">
-        <header class="app-header" style="padding-right: 40px;">
+        <header class="app-header" style="padding-right: 40px;">а
             <h1>✨ Нейро-художник</h1>
             <div class="user-info">
                 <span id="user-balance-display" style="font-weight: bold; font-size: 18px; color: #4a76a8;">Баланс: ...</span>
@@ -199,16 +199,16 @@
             <button class="process-button hidden">3. Запустить</button>
         </div>
 
-        <div class="mode-section" data-mode="t2i" data-max-photos="4">
-            <h2>🎨 Нейро-Художник</h2>
+        <div class="mode-section" data-mode="t2i" data-max-photos="0"> <h2>🎨 Нейро-Художник</h2>
             <p style="color: #2787F5; font-size: 13px; font-weight: bold; margin-top: -10px; margin-bottom: 10px;">💎 Цена: 1 кредит</p>
-            <p class="section-desc">Рисование с нуля или по вашему фото-стилю.<br>
-            <span style="color: #d9534f; font-size: 12px; font-weight: bold;">⚠️ Этот режим НЕ сохраняет сходство лиц! Для сходства используйте VIP-Микс.</span></p>
-            <div class="image-previews"></div>
+            <p class="section-desc">Рисование с нуля полностью по вашему текстовому описанию.<br>
+            <span style="color: #d9534f; font-size: 12px;">⚠️ **ОБРАТИТЕ ВНИМАНИЕ:** Этот режим не предназначен для сохранения или замены лиц. Сходства с реальным человеком не будет — нейросеть рисует в свободном стиле.</span><br>
+            <span style="color: #2787f5;">👉 *Если вам нужно точное сходство лица, используйте кнопку «👑 VIP-Микс».*</span></p>
+    
             <input type="file" class="file-upload-input hidden" accept="image/*" multiple>
-            <button class="universal-upload-button">1. Выбрать фото-стиль (необязательно)</button>
-            <p style="margin-top: 10px;">2. Напишите, что нарисовать:</p>
-            <textarea class="prompt-input" maxlength="5000" rows="2" placeholder="Например: милый кот в скафандре"></textarea>
+    
+            <p style="margin-top: 10px;"><b>Напишите, что нарисовать:</b></p>
+            <textarea class="prompt-input" maxlength="5000" rows="2" placeholder="Например: милый кот в скафандре печет хлеб"></textarea>
             <button class="process-button" style="background-color: #4a76a8;">Нарисовать</button>
         </div>
 
