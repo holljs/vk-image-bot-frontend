@@ -355,6 +355,9 @@ document.querySelectorAll('.process-button').forEach(btn => {
         const mode = section.dataset.mode;
         if (!USER_ID) return showCustomAlert("Пожалуйста, авторизуйтесь.", "Ошибка");
         
+        // 🔥 Вытаскиваем вложения СРАЗУ, чтобы проверки ниже их видели!
+        const files = filesByMode[mode] || { photos: [], videos: [], audios: [] };
+        
         const promptInput = section.querySelector('.prompt-input');
         let prompt = promptInput ? promptInput.value.trim() : '';
         let stylePrompt = null; let musicLyrics = null;
@@ -391,8 +394,6 @@ document.querySelectorAll('.process-button').forEach(btn => {
                 if (styleLength > 300) return showCustomAlert("Стиль музыки не должен превышать 300 символов.", "Ошибка стиля");
             }
         }
-        
-        const files = filesByMode[mode] || { photos: [], videos: [], audios: [] };
         
         filesByMode[mode] = { photos: [], videos: [], audios: [] };
         if (promptInput) promptInput.value = '';
