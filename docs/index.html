@@ -252,38 +252,42 @@
             <button class="process-button">Создать видео</button>
         </div>
 
-        <div class="mode-section" data-mode="bytedance_5" data-max-photos="1" data-max-audios="1">
+        <div class="mode-section" data-mode="bytedance_5" data-max-photos="10" data-max-audios="3" data-max-videos="3">
             <h2>🎬 Режиссёр 5 сек</h2>
             <p style="color: #2787F5; font-size: 13px; font-weight: bold; margin-top: -10px; margin-bottom: 10px;">💎 Цена: 30 кредитов</p>
-            <p class="section-desc">Создание профессионального видео от ByteDance со встроенным звуком и точным липсинком.</p>
+            <p class="section-desc">Создание профессионального видео от ByteDance со встроенным звуком и точным липсинком. Всё по желанию!</p>
             <div class="image-previews"></div>
-            <input type="file" class="file-upload-input hidden" accept="image/*">
-            <input type="file" class="audio-upload-input hidden" accept="audio/*">
+            <input type="file" class="file-upload-input hidden" accept="image/*" multiple>
+            <input type="file" class="audio-upload-input hidden" accept="audio/*" multiple>
+            <input type="file" class="video-upload-input hidden" accept="video/*" multiple>
             <div class="step-buttons">
-                <button class="universal-upload-button" data-type="photo">1. Исходное фото (необязательно, 0/1)</button>
-                <button class="universal-upload-button" data-type="audio">2. Озвучка (необязательно)</button>
+                <button class="universal-upload-button" data-type="photo">1. Фото / Кадры (необязательно)</button>
+                <button class="universal-upload-button" data-type="audio">2. Аудио / Голос (необязательно)</button>
+                <button class="universal-upload-button" data-type="video">3. Видео-референс (необязательно)</button>
             </div>
-            <p style="margin-top: 10px;">3. Текст запроса (речь для липсинка пишите в кавычках):</p>
+            <p style="margin-top: 10px;">4. Текст запроса (речь для липсинка или сюжет в кавычках):</p>
             <textarea class="prompt-input" maxlength="2000" rows="2" placeholder='Например: Девушка улыбается и говорит: "Добро пожаловать в будущее"'></textarea>
             <button class="process-button" style="margin-top: 10px; background-color: #4a76a8;">Сгенерировать ролик</button>
         </div>
 
-        <div class="mode-section" data-mode="bytedance_10" data-max-photos="1" data-max-videos="1">
+        <div class="mode-section" data-mode="bytedance_10" data-max-photos="10" data-max-audios="3" data-max-videos="3">
             <h2>🎬 Режиссёр 10 сек</h2>
             <p style="color: #2787F5; font-size: 13px; font-weight: bold; margin-top: -10px; margin-bottom: 10px;">💎 Цена: 50 кредитов</p>
-            <p class="section-desc">Удлиненные ИИ-клипы премиум-качества. Идеально для масштабных панорам и умного монтажа.</p>
+            <p class="section-desc">Удлиненные ИИ-клипы премиум-качества. Добавляйте любые референсы или генерируйте чисто с нуля.</p>
             <div class="image-previews"></div>
-            <input type="file" class="file-upload-input hidden" accept="image/*">
-            <input type="file" class="video-upload-input hidden" accept="video/*">
+            <input type="file" class="file-upload-input hidden" accept="image/*" multiple>
+            <input type="file" class="audio-upload-input hidden" accept="audio/*" multiple>
+            <input type="file" class="video-upload-input hidden" accept="video/*" multiple>
             <div class="step-buttons">
-                <button class="universal-upload-button" data-type="photo">1. Исходное фото (необязательно, 0/1)</button>
-                <button class="universal-upload-button" data-type="video">2. Исходное видео (необязательно)</button>
+                <button class="universal-upload-button" data-type="photo">1. Фото / Кадры (необязательно)</button>
+                <button class="universal-upload-button" data-type="audio">2. Аудио / Голос (необязательно)</button>
+                <button class="universal-upload-button" data-type="video">3. Видео-референс (необязательно)</button>
             </div>
-            <p style="margin-top: 10px;">3. Описание клипа и эффектов:</p>
+            <p style="margin-top: 10px;">4. Описание клипа и эффектов:</p>
             <textarea class="prompt-input" maxlength="2000" rows="2" placeholder='Например: Кинематографичный пролет камеры сквозь неоновый мегаполис, дождь, отражения, 4k'></textarea>
             <button class="process-button" style="margin-top: 10px; background-color: #4a76a8;">Запустить режиссуру</button>
         </div>
-
+        
         <div class="section-header" style="text-align: center; font-weight: bold; margin: 30px 0 15px; color: #4a76a8; text-transform: uppercase; background: #ebf2fa; padding: 10px; border-radius: 8px;">🎙️ Аудио и Текст 🎙️</div>
         
         <div class="mode-section" data-mode="tts">
