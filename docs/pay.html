@@ -215,7 +215,7 @@
             const result = await response.json();
             
             if (result.success && result.payment_url) {
-                window.location.href = result.payment_url;
+                var w = window.open(result.payment_url, '_blank'); if (!w) { window.location.href = result.payment_url; };
             } else {
                 alert("Ошибка: " + (result.detail || "Не удалось создать платеж"));
             }
